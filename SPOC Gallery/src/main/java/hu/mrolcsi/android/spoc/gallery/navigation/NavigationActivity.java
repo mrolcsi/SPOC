@@ -26,8 +26,9 @@ public class NavigationActivity extends AppCompatActivity {
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
-    private CharSequence mTitle;
+    private CharSequence mTitle = "";
     private DrawerLayout mDrawerLayout;
+    private NavigationView mNavigationView;
     private ActionBarDrawerToggle mDrawerToggle;
 
     private ISPOCFragment mCurrentFragment;
@@ -39,11 +40,10 @@ public class NavigationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_navigation);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mNavigationView = (NavigationView) findViewById(R.id.navigation);
 
         setUpDrawerToggle();
         setUpNavigationView();
-
-        mTitle = getTitle();
     }
 
     @Override
@@ -62,15 +62,20 @@ public class NavigationActivity extends AppCompatActivity {
     }
 
     private void setUpNavigationView() {
-        final NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigation);
-
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
                 //switch (menuItem.getId()) case
                 //replace fragment
 
-                swapFragment(new HomeFragment());
+                int id = menuItem.getItemId();
+                switch (id) {
+                    case R.id.navigation_home:
+                    default:
+                        swapFragment(new HomeFragment());
+                        mTitle = "";
+                        break;
+                }
 
                 menuItem.setChecked(true);
                 mDrawerLayout.closeDrawers();
@@ -135,6 +140,7 @@ public class NavigationActivity extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         // If the nav drawer is open, hide action items related to the content view
+        //noinspection SimplifiableIfStatement
         boolean drawerOpen = mDrawerLayout.isDrawerOpen(GravityCompat.START);
         //menu.findItem(R.id.action_websearch).setVisible(!drawerOpen);
         return super.onPrepareOptionsMenu(menu);
@@ -178,7 +184,6 @@ public class NavigationActivity extends AppCompatActivity {
 
         final FragmentManager fragmentManager = getSupportFragmentManager();
         final FragmentTransaction transaction = fragmentManager.beginTransaction();
-        //transaction.setBreadCrumbTitle(newFragment.getTitle());
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         transaction.replace(R.id.container, (Fragment) newFragment, newFragment.getTagString());
         transaction.commit();
@@ -190,7 +195,6 @@ public class NavigationActivity extends AppCompatActivity {
         mCurrentFragment = fragmentStack.pop();
         final FragmentManager fragmentManager = getSupportFragmentManager();
         final FragmentTransaction transaction = fragmentManager.beginTransaction();
-        //transaction.setBreadCrumbTitle(mCurrentFragment.getTitle());
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE);
         transaction.replace(R.id.container, (Fragment) mCurrentFragment, mCurrentFragment.getTagString());
         transaction.commit();
