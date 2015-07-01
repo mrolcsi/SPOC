@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Gallery</string>
+    <string name="app_name">SPOC Gallery</string>
     <string name="title_activity_navigation">Gallery</string>
 
     <string name="title_section1">Section 1</string>

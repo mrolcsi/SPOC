@@ -10,13 +10,11 @@
 
         <!-- colorAccent is used as the default value for colorControlActivated,
              which is used to tint widgets -->
-        <item name="colorAccent">@color/holo_blue_bright</item>
+        <item name="colorAccent">@android:color/white</item>
 
         <!-- You can also set colorControlNormal, colorControlActivated
              colorControlHighlight, and colorSwitchThumbNormal. -->
 
         <item name="windowActionBar">false</item>
     </style>
-
-    <color name="holo_blue_bright">#00ddff</color>
 </resources>

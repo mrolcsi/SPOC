@@ -9,7 +9,7 @@
     android:fitsSystemWindows="true"
     tools:context="hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity">
 
-    <android.support.design.widget.CoordinatorLayout
+    <RelativeLayout
         android:id="@+id/main_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -34,9 +34,10 @@
         <FrameLayout
             android:id="@+id/container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:layout_below="@+id/appbar" />
 
-    </android.support.design.widget.CoordinatorLayout>
+    </RelativeLayout>
 
     <!-- android:layout_gravity="start" tells DrawerLayout to treat
          this as a sliding drawer on the left side for left-to-right

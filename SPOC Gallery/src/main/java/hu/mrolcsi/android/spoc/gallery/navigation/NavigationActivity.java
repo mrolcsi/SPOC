@@ -1,19 +1,25 @@
 package hu.mrolcsi.android.spoc.gallery.navigation;
 
-import android.app.Activity;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.*;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import hu.mrolcsi.android.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.ISPOCFragment;
+import hu.mrolcsi.android.spoc.gallery.home.HomeFragment;
+
+import java.util.Stack;
 
 public class NavigationActivity extends AppCompatActivity {
 
@@ -23,6 +29,9 @@ public class NavigationActivity extends AppCompatActivity {
     private CharSequence mTitle;
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
+
+    private ISPOCFragment mCurrentFragment;
+    private Stack<ISPOCFragment> fragmentStack = new Stack<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +51,8 @@ public class NavigationActivity extends AppCompatActivity {
         super.onPostCreate(savedInstanceState);
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
+
+        swapFragment(new HomeFragment());
     }
 
     @Override
@@ -56,10 +67,10 @@ public class NavigationActivity extends AppCompatActivity {
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.container, PlaceholderFragment.newInstance(menuItem.getOrder() + 1)).commit();
+                //switch (menuItem.getId()) case
+                //replace fragment
 
-                onSectionAttached(menuItem.getOrder());
+                swapFragment(new HomeFragment());
 
                 menuItem.setChecked(true);
                 mDrawerLayout.closeDrawers();
@@ -105,23 +116,6 @@ public class NavigationActivity extends AppCompatActivity {
         }
     }
 
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getString(R.string.title_home);
-                break;
-            case 2:
-                mTitle = getString(R.string.title_section1);
-                break;
-            case 3:
-                mTitle = getString(R.string.title_section2);
-                break;
-            case 4:
-                mTitle = getString(R.string.title_section3);
-                break;
-        }
-    }
-
     public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -129,7 +123,6 @@ public class NavigationActivity extends AppCompatActivity {
             actionBar.setTitle(mTitle);
         }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -177,41 +170,29 @@ public class NavigationActivity extends AppCompatActivity {
         } else super.onBackPressed();
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
+    public void swapFragment(ISPOCFragment newFragment) {
+        if (mCurrentFragment != null)
+            fragmentStack.push(mCurrentFragment);
 
-        public PlaceholderFragment() {
-        }
+        mCurrentFragment = newFragment;
 
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_navigation, container, false);
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((NavigationActivity) activity).onSectionAttached(getArguments().getInt(ARG_SECTION_NUMBER));
-        }
+        final FragmentManager fragmentManager = getSupportFragmentManager();
+        final FragmentTransaction transaction = fragmentManager.beginTransaction();
+        //transaction.setBreadCrumbTitle(newFragment.getTitle());
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        transaction.replace(R.id.container, (Fragment) newFragment, newFragment.getTagString());
+        transaction.commit();
     }
 
+    public void restoreFragmentFromStack() {
+        if (fragmentStack.isEmpty()) return;
+
+        mCurrentFragment = fragmentStack.pop();
+        final FragmentManager fragmentManager = getSupportFragmentManager();
+        final FragmentTransaction transaction = fragmentManager.beginTransaction();
+        //transaction.setBreadCrumbTitle(mCurrentFragment.getTitle());
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE);
+        transaction.replace(R.id.container, (Fragment) mCurrentFragment, mCurrentFragment.getTagString());
+        transaction.commit();
+    }
 }
