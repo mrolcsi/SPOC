@@ -16,7 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import hu.mrolcsi.android.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.common.ISPOCFragment;
+import hu.mrolcsi.android.spoc.common.ISPOCFragment;
 import hu.mrolcsi.android.spoc.gallery.home.HomeFragment;
 
 import java.util.Stack;

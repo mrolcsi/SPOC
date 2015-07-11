@@ -1,12 +1,18 @@
 package hu.mrolcsi.android.spoc.gallery.home;
 
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 import hu.mrolcsi.android.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.common.SPOCFragment;
+import hu.mrolcsi.android.spoc.common.MediaStoreLoader;
+import hu.mrolcsi.android.spoc.common.SPOCFragment;
 import org.lucasr.twowayview.widget.TwoWayView;
 
 /**
@@ -16,10 +22,11 @@ import org.lucasr.twowayview.widget.TwoWayView;
  * Time: 21:12
  */
 
-public class HomeFragment extends SPOCFragment {
+public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
 
     private View mRootView;
     private TwoWayView twList;
+    private HomeScreenAdapter adapter;
 
     @Nullable
     @Override
@@ -33,12 +40,40 @@ public class HomeFragment extends SPOCFragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         twList = (TwoWayView) view.findViewById(R.id.list);
+        twList.setHasFixedSize(true);
+    }
 
-        twList.setAdapter(new HomeScreenAdapter());
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        if (getArguments() != null) {
+            //TODO: process params
+        }
+
+        getLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(getActivity(), this));
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (adapter != null && adapter.getCursor() != null)
+            adapter.getCursor().close();
     }
 
     @Override
     public String getTitle() {
         return getString(R.string.title_home);
+    }
+
+    @Override
+    public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
+        // TODO
+        Toast.makeText(getActivity(), "Load complete.", Toast.LENGTH_SHORT).show();
+        Log.d(getClass().getName(), "Cursor.getCount= " + data.getCount());
+
+        adapter = new HomeScreenAdapter(getActivity(), data);
+        twList.setAdapter(adapter);
     }
 }

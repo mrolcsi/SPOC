@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery.common;
+package hu.mrolcsi.android.spoc.common;
 
 import android.support.v4.app.Fragment;
 

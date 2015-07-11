@@ -1,1 +1,1 @@
-include ':SPOC Gallery'
+include ':SPOC Gallery', ':SPOC Common', ':SPOC Database'

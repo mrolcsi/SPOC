@@ -1,14 +1,19 @@
 package hu.mrolcsi.android.spoc.gallery.home;
 
-import android.graphics.Color;
+import android.content.Context;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.ImageView;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import hu.mrolcsi.android.gallery.R;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
-
-import java.util.Random;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,44 +22,85 @@ import java.util.Random;
  * Time: 21:48
  */
 
-public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.TextViewHolder> {
+public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.ImageViewHolder> {
 
-    private Random rnd = new Random();
+    private final int columnSpan;
+    private final Context context;
 
-    @Override
-    public TextViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        View v = LayoutInflater.from(viewGroup.getContext()).inflate(android.R.layout.simple_list_item_1, viewGroup, false);
-        return new TextViewHolder(v);
+    private final DisplayImageOptions options = new DisplayImageOptions.Builder()
+            .bitmapConfig(Bitmap.Config.RGB_565)
+            .imageScaleType(ImageScaleType.EXACTLY)
+            .considerExifParams(true)
+                    //.showImageOnLoading()
+                    //.showImageOnFail()
+            .build();
+
+    private String filename;
+    private int iData;
+
+    private Cursor cursor;
+
+    public HomeScreenAdapter(Context context) {
+        this.context = context;
+        int preferredColumns = context.getResources().getInteger(R.integer.preferredColumns);
+        columnSpan = (int) Math.round((preferredColumns + 0.5) / 2);
+    }
+
+    public HomeScreenAdapter(Context context, Cursor cursor) {
+        this(context);
+        this.cursor = cursor;
+
+        iData = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
     }
 
     @Override
-    public void onBindViewHolder(TextViewHolder textViewHolder, int i) {
-        textViewHolder.textView.setText("Random Item #" + rnd.nextInt(100));
+    public ImageViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+        View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.gallery_thumbnail, viewGroup, false);
+        return new ImageViewHolder(v);
+    }
 
-        SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) textViewHolder.itemView.getLayoutParams();
-        if (i % 5 == 0) {
-            lp.colSpan = 2;
-            lp.rowSpan = 2;
-            textViewHolder.itemView.setBackgroundColor(Color.BLUE);
+    @Override
+    public void onBindViewHolder(ImageViewHolder imageViewHolder, int i) {
+
+        cursor.moveToPosition(i);
+
+        filename = cursor.getString(iData);
+
+        ImageLoader.getInstance().cancelDisplayTask(imageViewHolder.img);
+        ImageLoader.getInstance().displayImage("file://" + filename, imageViewHolder.img, options);
+
+        SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) imageViewHolder.itemView.getLayoutParams();
+
+        if (i % 12 == 0) { //TODO: expand frequently used items
+            lp.colSpan = columnSpan;
+            lp.rowSpan = columnSpan;
+            //imageViewHolder.itemView.setBackgroundColor(Color.BLUE);
         } else {
             lp.colSpan = 1;
             lp.rowSpan = 1;
-            textViewHolder.itemView.setBackgroundColor(Color.TRANSPARENT);
+            //imageViewHolder.itemView.setBackgroundColor(Color.TRANSPARENT);
         }
-        textViewHolder.itemView.setLayoutParams(lp);
+
+        imageViewHolder.itemView.setLayoutParams(lp);
     }
 
     @Override
     public int getItemCount() {
-        return 25;
+        if (cursor != null)
+            return cursor.getCount();
+        else return 0;
     }
 
-    class TextViewHolder extends RecyclerView.ViewHolder {
-        private TextView textView;
+    public Cursor getCursor() {
+        return cursor;
+    }
 
-        public TextViewHolder(View itemView) {
+    class ImageViewHolder extends RecyclerView.ViewHolder {
+        private ImageView img;
+
+        public ImageViewHolder(View itemView) {
             super(itemView);
-            textView = (TextView) itemView.findViewById(android.R.id.text1);
+            img = (ImageView) itemView.findViewById(R.id.img);
         }
     }
 }
