@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    package="hu.mrolcsi.android.gallery"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        package="hu.mrolcsi.android.spoc.gallery">
 
     <application
         android:name="hu.mrolcsi.android.spoc.gallery.SPOCApplication"

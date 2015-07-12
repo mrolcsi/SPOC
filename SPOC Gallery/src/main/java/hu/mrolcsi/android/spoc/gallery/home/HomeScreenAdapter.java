@@ -2,17 +2,14 @@ package hu.mrolcsi.android.spoc.gallery.home;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import hu.mrolcsi.android.gallery.R;
+import com.squareup.picasso.Picasso;
+import hu.mrolcsi.android.spoc.gallery.R;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 
 /**
@@ -26,14 +23,6 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
     private final int columnSpan;
     private final Context context;
-
-    private final DisplayImageOptions options = new DisplayImageOptions.Builder()
-            .bitmapConfig(Bitmap.Config.RGB_565)
-            .imageScaleType(ImageScaleType.EXACTLY)
-            .considerExifParams(true)
-                    //.showImageOnLoading()
-                    //.showImageOnFail()
-            .build();
 
     private String filename;
     private int iData;
@@ -66,8 +55,9 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
         filename = cursor.getString(iData);
 
-        ImageLoader.getInstance().cancelDisplayTask(imageViewHolder.img);
-        ImageLoader.getInstance().displayImage("file://" + filename, imageViewHolder.img, options);
+        //load image
+        Picasso.with(context).cancelRequest(imageViewHolder.img);
+        Picasso.with(context).load("file://" + filename).centerCrop().resizeDimen(R.dimen.image_thumbnail_size, R.dimen.image_thumbnail_size).into(imageViewHolder.img);
 
         SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) imageViewHolder.itemView.getLayoutParams();
 

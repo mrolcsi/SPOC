@@ -10,9 +10,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
-import hu.mrolcsi.android.gallery.R;
 import hu.mrolcsi.android.spoc.common.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.common.SPOCFragment;
+import hu.mrolcsi.android.spoc.gallery.R;
 import org.lucasr.twowayview.widget.TwoWayView;
 
 /**
