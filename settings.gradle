@@ -1,1 +1,3 @@
-include ':SPOC Gallery', ':SPOC Common', ':SPOC Database'
+include ':SPOC Gallery', ':SPOC Common', ':SPOC Database', ':core', ':layouts'
+project(':core').projectDir = new File('Libraries/twoway-view/core')
+project(':layouts').projectDir = new File('Libraries/twoway-view/layouts')
