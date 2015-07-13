@@ -12,6 +12,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -173,7 +174,8 @@ public class NavigationActivity extends AppCompatActivity {
     public void onBackPressed() {
         if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
             mDrawerLayout.closeDrawers();
-        } else super.onBackPressed();
+        } else if (mCurrentFragment != null && !mCurrentFragment.onBackPressed())
+            super.onBackPressed();
     }
 
     public void swapFragment(ISPOCFragment newFragment) {
@@ -187,6 +189,8 @@ public class NavigationActivity extends AppCompatActivity {
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         transaction.replace(R.id.container, (Fragment) newFragment, newFragment.getTagString());
         transaction.commit();
+
+        Log.v(getClass().getSimpleName(), "Swapped to fragment: " + newFragment.toString());
     }
 
     public void restoreFragmentFromStack() {
@@ -198,5 +202,7 @@ public class NavigationActivity extends AppCompatActivity {
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE);
         transaction.replace(R.id.container, (Fragment) mCurrentFragment, mCurrentFragment.getTagString());
         transaction.commit();
+
+        Log.v(getClass().getSimpleName(), "Fragment restored from stack: " + mCurrentFragment.toString());
     }
 }

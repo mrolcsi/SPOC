@@ -8,7 +8,9 @@ package hu.mrolcsi.android.spoc.common;
  */
 
 public interface ISPOCFragment {
-    String getTitle();
+    //String getTitle();
 
     String getTagString();
+
+    boolean onBackPressed();
 }

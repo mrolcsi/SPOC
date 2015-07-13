@@ -5,14 +5,16 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
-import hu.mrolcsi.android.spoc.common.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.common.SPOCFragment;
+import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.ImagePagerFragment;
+import hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity;
+import org.lucasr.twowayview.ItemClickSupport;
 import org.lucasr.twowayview.widget.TwoWayView;
 
 /**
@@ -26,7 +28,8 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
 
     private View mRootView;
     private TwoWayView twList;
-    private HomeScreenAdapter adapter;
+    private HomeScreenAdapter mAdapter;
+    private Loader<Cursor> mLoader;
 
     @Nullable
     @Override
@@ -40,7 +43,24 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         twList = (TwoWayView) view.findViewById(R.id.list);
-        twList.setHasFixedSize(true);
+        //twList.setHasFixedSize(true);
+
+        ItemClickSupport itemClick = ItemClickSupport.addTo(twList);
+
+        itemClick.setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
+            @Override
+            public void onItemClick(RecyclerView recyclerView, View view, int i, long l) {
+                ImagePagerFragment fragment = new ImagePagerFragment();
+
+                Bundle args = new Bundle();
+                args.putInt(ImagePagerFragment.ARG_LOADER_ID, mLoader.getId());
+                args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
+
+                fragment.setArguments(args);
+
+                ((NavigationActivity) getActivity()).swapFragment(fragment);
+            }
+        });
     }
 
     @Override
@@ -48,32 +68,28 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
         super.onStart();
 
         if (getArguments() != null) {
-            //TODO: process params
+            //TODO: process args
         }
 
-        getLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(getActivity(), this));
+        mLoader = getLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(getActivity(), this));
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onResume() {
+        super.onResume();
 
-        if (adapter != null && adapter.getCursor() != null)
-            adapter.getCursor().close();
+        mLoader.startLoading();
     }
 
     @Override
-    public String getTitle() {
-        return getString(R.string.title_home);
+    public void onDestroy() {
+        super.onDestroy();
+        getLoaderManager().destroyLoader(MediaStoreLoader.ID);
     }
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
-        // TODO
-        Toast.makeText(getActivity(), "Load complete.", Toast.LENGTH_SHORT).show();
-        Log.d(getClass().getName(), "Cursor.getCount= " + data.getCount());
-
-        adapter = new HomeScreenAdapter(getActivity(), data);
-        twList.setAdapter(adapter);
+        mAdapter = new HomeScreenAdapter(getActivity(), data);
+        twList.setAdapter(mAdapter);
     }
 }

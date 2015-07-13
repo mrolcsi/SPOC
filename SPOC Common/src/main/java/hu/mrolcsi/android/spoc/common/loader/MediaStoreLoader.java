@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.common;
+package hu.mrolcsi.android.spoc.common.loader;
 
 
 import android.content.Context;
@@ -8,6 +8,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,7 +18,7 @@ import android.support.v4.content.Loader;
  */
 
 public class MediaStoreLoader implements LoaderManager.LoaderCallbacks<Cursor> {
-    public static final int ID = 0;
+    public static final int ID = 12;
     private final Context context;
     private final Loader.OnLoadCompleteListener<Cursor> onLoadCompleteListener;
 
@@ -46,5 +47,6 @@ public class MediaStoreLoader implements LoaderManager.LoaderCallbacks<Cursor> {
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+        Log.v(getClass().getSimpleName(), "onLoaderReset");
     }
 }

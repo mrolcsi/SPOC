@@ -28,6 +28,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
     private int iData;
 
     private Cursor cursor;
+    private int mCount = 0;
 
     public HomeScreenAdapter(Context context) {
         this.context = context;
@@ -50,6 +51,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
     @Override
     public void onBindViewHolder(ImageViewHolder imageViewHolder, int i) {
+        if (cursor == null || cursor.isClosed()) return;
 
         cursor.moveToPosition(i);
 
@@ -61,7 +63,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
         SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) imageViewHolder.itemView.getLayoutParams();
 
-        if (i % 12 == 0) { //TODO: expand frequently used items
+        if (i % 7 == 0) { //TODO: expand frequently used items
             lp.colSpan = columnSpan;
             lp.rowSpan = columnSpan;
             //imageViewHolder.itemView.setBackgroundColor(Color.BLUE);
@@ -76,13 +78,9 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
     @Override
     public int getItemCount() {
-        if (cursor != null)
-            return cursor.getCount();
-        else return 0;
-    }
-
-    public Cursor getCursor() {
-        return cursor;
+        if (cursor != null && !cursor.isClosed())
+            mCount = cursor.getCount();
+        return mCount;
     }
 
     class ImageViewHolder extends RecyclerView.ViewHolder {
