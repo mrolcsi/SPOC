@@ -14,6 +14,83 @@ repositories {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
+def makeVersionCode = { ->
+    try {
+        def code = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-list', 'HEAD', '--count'
+            standardOutput = code
+        }
+        return Integer.parseInt(code.toString().trim())
+    }
+    catch (ignored) {
+        logger.error(ignored.printStackTrace())
+        return -1;
+    }
+}
+
+def makeVersionNameRelease = { ->
+    try {
+        def lastTag = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-list', '--tags', '--no-walk', '--max-count=1'
+            standardOutput = lastTag
+        }
+
+        def lastCommits = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-list', lastTag.toString().trim() + '..HEAD'
+            standardOutput = lastCommits
+        }
+
+        def versionName = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'describe', '--tags', '--abbrev=0'
+            standardOutput = versionName
+        }
+
+        return 'v' + versionName.toString().trim() + '-' + lastCommits.toString().trim()
+    }
+    catch (ignored) {
+        logger.error(ignored.printStackTrace())
+        return null;
+    }
+}
+
+def makeVersionNameDebug = { ->
+    try {
+        def lastTag = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-list', '--tags', '--no-walk', '--max-count=1'
+            standardOutput = lastTag
+        }
+
+        def lastCommits = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-list', lastTag.toString().trim() + '..HEAD', '--count'
+            standardOutput = lastCommits
+        }
+
+        def versionName = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'describe', '--tags', '--abbrev=0'
+            standardOutput = versionName
+        }
+
+        def currentBranch = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
+            standardOutput = currentBranch
+        }
+
+        return 'v' + versionName.toString().trim() + '-' + lastCommits.toString().trim() + '/' + currentBranch.toString().trim()
+    }
+    catch (ignored) {
+        logger.error(ignored.printStackTrace())
+        return null;
+    }
+}
+
 android {
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
@@ -22,8 +99,8 @@ android {
         applicationId "hu.mrolcsi.android.spoc.gallery"
         minSdkVersion 10
         targetSdkVersion 22
-        versionCode 1
-        versionName "1.0"
+        versionCode makeVersionCode()
+        versionName makeVersionNameDebug()
     }
     buildTypes {
         release {
