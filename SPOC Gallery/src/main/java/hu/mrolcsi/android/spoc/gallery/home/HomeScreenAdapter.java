@@ -1,6 +1,7 @@
 package hu.mrolcsi.android.spoc.gallery.home;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
@@ -23,6 +24,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
     private final int columnSpan;
     private final Context context;
+    private final int preferredColumns;
 
     private String filename;
     private int iData;
@@ -32,8 +34,12 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
     public HomeScreenAdapter(Context context) {
         this.context = context;
-        int preferredColumns = context.getResources().getInteger(R.integer.preferredColumns);
-        columnSpan = (int) Math.round((preferredColumns + 0.5) / 2);
+        preferredColumns = context.getResources().getInteger(R.integer.preferredColumns);
+        if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            columnSpan = (int) Math.round((preferredColumns + 0.5) / 2);
+        } else if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            columnSpan = (int) Math.round((preferredColumns + 0.5) / 3);
+        } else columnSpan = 1;
     }
 
     public HomeScreenAdapter(Context context, Cursor cursor) {
@@ -49,31 +55,42 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
         return new ImageViewHolder(v);
     }
 
+//    @Override
+//    public void onViewRecycled(ImageViewHolder holder) {
+//        super.onViewRecycled(holder);
+//        SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
+//
+//        lp.colSpan = 1;
+//        lp.rowSpan = 1;
+//
+//        holder.img.setLayoutParams(lp);
+//    }
+
     @Override
-    public void onBindViewHolder(ImageViewHolder imageViewHolder, int i) {
+    public void onBindViewHolder(ImageViewHolder holder, int i) {
         if (cursor == null || cursor.isClosed()) return;
 
         cursor.moveToPosition(i);
 
         filename = cursor.getString(iData);
 
-        //load image
-        Picasso.with(context).cancelRequest(imageViewHolder.img);
-        Picasso.with(context).load("file://" + filename).centerCrop().resizeDimen(R.dimen.image_thumbnail_size, R.dimen.image_thumbnail_size).into(imageViewHolder.img);
+        Picasso.with(context).cancelRequest(holder.img);
 
-        SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) imageViewHolder.itemView.getLayoutParams();
+        SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
 
-        if (i % 7 == 0) { //TODO: expand frequently used items
+        if (i % 7 == 1) { //TODO: expand frequently used items
             lp.colSpan = columnSpan;
             lp.rowSpan = columnSpan;
-            //imageViewHolder.itemView.setBackgroundColor(Color.BLUE);
+            //holder.itemView.setBackgroundColor(Color.BLUE);
         } else {
             lp.colSpan = 1;
             lp.rowSpan = 1;
-            //imageViewHolder.itemView.setBackgroundColor(Color.TRANSPARENT);
+            //holder.itemView.setBackgroundColor(Color.TRANSPARENT);
         }
 
-        imageViewHolder.itemView.setLayoutParams(lp);
+        holder.itemView.setLayoutParams(lp);
+
+        Picasso.with(context).load("file://" + filename).centerCrop().resizeDimen(R.dimen.image_thumbnail_size, R.dimen.image_thumbnail_size).into(holder.img);
     }
 
     @Override

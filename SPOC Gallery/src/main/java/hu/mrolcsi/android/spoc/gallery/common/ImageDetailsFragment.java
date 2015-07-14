@@ -86,9 +86,10 @@ public class ImageDetailsFragment extends SPOCFragment {
 //        }
 //    }
 
+
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onDetach() {
+        super.onDetach();
 
         Picasso.with(getActivity()).cancelRequest(imageView);
     }

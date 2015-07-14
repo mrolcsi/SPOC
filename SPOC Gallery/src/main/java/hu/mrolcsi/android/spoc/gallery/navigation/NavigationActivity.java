@@ -17,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import hu.mrolcsi.android.spoc.common.ISPOCFragment;
+import hu.mrolcsi.android.spoc.common.RetainedFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.home.HomeFragment;
 
@@ -24,21 +25,25 @@ import java.util.Stack;
 
 public class NavigationActivity extends AppCompatActivity {
 
-    /**
-     * Used to store the last screen title. For use in {@link #restoreActionBar()}.
-     */
+    public static final String DATA_FRAGMENT_STACK = "SPOC.Gallery.Navigation.FragmentStack";
+    public static final String DATA_CURRENT_FRAGMENT = "SPOC.Gallery.Navigation.CurrentFragment";
+
     private CharSequence mTitle = "";
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
     private ActionBarDrawerToggle mDrawerToggle;
 
     private ISPOCFragment mCurrentFragment;
-    private Stack<ISPOCFragment> fragmentStack = new Stack<>();
+    private Stack<ISPOCFragment> mFragmentStack = new Stack<>();
+
+    private RetainedFragment mRetainedFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_navigation);
+
+        loadRetainedData();
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mNavigationView = (NavigationView) findViewById(R.id.navigation);
@@ -47,13 +52,45 @@ public class NavigationActivity extends AppCompatActivity {
         setUpNavigationView();
     }
 
+    private void loadRetainedData() {
+        FragmentManager fm = getSupportFragmentManager();
+        mRetainedFragment = (RetainedFragment) fm.findFragmentByTag(RetainedFragment.TAG);
+
+        if (mRetainedFragment == null) {
+            mRetainedFragment = new RetainedFragment();
+            fm.beginTransaction().add(mRetainedFragment, RetainedFragment.TAG).commit();
+
+            retainData();
+        }
+
+        //TODO: load data from retained fragment
+        mFragmentStack = (Stack<ISPOCFragment>) mRetainedFragment.getRetainedData(DATA_FRAGMENT_STACK);
+        mCurrentFragment = (ISPOCFragment) mRetainedFragment.getRetainedData(DATA_CURRENT_FRAGMENT);
+    }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
 
-        swapFragment(new HomeFragment());
+        if (mCurrentFragment == null)
+            mCurrentFragment = new HomeFragment();
+
+        swapFragment(mCurrentFragment);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        retainData();
+    }
+
+    private void retainData() {
+        //TODO: put data into retained fragment
+        mRetainedFragment.putRetainedData(DATA_FRAGMENT_STACK, mFragmentStack);
+        mRetainedFragment.putRetainedData(DATA_CURRENT_FRAGMENT, mCurrentFragment);
     }
 
     @Override
@@ -179,8 +216,8 @@ public class NavigationActivity extends AppCompatActivity {
     }
 
     public void swapFragment(ISPOCFragment newFragment) {
-        if (mCurrentFragment != null)
-            fragmentStack.push(mCurrentFragment);
+        if (mCurrentFragment != null && mCurrentFragment != newFragment) //avoid storing the same fragment more than once
+            mFragmentStack.push(mCurrentFragment);
 
         mCurrentFragment = newFragment;
 
@@ -194,9 +231,9 @@ public class NavigationActivity extends AppCompatActivity {
     }
 
     public void restoreFragmentFromStack() {
-        if (fragmentStack.isEmpty()) return;
+        if (mFragmentStack.isEmpty()) return;
 
-        mCurrentFragment = fragmentStack.pop();
+        mCurrentFragment = mFragmentStack.pop();
         final FragmentManager fragmentManager = getSupportFragmentManager();
         final FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE);

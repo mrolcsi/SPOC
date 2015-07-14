@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.gallery.common;
 
+import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -33,6 +34,12 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
 
         mAdapter = new ImageDetailsAdapter(getChildFragmentManager());
     }
@@ -54,8 +61,6 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     public void onStart() {
         super.onStart();
 
-        Log.d(getClass().getSimpleName(), "onResume");
-
         if (getArguments() != null && getArguments().containsKey(ARG_LOADER_ID)) {
             int loaderId = getArguments().getInt(ARG_LOADER_ID);
             getLoaderManager().initLoader(loaderId, null, new MediaStoreLoader(getActivity(), this));
@@ -64,7 +69,6 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
             if (!mLoader.isStarted())
                 mLoader.startLoading();
         }
-
     }
 
     @Override
@@ -81,7 +85,11 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
         mAdapter = new ImageDetailsAdapter(getChildFragmentManager(), data);
-        vpDetailsPager.setAdapter(mAdapter);
+        try {
+            vpDetailsPager.setAdapter(mAdapter);
+        } catch (NullPointerException e) {
+            Log.w(getClass().getName(), "Caught NullPointerException. Premature loading?");
+        }
 
         if (data != null && getArguments() != null && getArguments().containsKey(ARG_SELECTED_POSITION)) {
             int selectedPosition = getArguments().getInt(ARG_SELECTED_POSITION);

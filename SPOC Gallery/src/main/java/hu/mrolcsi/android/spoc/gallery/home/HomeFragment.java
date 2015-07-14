@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,7 @@ import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.ImagePagerFragment;
 import hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity;
 import org.lucasr.twowayview.ItemClickSupport;
+import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 import org.lucasr.twowayview.widget.TwoWayView;
 
 /**
@@ -31,6 +33,12 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     private HomeScreenAdapter mAdapter;
     private Loader<Cursor> mLoader;
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -43,7 +51,9 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         twList = (TwoWayView) view.findViewById(R.id.list);
-        //twList.setHasFixedSize(true);
+        twList.setHasFixedSize(true);
+
+        ((SpannableGridLayoutManager) twList.getLayoutManager()).setNumColumns(getResources().getInteger(R.integer.preferredColumns));
 
         ItemClickSupport itemClick = ItemClickSupport.addTo(twList);
 
@@ -84,12 +94,19 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     @Override
     public void onDestroy() {
         super.onDestroy();
+
         getLoaderManager().destroyLoader(MediaStoreLoader.ID);
     }
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
+        Log.v(getClass().getSimpleName(), "onLoadComplete");
+
+        //Parcelable mListSavedState = twList.getLayoutManager().onSaveInstanceState();
+
         mAdapter = new HomeScreenAdapter(getActivity(), data);
         twList.setAdapter(mAdapter);
+
+        //twList.getLayoutManager().onRestoreInstanceState(mListSavedState);
     }
 }
