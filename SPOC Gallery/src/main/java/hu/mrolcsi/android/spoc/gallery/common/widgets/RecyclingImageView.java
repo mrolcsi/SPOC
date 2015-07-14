@@ -24,8 +24,8 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.widget.ImageView;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
+import uk.co.senab.photoview.PhotoView;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,7 +34,7 @@ import hu.mrolcsi.android.spoc.gallery.BuildConfig;
  * Time: 20:28
  */
 
-public class RecyclingImageView extends ImageView {
+public class RecyclingImageView extends PhotoView {
 
     public RecyclingImageView(Context context) {
         super(context);

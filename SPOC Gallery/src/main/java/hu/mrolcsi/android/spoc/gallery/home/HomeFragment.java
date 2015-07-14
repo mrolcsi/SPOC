@@ -32,6 +32,7 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     private TwoWayView twList;
     private HomeScreenAdapter mAdapter;
     private Loader<Cursor> mLoader;
+    private int mSavedPosition = -1;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,6 +66,8 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
                 Bundle args = new Bundle();
                 args.putInt(ImagePagerFragment.ARG_LOADER_ID, mLoader.getId());
                 args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
+
+                mSavedPosition = i;
 
                 fragment.setArguments(args);
 
@@ -102,11 +105,12 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
         Log.v(getClass().getSimpleName(), "onLoadComplete");
 
-        //Parcelable mListSavedState = twList.getLayoutManager().onSaveInstanceState();
-
         mAdapter = new HomeScreenAdapter(getActivity(), data);
         twList.setAdapter(mAdapter);
 
-        //twList.getLayoutManager().onRestoreInstanceState(mListSavedState);
+//        if (mSavedPosition > 0) {
+//            twList.scrollToPosition(mSavedPosition);
+//        }
+//        mSavedPosition = -1;
     }
 }

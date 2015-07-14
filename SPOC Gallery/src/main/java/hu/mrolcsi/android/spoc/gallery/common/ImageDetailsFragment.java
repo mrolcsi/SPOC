@@ -11,6 +11,8 @@ import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 import hu.mrolcsi.android.spoc.common.SPOCFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
+import uk.co.senab.photoview.PhotoView;
+import uk.co.senab.photoview.PhotoViewAttacher;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,10 +24,12 @@ import hu.mrolcsi.android.spoc.gallery.R;
 public class ImageDetailsFragment extends SPOCFragment {
 
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
-    private ImageView imageView;
+    private ImageView photoView;
 
     private int mDesiredWidth;
     private int mDesiredHeight;
+
+    private PhotoViewAttacher mAttacher;
 
     public ImageDetailsFragment() {
     }
@@ -50,9 +54,19 @@ public class ImageDetailsFragment extends SPOCFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        imageView = (ImageView) view.findViewById(R.id.image);
+        /*
+        problem:
+            java.lang.ArrayIndexOutOfBoundsException: length=1; index=1
+            at android.support.v4.widget.ViewDragHelper.shouldInterceptTouchEvent(ViewDragHelper.java:1014)
+            at android.support.v4.widget.DrawerLayout.onInterceptTouchEvent(DrawerLayout.java:1140)...
+            when pinch-zooming
 
-        final ViewTreeObserver viewTreeObserver = imageView.getViewTreeObserver();
+        solution:
+            http://www.arthurwang.net/android/arrayindexoutofboundsexception-with-photoview-library-and-drawerlayout
+         */
+        photoView = (PhotoView) view.findViewById(R.id.image);
+
+        final ViewTreeObserver viewTreeObserver = photoView.getViewTreeObserver();
         if (viewTreeObserver != null && viewTreeObserver.isAlive()) {
             viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
@@ -63,34 +77,23 @@ public class ImageDetailsFragment extends SPOCFragment {
                     } else
                         viewTreeObserver.removeOnGlobalLayoutListener(this);
 
-                    mDesiredWidth = imageView.getWidth();
-                    mDesiredHeight = imageView.getHeight();
+                    mDesiredWidth = photoView.getWidth();
+                    mDesiredHeight = photoView.getHeight();
 
                     if (getArguments() != null && getArguments().containsKey(ARG_IMAGE_PATH)) {
                         final String imagePath = getArguments().getString(ARG_IMAGE_PATH);
 
-                        Picasso.with(getActivity()).load("file://" + imagePath).resize(mDesiredWidth, mDesiredHeight).centerInside().into(imageView);
+                        Picasso.with(getActivity()).load("file://" + imagePath).resize(mDesiredWidth, mDesiredHeight).centerInside().onlyScaleDown().into(photoView);
                     }
                 }
             });
         }
     }
 
-//    @Override
-//    public void onStart() {
-//        super.onStart();
-//        if (getArguments() != null && getArguments().containsKey(ARG_IMAGE_PATH)) {
-//            final String imagePath = getArguments().getString(ARG_IMAGE_PATH);
-//
-//            Picasso.with(getActivity()).load("file://" + imagePath).resize(mDesiredWidth, mDesiredHeight).centerInside().into(imageView);
-//        }
-//    }
-
-
     @Override
     public void onDetach() {
         super.onDetach();
 
-        Picasso.with(getActivity()).cancelRequest(imageView);
+        Picasso.with(getActivity()).cancelRequest(photoView);
     }
 }
