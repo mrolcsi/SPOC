@@ -1,0 +1,3 @@
+[submodule "Libraries/twoway-view"]
+	path = Libraries/twoway-view
+	url = git://github.com/mrolcsi/twoway-view.git
