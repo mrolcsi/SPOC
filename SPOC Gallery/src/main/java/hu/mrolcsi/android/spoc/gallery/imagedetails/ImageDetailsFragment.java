@@ -9,7 +9,6 @@ import com.squareup.picasso.Picasso;
 import hu.mrolcsi.android.spoc.common.SPOCFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
 import uk.co.senab.photoview.PhotoView;
-import uk.co.senab.photoview.PhotoViewAttacher;
 
 /**
  * Created with IntelliJ IDEA.
@@ -26,7 +25,6 @@ public class ImageDetailsFragment extends SPOCFragment {
     private int mDesiredWidth;
     private int mDesiredHeight;
 
-    private PhotoViewAttacher mAttacher;
     private String mImagePath;
 
     public ImageDetailsFragment() {
@@ -63,6 +61,14 @@ public class ImageDetailsFragment extends SPOCFragment {
             http://www.arthurwang.net/android/arrayindexoutofboundsexception-with-photoview-library-and-drawerlayout
          */
         photoView = (PhotoView) view.findViewById(R.id.image);
+
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isFullscreen()) hideSystemUI();
+                else showSystemUI();
+            }
+        });
 
         final ViewTreeObserver viewTreeObserver = photoView.getViewTreeObserver();
         if (viewTreeObserver != null && viewTreeObserver.isAlive()) {

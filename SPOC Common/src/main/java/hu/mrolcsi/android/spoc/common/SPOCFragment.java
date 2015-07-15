@@ -1,6 +1,7 @@
 package hu.mrolcsi.android.spoc.common;
 
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -8,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,6 +19,9 @@ import android.view.ViewGroup;
  */
 
 public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
+
+    private boolean isFullscreen = false;
+
     @Override
     public String getTagString() {
         return getClass().getName();
@@ -25,6 +30,10 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
     @Override
     public boolean onBackPressed() {
         return false;
+    }
+
+    public boolean isFullscreen() {
+        return isFullscreen;
     }
 
     //region -- L I F E C Y C L E --
@@ -113,11 +122,15 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
     //endregion
 
     // This snippet hides the system bars.
-    private void hideSystemUI() {
+    protected void hideSystemUI() {
         // Set the IMMERSIVE flag.
         // Set the content to appear under the system bars so that the content
         // doesn't resize when the system bars hide and show.
+
+        if (BuildConfig.DEBUG) Log.v(getClass().getSimpleName(), "Hide system UI.");
+
         if (getView() != null) {
+            if (Build.VERSION.SDK_INT >= 11)
             getView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -125,17 +138,26 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
                             | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
                             | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
                             | View.SYSTEM_UI_FLAG_IMMERSIVE);
+            getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            isFullscreen = true;
         }
     }
 
     // This snippet shows the system bars. It does this by removing all the flags
-// except for the ones that make the content appear under the system bars.
-    private void showSystemUI() {
+    // except for the ones that make the content appear under the system bars.
+    protected void showSystemUI() {
+
+        if (BuildConfig.DEBUG) Log.v(getClass().getSimpleName(), "Show system UI.");
+
         if (getView() != null) {
+            if (Build.VERSION.SDK_INT >= 11)
             getView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         }
+
+        getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        isFullscreen = false;
     }
 }

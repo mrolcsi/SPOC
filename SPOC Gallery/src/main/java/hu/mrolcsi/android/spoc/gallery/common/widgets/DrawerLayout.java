@@ -54,7 +54,11 @@ public class DrawerLayout extends android.support.v4.widget.DrawerLayout {
             requestDisallowInterceptTouchEvent(true);
             return handled;
         } else {
-            return super.dispatchTouchEvent(ev);
+            try {
+                return super.dispatchTouchEvent(ev);
+            } catch (Exception e) {
+                return false;
+            }
         }
     }
 }

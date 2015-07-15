@@ -142,9 +142,9 @@ public class OtherDetailsDialog extends DialogFragment {
                 final String model = exif.getAttribute(ExifInterface.TAG_MODEL);
                 tvModel.setText(brand + " " + model);
 
-                final String aperture;
-                final float exposureTime;
-                final String isoValue;
+                String aperture;
+                float exposureTime;
+                String isoValue;
                 if (Build.VERSION.SDK_INT > 11) {
                     aperture = exif.getAttribute(ExifInterface.TAG_APERTURE);
                     exposureTime = Float.parseFloat(exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME));

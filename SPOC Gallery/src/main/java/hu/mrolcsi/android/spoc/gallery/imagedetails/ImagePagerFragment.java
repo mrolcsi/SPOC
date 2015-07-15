@@ -2,6 +2,7 @@ package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.app.Activity;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
@@ -33,6 +34,12 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        
+        if (Build.VERSION.SDK_INT > 18) {
+            WindowManager.LayoutParams params = getActivity().getWindow().getAttributes();
+            params.rotationAnimation = WindowManager.LayoutParams.ROTATION_ANIMATION_ROTATE;
+            getActivity().getWindow().setAttributes(params);
+        }
     }
 
     @Override
