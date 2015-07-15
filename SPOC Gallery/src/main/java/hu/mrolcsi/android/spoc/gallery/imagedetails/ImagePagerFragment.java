@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery.common;
+package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.app.Activity;
 import android.database.Cursor;
@@ -8,9 +8,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import hu.mrolcsi.android.spoc.common.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -55,6 +53,13 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
         vpDetailsPager = (ViewPager) view.findViewById(R.id.vpDetailsPager);
 
         //TODO: system ui visibility
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.details, menu);
     }
 
     @Override

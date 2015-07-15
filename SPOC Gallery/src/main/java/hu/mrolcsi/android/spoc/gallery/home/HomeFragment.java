@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import hu.mrolcsi.android.spoc.common.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.common.ImagePagerFragment;
+import hu.mrolcsi.android.spoc.gallery.imagedetails.ImagePagerFragment;
 import hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity;
 import org.lucasr.twowayview.ItemClickSupport;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;

@@ -39,6 +39,9 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setHasOptionsMenu(true);
+
         if (BuildConfig.DEBUG)
             Log.v(getClass().getSimpleName(), "LIFECYCLE : onCreate");
     }

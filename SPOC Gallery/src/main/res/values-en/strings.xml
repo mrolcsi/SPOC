@@ -1,25 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SPOC Gallery</string>
-    <string name="title_activity_navigation">Gallery</string>
-
-    <string name="title_section1" translatable="false">Section 1</string>
-    <string name="title_section2" translatable="false">Section 2</string>
-    <string name="title_section3" translatable="false">Section 3</string>
-
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-
-    <string name="action_settings">Settings</string>
-    <string name="title_home">Home</string>
     <string name="details_label_fileInfo">File Info</string>
     <string name="details_label_dateTaken">Date taken:</string>
-    <string name="details_label_fileSize">File size:</string>
     <string name="details_label_location">Location:</string>
     <string name="details_label_coordinates">Coordinates:</string>
     <string name="details_label_savedTo">Saved to:</string>
     <string name="details_label_filePath">File path:</string>
     <string name="details_label_resolution">Resolution:</string>
+    <string name="details_label_fileSize">File size:</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="title_activity_navigation">Gallery</string>
+    <string name="title_home">Home</string>
     <string name="details_label_cameraSettings">Camera Settings</string>
+    <string name="action_settings">Settings</string>
+    <string name="app_name">SPOC Gallery</string>
     <string name="details_label_cameraModel">Model:</string>
     <string name="details_label_aperture">Aperture:</string>
     <string name="details_label_exposureTime">Exposure time:</string>

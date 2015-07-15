@@ -1,12 +1,9 @@
-package hu.mrolcsi.android.spoc.gallery.common;
+package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
+import android.view.*;
 import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 import hu.mrolcsi.android.spoc.common.SPOCFragment;
@@ -30,6 +27,7 @@ public class ImageDetailsFragment extends SPOCFragment {
     private int mDesiredHeight;
 
     private PhotoViewAttacher mAttacher;
+    private String mImagePath;
 
     public ImageDetailsFragment() {
     }
@@ -81,12 +79,31 @@ public class ImageDetailsFragment extends SPOCFragment {
                     mDesiredHeight = photoView.getHeight();
 
                     if (getArguments() != null && getArguments().containsKey(ARG_IMAGE_PATH)) {
-                        final String imagePath = getArguments().getString(ARG_IMAGE_PATH);
+                        mImagePath = getArguments().getString(ARG_IMAGE_PATH);
 
-                        Picasso.with(getActivity()).load("file://" + imagePath).resize(mDesiredWidth, mDesiredHeight).centerInside().onlyScaleDown().into(photoView);
+                        Picasso.with(getActivity()).load("file://" + mImagePath).resize(mDesiredWidth, mDesiredHeight).centerInside().onlyScaleDown().into(photoView);
                     }
                 }
             });
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        final int id = item.getItemId();
+        switch (id) {
+            case R.id.menuDetails:
+
+                final Bundle args = new Bundle();
+                args.putString(ARG_IMAGE_PATH, mImagePath);
+
+                final OtherDetailsDialog dialog = new OtherDetailsDialog();
+                dialog.setArguments(args);
+                dialog.show(getChildFragmentManager(), OtherDetailsDialog.TAG);
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 

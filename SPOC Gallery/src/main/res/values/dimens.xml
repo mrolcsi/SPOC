@@ -7,7 +7,13 @@
          https://developer.android.com/design/patterns/navigation-drawer.html -->
     <dimen name="navigation_drawer_width">240dp</dimen>
 
-    <dimen name="gallery_padding">2dp</dimen>
-
     <dimen name="image_thumbnail_size">100dp</dimen>
+
+    <dimen name="margin_xxsmall">1dp</dimen>
+    <dimen name="margin_xsmall">2dp</dimen>
+    <dimen name="margin_small">6dp</dimen>
+    <dimen name="margin_medium">12dp</dimen>
+    <dimen name="margin_large">18dp</dimen>
+    <dimen name="margin_xlarge">24dp</dimen>
+    <dimen name="margin_xxlarge">48dp</dimen>
 </resources>

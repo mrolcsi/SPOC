@@ -88,7 +88,6 @@ public class NavigationActivity extends AppCompatActivity {
     }
 
     private void retainData() {
-        //TODO: put data into retained fragment
         mRetainedFragment.putRetainedData(DATA_FRAGMENT_STACK, mFragmentStack);
         mRetainedFragment.putRetainedData(DATA_CURRENT_FRAGMENT, mCurrentFragment);
     }
@@ -192,19 +191,7 @@ public class NavigationActivity extends AppCompatActivity {
 
         // Pass the event to ActionBarDrawerToggle, if it returns
         // true, then it has handled the app icon touch event
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.menu_settings) {
-            //TODO: open settings
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        return mDrawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
     @Override

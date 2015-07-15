@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SPOC Galéria</string>
+    <string name="action_settings">Beállítások</string>
+    <string name="title_activity_navigation">Galéria</string>
+    <string name="title_home">Kezdőképernyő</string>
+</resources>
