@@ -34,4 +34,5 @@
     <string name="details_labe_digitalZoomFactor">Digital zoom amount:</string>
     <string name="details_message_flashOn">On</string>
     <string name="details_message_flashOff">Off</string>
+    <string name="not_available">N/A</string>
 </resources>

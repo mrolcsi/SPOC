@@ -114,8 +114,10 @@ public class OtherDetailsDialog extends DialogFragment {
                 ExifInterface exif = new ExifInterface(path);
 
                 final String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
+                if (dateString != null) {
                 final Date date = sdf.parse(dateString);
-                tvDateTaken.setText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date));
+                    tvDateTaken.setText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date));
+                } else tvDateTaken.setText(getString(R.string.not_available));
 
                 float latLong[] = new float[2];
                 if (exif.getLatLong(latLong)) {
@@ -125,6 +127,9 @@ public class OtherDetailsDialog extends DialogFragment {
 
                     mLocationFinderTask = new LocationFinderTask();
                     mLocationFinderTask.execute(latLong[0], latLong[1]);
+                } else {
+                    tvCoordinates.setText(getString(R.string.not_available));
+                    tvLocation.setText(getString(R.string.not_available));
                 }
 
                 final File imageFile = new File(path);
@@ -138,33 +143,46 @@ public class OtherDetailsDialog extends DialogFragment {
                 final int height = exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0);
                 tvResolution.setText(width + " x " + height);
 
-                final String brand = exif.getAttribute(ExifInterface.TAG_MAKE);
-                final String model = exif.getAttribute(ExifInterface.TAG_MODEL);
-                tvModel.setText(brand + " " + model);
+                String brand = exif.getAttribute(ExifInterface.TAG_MAKE);
+                String model = exif.getAttribute(ExifInterface.TAG_MODEL);
+                if (brand == null) {
+                    brand = "<i>Unknown Brand</i>";
+                }
+                if (model == null) {
+                    model = "<i>Unknown Model</i>";
+                }
+                tvModel.setText(Html.fromHtml(brand + " " + model));
 
                 String aperture;
-                float exposureTime;
+                String exposureTimeString;
                 String isoValue;
                 if (Build.VERSION.SDK_INT > 11) {
                     aperture = exif.getAttribute(ExifInterface.TAG_APERTURE);
-                    exposureTime = Float.parseFloat(exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME));
+                    exposureTimeString = exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME);
                     isoValue = exif.getAttribute(ExifInterface.TAG_ISO);
                 } else {
                     aperture = exif.getAttribute("FNumber");
-                    exposureTime = Float.parseFloat(exif.getAttribute("ExposureTime"));
+                    exposureTimeString = exif.getAttribute("ExposureTime");
                     isoValue = exif.getAttribute("ISOSpeedRatings");
                 }
-                tvAperture.setText("f/" + aperture);
-                tvExposureTime.setText(String.format("1/%.0f s", 1 / exposureTime));
-                tvIsoValue.setText(isoValue);
+                if (aperture != null) tvAperture.setText("f/" + aperture);
+                else tvAperture.setText(getString(R.string.not_available));
+                if (exposureTimeString != null)
+                    tvExposureTime.setText(String.format("1/%.0f s", 1 / Float.parseFloat(exposureTimeString)));
+                else tvExposureTime.setText(getString(R.string.not_available));
+                if (isoValue != null) tvIsoValue.setText(isoValue);
+                else tvIsoValue.setText(getString(R.string.not_available));
 
                 // http://stackoverflow.com/questions/7076958/read-exif-and-determine-if-the-flash-has-fired
                 final int flash = exif.getAttributeInt(ExifInterface.TAG_FLASH, 0);
                 tvFlash.setText(flash % 2 == 1 ? getString(R.string.details_message_flashOn) : getString(R.string.details_message_flashOff));
 
                 final String focalLengthString = exif.getAttribute(ExifInterface.TAG_FOCAL_LENGTH);
-                final float focalLength = Float.parseFloat(focalLengthString.substring(0, focalLengthString.lastIndexOf('/'))) / 100f;
-                tvFocalLength.setText(String.format("%.2f mm", focalLength));
+                if (focalLengthString != null) {
+
+                    final float focalLength = Float.parseFloat(focalLengthString.substring(0, focalLengthString.lastIndexOf('/'))) / 100f;
+                    tvFocalLength.setText(String.format("%.2f mm", focalLength));
+                } else tvFocalLength.setText(getString(R.string.not_available));
 
             } catch (IOException | ParseException e) {
                 Log.w(getClass().getName(), e);
@@ -175,8 +193,7 @@ public class OtherDetailsDialog extends DialogFragment {
     @Override
     public void onDetach() {
         super.onDetach();
-
-        mLocationFinderTask.cancel(true);
+        if (mLocationFinderTask != null) mLocationFinderTask.cancel(true);
     }
 
     class LocationFinderTask extends AsyncTask<Float, Void, List<Address>> {
