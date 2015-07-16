@@ -69,6 +69,7 @@ public class OtherDetailsDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         builder.setTitle(R.string.details_title)
+                .setIcon(R.drawable.info)
                 .setNeutralButton(R.string.close, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -211,7 +212,7 @@ public class OtherDetailsDialog extends DialogFragment {
             try {
                 addresses = geocoder.getFromLocation(floats[0], floats[1], 1);
             } catch (IOException e) {
-                Log.w(getClass().getName(), "Location lookup failed.");
+                Log.w(getClass().getName(), "Location lookup failed. Cause:\n" + e.toString());
             }
             return addresses;
         }

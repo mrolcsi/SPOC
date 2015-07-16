@@ -35,6 +35,11 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     private int mSavedPosition = -1;
 
     @Override
+    public int getNavigationItemId() {
+        return R.id.navigation_home;
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);

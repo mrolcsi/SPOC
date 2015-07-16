@@ -8,7 +8,10 @@ package hu.mrolcsi.android.spoc.common;
  */
 
 public interface ISPOCFragment {
-    //String getTitle();
+
+    int getNavigationItemId();
+
+    String getTitle();
 
     String getTagString();
 

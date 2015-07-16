@@ -121,4 +121,5 @@ dependencies {
     //compile 'org.lucasr.twowayview:layouts:1.0.0-SNAPSHOT@aar'
     compile project(':core')
     compile project(':layouts')
+    compile 'com.github.machinarius:preferencefragment:0.1.2'
 }

@@ -20,6 +20,7 @@ import hu.mrolcsi.android.spoc.common.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.RetainedFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.home.HomeFragment;
+import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
 
 import java.util.Stack;
 
@@ -28,14 +29,12 @@ public class NavigationActivity extends AppCompatActivity {
     public static final String DATA_FRAGMENT_STACK = "SPOC.Gallery.Navigation.FragmentStack";
     public static final String DATA_CURRENT_FRAGMENT = "SPOC.Gallery.Navigation.CurrentFragment";
 
-    private CharSequence mTitle = "";
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
     private ActionBarDrawerToggle mDrawerToggle;
 
     private ISPOCFragment mCurrentFragment;
     private Stack<ISPOCFragment> mFragmentStack = new Stack<>();
-
     private RetainedFragment mRetainedFragment;
 
     @Override
@@ -64,6 +63,7 @@ public class NavigationActivity extends AppCompatActivity {
         }
 
         //TODO: load data from retained fragment
+        //noinspection unchecked
         mFragmentStack = (Stack<ISPOCFragment>) mRetainedFragment.getRetainedData(DATA_FRAGMENT_STACK);
         mCurrentFragment = (ISPOCFragment) mRetainedFragment.getRetainedData(DATA_CURRENT_FRAGMENT);
     }
@@ -107,10 +107,12 @@ public class NavigationActivity extends AppCompatActivity {
 
                 int id = menuItem.getItemId();
                 switch (id) {
+                    case R.id.navigation_settings:
+                        swapFragment(new SettingsFragment());
+                        break;
                     case R.id.navigation_home:
                     default:
                         swapFragment(new HomeFragment());
-                        mTitle = "";
                         break;
                 }
 
@@ -131,7 +133,7 @@ public class NavigationActivity extends AppCompatActivity {
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
                 if (getSupportActionBar() != null) {
-                    getSupportActionBar().setTitle(mTitle);
+                    getSupportActionBar().setTitle(mCurrentFragment.getTitle());
                 }
                 invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
             }
@@ -162,8 +164,11 @@ public class NavigationActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayShowTitleEnabled(true);
-            actionBar.setTitle(mTitle);
+            actionBar.setTitle(mCurrentFragment.getTitle());
         }
+        final MenuItem item = mNavigationView.getMenu().findItem(mCurrentFragment.getNavigationItemId());
+        if (item != null)
+            item.setChecked(true);
     }
 
     @Override
@@ -177,9 +182,11 @@ public class NavigationActivity extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         // If the nav drawer is open, hide action items related to the content view
+
         //noinspection SimplifiableIfStatement
         boolean drawerOpen = mDrawerLayout.isDrawerOpen(GravityCompat.START);
         //menu.findItem(R.id.action_websearch).setVisible(!drawerOpen);
+
         return super.onPrepareOptionsMenu(menu);
     }
 

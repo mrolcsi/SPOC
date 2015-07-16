@@ -5,6 +5,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +23,16 @@ import android.view.WindowManager;
 public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
 
     private boolean isFullscreen = false;
+
+    @Override
+    public int getNavigationItemId() {
+        return -1;
+    }
+
+    @Override
+    public String getTitle() {
+        return null;
+    }
 
     @Override
     public String getTagString() {
@@ -41,6 +53,11 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+
+        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        if (actionBar != null)
+            actionBar.setTitle(getTitle());
+
         if (BuildConfig.DEBUG)
             Log.v(getClass().getSimpleName(), "LIFECYCLE : onAttach");
     }
