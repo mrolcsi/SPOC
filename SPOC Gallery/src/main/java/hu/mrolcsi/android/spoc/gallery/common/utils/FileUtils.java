@@ -2,9 +2,7 @@ package hu.mrolcsi.android.spoc.gallery.common.utils;
 
 import android.content.Context;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -41,4 +39,13 @@ public abstract class FileUtils {
         return byteArrayOutputStream.toString();
     }
 
+    public static boolean deleteFile(String mImagePath) throws IOException {
+        File file = new File(mImagePath);
+
+        if (!file.exists()) throw new FileNotFoundException();
+        if (!file.canRead() || !file.canWrite())
+            throw new IOException("File cannot be read or written. No permission to write on disk?");
+
+        return file.delete();
+    }
 }

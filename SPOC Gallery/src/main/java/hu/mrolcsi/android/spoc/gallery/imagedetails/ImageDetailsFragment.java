@@ -1,14 +1,22 @@
 package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.*;
 import android.widget.ImageView;
+import android.widget.Toast;
 import com.squareup.picasso.Picasso;
+import hu.mrolcsi.android.spoc.common.BuildConfig;
 import hu.mrolcsi.android.spoc.common.SPOCFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.utils.FileUtils;
 import uk.co.senab.photoview.PhotoView;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -107,6 +115,49 @@ public class ImageDetailsFragment extends SPOCFragment {
                 dialog.setArguments(args);
                 dialog.show(getChildFragmentManager(), OtherDetailsDialog.TAG);
 
+                return true;
+            case R.id.menuDelete:
+                final AlertDialog.Builder questionBuilder = new AlertDialog.Builder(getActivity());
+                questionBuilder.setIcon(R.drawable.help)
+                        .setTitle(getString(R.string.dialog_title_areYouSure))
+                        .setMessage(getString(R.string.dialog_delete_message))
+                        .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                try {
+                                    final boolean success = FileUtils.deleteFile(mImagePath);
+                                    if (success)
+                                        Toast.makeText(getActivity(), "Picture deleted.", Toast.LENGTH_SHORT).show();
+                                    else
+                                        Toast.makeText(getActivity(), "Picture not deleted.", Toast.LENGTH_SHORT).show();
+                                } catch (IOException e) {
+                                    String message;
+                                    final AlertDialog.Builder errorBuilder = new AlertDialog.Builder(getActivity());
+                                    errorBuilder.setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            dialogInterface.dismiss();
+                                        }
+                                    });
+                                    if (e instanceof FileNotFoundException) {
+                                        message = "Picture could not be deleted. File does not exist anymore.";
+                                        if (BuildConfig.DEBUG) message += "\n" + e.toString();
+                                    } else {
+                                        message = "Picture could not be deleted.";
+                                        if (BuildConfig.DEBUG) message += "\n" + e.toString();
+                                    }
+                                    errorBuilder.setMessage(message);
+                                    errorBuilder.show();
+                                }
+                            }
+                        })
+                        .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

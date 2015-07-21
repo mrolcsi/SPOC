@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menuDelete"
+        android:icon="@drawable/delete"
+        android:title="@string/details_action_delete"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuRotate"
+        android:icon="@drawable/rotate"
+        android:title="@string/details_action_rotate"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuShare"
+        android:icon="@drawable/share"
+        android:title="@string/details_action_share"
+        app:showAsAction="ifRoom" />
+
     <item
         android:id="@+id/menuDetails"
-        android:showAsAction="never"
-        android:title="@string/details_menu_showDetails" />
+        android:title="@string/details_menu_showDetails"
+        app:showAsAction="never" />
 </menu>

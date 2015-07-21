@@ -44,4 +44,11 @@
     <string name="preferences_about_summary">Information about the app and used software.</string>
     <string name="preferences_webPage_title">Visit webpage</string>
     <string name="preferences_webPage_summary">http://github.com/mrolcsi/SPOC</string>
+    <string name="details_action_rotate">Rotate</string>
+    <string name="details_action_delete">Delete</string>
+    <string name="details_action_share">Share…</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="dialog_title_areYouSure">Are you sure?</string>
+    <string name="dialog_delete_message">Are you sure you want do delete this picture?</string>
 </resources>

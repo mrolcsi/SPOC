@@ -58,7 +58,7 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         vpDetailsPager = (ViewPager) view.findViewById(R.id.vpDetailsPager);
-
+        vpDetailsPager.setOffscreenPageLimit(5);
         //TODO: system ui visibility
     }
 
