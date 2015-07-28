@@ -14,8 +14,8 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import hu.mrolcsi.android.spoc.common.BuildConfig;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
+import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.common.utils.FileUtils;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
 

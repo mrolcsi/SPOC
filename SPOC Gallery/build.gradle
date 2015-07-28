@@ -83,7 +83,7 @@ def makeVersionNameDebug = { ->
             standardOutput = currentBranch
         }
 
-        return 'v' + versionName.toString().trim() + '-' + lastCommits.toString().trim() + '/' + currentBranch.toString().trim()
+        return 'v' + versionName.toString().trim() + '.' + lastCommits.toString().trim() + '/' + currentBranch.toString().trim()
     }
     catch (ignored) {
         logger.error(ignored.printStackTrace())

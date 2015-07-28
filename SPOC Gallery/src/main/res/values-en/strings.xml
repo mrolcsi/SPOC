@@ -45,4 +45,7 @@
     <string name="no">No</string>
     <string name="dialog_title_areYouSure">Are you sure?</string>
     <string name="dialog_delete_message">Are you sure you want do delete this picture?</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_label_version">Version:</string>
+    <string name="settings_about_label_buildNumber">Build Number:</string>
 </resources>

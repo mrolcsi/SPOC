@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery.common.utils;
+package hu.mrolcsi.android.spoc.common.utils;
 
 /**
  * Created with IntelliJ IDEA.

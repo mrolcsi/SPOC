@@ -1,6 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<WebView
-    android:id="@+id/wvAbout"
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/margin_small">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_xsmall"
+            android:layout_weight="1"
+            android:text="@string/settings_about_label_version"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvVersionName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_xsmall"
+            android:layout_weight="1"
+            android:text="Version Name" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_xsmall"
+            android:layout_weight="1"
+            android:text="@string/settings_about_label_buildNumber"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvBuildNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_xsmall"
+            android:layout_weight="1"
+            android:text="Build Number" />
+    </LinearLayout>
+
+    <WebView
+        android:id="@+id/wvAbout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>

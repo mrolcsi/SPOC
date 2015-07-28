@@ -10,8 +10,10 @@ import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.webkit.WebView;
+import android.widget.TextView;
+import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.common.utils.FileUtils;
 
 /**
  * Created with IntelliJ IDEA.
@@ -29,7 +31,7 @@ public class AboutDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-        builder.setTitle(R.string.details_title)
+        builder.setTitle(R.string.settings_about_title)
                 .setIcon(R.drawable.info)
                 .setNeutralButton(R.string.close, new DialogInterface.OnClickListener() {
                     @Override
@@ -50,9 +52,13 @@ public class AboutDialog extends DialogFragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
 
         WebView webView = (WebView) view.findViewById(R.id.wvAbout);
-
         final String html = FileUtils.readRawResource(getActivity(), R.raw.about);
-
         webView.loadData(html, "text/html", null);
+
+        final TextView tvVersionName = (TextView) view.findViewById(R.id.tvVersionName);
+        final TextView tvBuildNumber = (TextView) view.findViewById(R.id.tvBuildNumber);
+
+        tvVersionName.setText(BuildConfig.VERSION_NAME);
+        tvBuildNumber.setText(String.valueOf(BuildConfig.VERSION_CODE));
     }
 }
