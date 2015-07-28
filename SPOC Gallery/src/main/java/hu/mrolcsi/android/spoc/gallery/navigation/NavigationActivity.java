@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -83,6 +84,8 @@ public class NavigationActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        Glide.get(this).clearMemory();
 
         retainData();
     }
