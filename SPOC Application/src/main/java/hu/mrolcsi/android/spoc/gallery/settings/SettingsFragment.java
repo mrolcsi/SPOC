@@ -6,8 +6,8 @@ import android.view.View;
 import android.widget.FrameLayout;
 import com.github.machinarius.preferencefragment.PreferenceFragment;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
+import hu.mrolcsi.android.spoc.gallery.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity;
 
 /**
  * Created with IntelliJ IDEA.
@@ -60,7 +60,7 @@ public class SettingsFragment extends PreferenceFragment implements ISPOCFragmen
 
     @Override
     public boolean onBackPressed() {
-        ((NavigationActivity) getActivity()).restoreFragmentFromStack();
+        ((GalleryActivity) getActivity()).restoreFragmentFromStack();
         return true;
     }
 }

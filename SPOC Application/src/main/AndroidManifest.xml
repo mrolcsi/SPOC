@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    package="hu.mrolcsi.android.spoc.gallery"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        package="hu.mrolcsi.android.spoc.gallery">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
-        android:name=".SPOCApplication"
+            android:name="hu.mrolcsi.android.spoc.SPOCApplication"
         android:allowBackup="true"
         android:icon="@drawable/stack_of_photos"
         android:label="@string/app_name"
@@ -16,7 +16,7 @@
             android:name="hu.mrolcsi.android.spoc.gallery.common.GlideConfiguration"
             android:value="GlideModule" />
         <activity
-            android:name="hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity"
+                android:name=".GalleryActivity"
             android:label="@string/title_activity_navigation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

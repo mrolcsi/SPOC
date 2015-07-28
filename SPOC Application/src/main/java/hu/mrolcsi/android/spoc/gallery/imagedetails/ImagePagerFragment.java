@@ -12,8 +12,8 @@ import android.util.Log;
 import android.view.*;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
+import hu.mrolcsi.android.spoc.gallery.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity;
 
 /**
  * Created with IntelliJ IDEA.
@@ -101,7 +101,7 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
 
     @Override
     public boolean onBackPressed() {
-        ((NavigationActivity) getActivity()).restoreFragmentFromStack();
+        ((GalleryActivity) getActivity()).restoreFragmentFromStack();
         return true;
     }
 

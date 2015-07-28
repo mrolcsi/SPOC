@@ -96,7 +96,7 @@ android {
     buildToolsVersion "22.0.1"
 
     defaultConfig {
-        applicationId "hu.mrolcsi.android.spoc.gallery"
+        applicationId "hu.mrolcsi.android.spoc"
         minSdkVersion 10
         targetSdkVersion 22
         versionCode makeVersionCode()

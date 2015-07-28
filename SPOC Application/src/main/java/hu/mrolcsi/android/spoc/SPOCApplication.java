@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery;
+package hu.mrolcsi.android.spoc;
 
 import android.app.Application;
 

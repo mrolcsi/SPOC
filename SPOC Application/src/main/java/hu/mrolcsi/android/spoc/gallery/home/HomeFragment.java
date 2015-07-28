@@ -12,9 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
+import hu.mrolcsi.android.spoc.gallery.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.imagedetails.ImagePagerFragment;
-import hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity;
 import org.lucasr.twowayview.ItemClickSupport;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 import org.lucasr.twowayview.widget.TwoWayView;
@@ -76,7 +76,7 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
 
                 fragment.setArguments(args);
 
-                ((NavigationActivity) getActivity()).swapFragment(fragment);
+                ((GalleryActivity) getActivity()).swapFragment(fragment);
             }
         });
     }

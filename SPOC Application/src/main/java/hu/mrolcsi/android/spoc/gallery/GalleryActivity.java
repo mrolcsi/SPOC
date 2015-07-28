@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery.navigation;
+package hu.mrolcsi.android.spoc.gallery;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -19,13 +19,12 @@ import android.view.View;
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
-import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.home.HomeFragment;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
 
 import java.util.Stack;
 
-public class NavigationActivity extends AppCompatActivity {
+public class GalleryActivity extends AppCompatActivity {
 
     public static final String DATA_FRAGMENT_STACK = "SPOC.Gallery.Navigation.FragmentStack";
     public static final String DATA_CURRENT_FRAGMENT = "SPOC.Gallery.Navigation.CurrentFragment";
