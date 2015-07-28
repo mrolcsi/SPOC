@@ -29,6 +29,7 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     private ViewPager vpDetailsPager;
     private ImageDetailsAdapter mAdapter;
     private Loader<Cursor> mLoader;
+    private int mCurrentPageIndex = -1;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,7 +59,10 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         vpDetailsPager = (ViewPager) view.findViewById(R.id.vpDetailsPager);
+
         toggleFullScreen();
+
+        if (savedInstanceState != null) mCurrentPageIndex = savedInstanceState.getInt(ARG_SELECTED_POSITION);
     }
 
     @Override
@@ -89,6 +93,13 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putInt(ARG_SELECTED_POSITION, vpDetailsPager.getCurrentItem());
+    }
+
+    @Override
     public boolean onBackPressed() {
         ((NavigationActivity) getActivity()).restoreFragmentFromStack();
         return true;
@@ -103,10 +114,10 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
             Log.w(getClass().getName(), "Caught NullPointerException. Premature loading?");
         }
 
-        if (data != null && getArguments() != null && getArguments().containsKey(ARG_SELECTED_POSITION)) {
-            int selectedPosition = getArguments().getInt(ARG_SELECTED_POSITION);
-
-            vpDetailsPager.setCurrentItem(selectedPosition);
+        if (mCurrentPageIndex < 0 && data != null && getArguments() != null && getArguments().containsKey(ARG_SELECTED_POSITION)) {
+            mCurrentPageIndex = getArguments().getInt(ARG_SELECTED_POSITION);
         }
+
+        vpDetailsPager.setCurrentItem(mCurrentPageIndex);
     }
 }

@@ -2,16 +2,13 @@ package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ProgressBar;
+import android.view.*;
 import android.widget.Toast;
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import hu.mrolcsi.android.spoc.common.BuildConfig;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -33,10 +30,12 @@ public class SingleImageFragment extends SPOCFragment {
 
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
     private PhotoView photoView;
-    private ProgressBar progress;
+
+    private int mDesiredWidth;
+    private int mDesiredHeight;
 
     private String mImagePath;
-    private Callback mPicassoCallback;
+    private boolean isLoaded = false;
 
     public static SingleImageFragment newInstance(String imagePath) {
         final SingleImageFragment f = new SingleImageFragment();
@@ -46,24 +45,6 @@ public class SingleImageFragment extends SPOCFragment {
         f.setArguments(args);
 
         return f;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mPicassoCallback = new Callback() {
-            @Override
-            public void onSuccess() {
-                progress.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onError() {
-                // retry loading
-                Picasso.with(getActivity()).load("file://" + mImagePath).fit().centerInside().into(photoView);
-            }
-        };
     }
 
     @Nullable
@@ -94,16 +75,40 @@ public class SingleImageFragment extends SPOCFragment {
             }
         });
 
-        progress = (ProgressBar) view.findViewById(android.R.id.progress);
+        final ViewTreeObserver viewTreeObserver = photoView.getViewTreeObserver();
+        if (viewTreeObserver != null && viewTreeObserver.isAlive()) {
+            viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    if (Build.VERSION.SDK_INT < 16) {
+                        //noinspection deprecation
+                        viewTreeObserver.removeGlobalOnLayoutListener(this);
+                    } else
+                        viewTreeObserver.removeOnGlobalLayoutListener(this);
+
+                    mDesiredWidth = photoView.getWidth();
+                    mDesiredHeight = photoView.getHeight();
+
+                    if (getArguments() != null && getArguments().containsKey(ARG_IMAGE_PATH)) {
+                        mImagePath = getArguments().getString(ARG_IMAGE_PATH);
+
+                        if (isAdded() && !isLoaded) {
+                            Glide.with(SingleImageFragment.this).load("file://" + mImagePath).override(mDesiredWidth, mDesiredHeight).fitCenter().diskCacheStrategy(DiskCacheStrategy.ALL).into(photoView);
+                            isLoaded = true;
+                        }
+                    }
+                }
+            });
+        }
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
-        if (getArguments() != null && getArguments().containsKey(ARG_IMAGE_PATH)) {
-            mImagePath = getArguments().getString(ARG_IMAGE_PATH);
-            Picasso.with(getActivity()).load("file://" + mImagePath).fit().centerInside().into(photoView, mPicassoCallback);
+        if (!isLoaded && mDesiredWidth > 0 && mDesiredHeight > 0) {
+            Glide.with(this).load("file://" + mImagePath).override(mDesiredWidth, mDesiredHeight).fitCenter().diskCacheStrategy(DiskCacheStrategy.ALL).into(photoView);
+            isLoaded = true;
         }
     }
 
@@ -170,9 +175,9 @@ public class SingleImageFragment extends SPOCFragment {
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
+    public void onDestroyView() {
+        super.onDestroyView();
 
-        Picasso.with(getActivity()).cancelRequest(photoView);
+        Glide.clear(photoView);
     }
 }

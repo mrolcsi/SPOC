@@ -3,13 +3,15 @@ package hu.mrolcsi.android.spoc.gallery.home;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import hu.mrolcsi.android.spoc.gallery.R;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 
@@ -25,6 +27,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
     private final int columnSpan;
     private final Context context;
     private final int preferredColumns;
+    private final int mThumbnailSize;
 
     private String filename;
     private int iData;
@@ -40,6 +43,8 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
         } else if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             columnSpan = (int) Math.round((preferredColumns + 0.5) / 3);
         } else columnSpan = 1;
+
+        mThumbnailSize = context.getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
     }
 
     public HomeScreenAdapter(Context context, Cursor cursor) {
@@ -57,7 +62,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
     @Override
     public void onViewRecycled(ImageViewHolder holder) {
-        Picasso.with(context).cancelRequest(holder.img);
+        //Glide.clear(holder.itemView);
     }
 
     @Override
@@ -81,7 +86,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
         holder.itemView.setLayoutParams(lp);
 
-        Picasso.with(context).load("file://" + filename).centerCrop().resizeDimen(R.dimen.image_thumbnail_size, R.dimen.image_thumbnail_size).into(holder.img);
+        Glide.with(context).fromMediaStore().load(Uri.parse("file://" + filename)).override(mThumbnailSize, mThumbnailSize).centerCrop().diskCacheStrategy(DiskCacheStrategy.ALL).into(holder.img);
     }
 
     @Override
