@@ -2,9 +2,13 @@ package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.view.*;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
@@ -36,6 +40,7 @@ public class SingleImageFragment extends SPOCFragment {
 
     private String mImagePath;
     private boolean isLoaded = false;
+    private ShareActionProvider mShareActionProvider;
 
     public static SingleImageFragment newInstance(String imagePath) {
         final SingleImageFragment f = new SingleImageFragment();
@@ -110,6 +115,26 @@ public class SingleImageFragment extends SPOCFragment {
             Glide.with(this).load("file://" + mImagePath).override(mDesiredWidth, mDesiredHeight).fitCenter().diskCacheStrategy(DiskCacheStrategy.ALL).into(photoView);
             isLoaded = true;
         }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        // Locate MenuItem with ShareActionProvider
+        MenuItem item = menu.findItem(R.id.menuShare);
+
+        // Fetch and store ShareActionProvider
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+        mShareActionProvider.setShareIntent(createShareIntent());
+    }
+
+    // Create and return the Share Intent
+    private Intent createShareIntent() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("image/jpeg");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + mImagePath));
+        return shareIntent;
     }
 
     @Override
