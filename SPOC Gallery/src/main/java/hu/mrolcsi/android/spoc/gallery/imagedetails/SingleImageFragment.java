@@ -2,18 +2,22 @@ package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.view.*;
-import android.widget.ImageView;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import hu.mrolcsi.android.spoc.common.BuildConfig;
-import hu.mrolcsi.android.spoc.common.SPOCFragment;
+import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.utils.FileUtils;
 import uk.co.senab.photoview.PhotoView;
+import uk.co.senab.photoview.PhotoViewAttacher;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,21 +29,17 @@ import java.io.IOException;
  * Time: 20:19
  */
 
-public class ImageDetailsFragment extends SPOCFragment {
+public class SingleImageFragment extends SPOCFragment {
 
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
-    private ImageView photoView;
-
-    private int mDesiredWidth;
-    private int mDesiredHeight;
+    private PhotoView photoView;
+    private ProgressBar progress;
 
     private String mImagePath;
+    private Callback mPicassoCallback;
 
-    public ImageDetailsFragment() {
-    }
-
-    public static ImageDetailsFragment newInstance(String imagePath) {
-        final ImageDetailsFragment f = new ImageDetailsFragment();
+    public static SingleImageFragment newInstance(String imagePath) {
+        final SingleImageFragment f = new SingleImageFragment();
 
         final Bundle args = new Bundle();
         args.putString(ARG_IMAGE_PATH, imagePath);
@@ -48,10 +48,28 @@ public class ImageDetailsFragment extends SPOCFragment {
         return f;
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mPicassoCallback = new Callback() {
+            @Override
+            public void onSuccess() {
+                progress.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onError() {
+                // retry loading
+                Picasso.with(getActivity()).load("file://" + mImagePath).fit().centerInside().into(photoView);
+            }
+        };
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_imagedetails, container, false);
+        return inflater.inflate(R.layout.fragment_singleimage, container, false);
     }
 
     @Override
@@ -69,36 +87,23 @@ public class ImageDetailsFragment extends SPOCFragment {
             http://www.arthurwang.net/android/arrayindexoutofboundsexception-with-photoview-library-and-drawerlayout
          */
         photoView = (PhotoView) view.findViewById(R.id.image);
-
-        view.setOnClickListener(new View.OnClickListener() {
+        photoView.setOnViewTapListener(new PhotoViewAttacher.OnViewTapListener() {
             @Override
-            public void onClick(View view) {
-                if (isFullscreen()) hideSystemUI();
-                else showSystemUI();
+            public void onViewTap(View view, float v, float v1) {
+                toggleFullScreen();
             }
         });
 
-        final ViewTreeObserver viewTreeObserver = photoView.getViewTreeObserver();
-        if (viewTreeObserver != null && viewTreeObserver.isAlive()) {
-            viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    if (Build.VERSION.SDK_INT < 16) {
-                        //noinspection deprecation
-                        viewTreeObserver.removeGlobalOnLayoutListener(this);
-                    } else
-                        viewTreeObserver.removeOnGlobalLayoutListener(this);
+        progress = (ProgressBar) view.findViewById(android.R.id.progress);
+    }
 
-                    mDesiredWidth = photoView.getWidth();
-                    mDesiredHeight = photoView.getHeight();
+    @Override
+    public void onStart() {
+        super.onStart();
 
-                    if (getArguments() != null && getArguments().containsKey(ARG_IMAGE_PATH)) {
-                        mImagePath = getArguments().getString(ARG_IMAGE_PATH);
-
-                        Picasso.with(getActivity()).load("file://" + mImagePath).resize(mDesiredWidth, mDesiredHeight).centerInside().onlyScaleDown().into(photoView);
-                    }
-                }
-            });
+        if (getArguments() != null && getArguments().containsKey(ARG_IMAGE_PATH)) {
+            mImagePath = getArguments().getString(ARG_IMAGE_PATH);
+            Picasso.with(getActivity()).load("file://" + mImagePath).fit().centerInside().into(photoView, mPicassoCallback);
         }
     }
 
@@ -111,9 +116,9 @@ public class ImageDetailsFragment extends SPOCFragment {
                 final Bundle args = new Bundle();
                 args.putString(ARG_IMAGE_PATH, mImagePath);
 
-                final OtherDetailsDialog dialog = new OtherDetailsDialog();
+                final ImageDetailsDialog dialog = new ImageDetailsDialog();
                 dialog.setArguments(args);
-                dialog.show(getChildFragmentManager(), OtherDetailsDialog.TAG);
+                dialog.show(getChildFragmentManager(), ImageDetailsDialog.TAG);
 
                 return true;
             case R.id.menuDelete:

@@ -5,7 +5,7 @@ import android.preference.Preference;
 import android.view.View;
 import android.widget.FrameLayout;
 import com.github.machinarius.preferencefragment.PreferenceFragment;
-import hu.mrolcsi.android.spoc.common.ISPOCFragment;
+import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity;
 

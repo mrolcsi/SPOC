@@ -10,7 +10,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.*;
-import hu.mrolcsi.android.spoc.common.SPOCFragment;
+import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.navigation.NavigationActivity;
@@ -58,8 +58,7 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         vpDetailsPager = (ViewPager) view.findViewById(R.id.vpDetailsPager);
-        vpDetailsPager.setOffscreenPageLimit(5);
-        //TODO: system ui visibility
+        toggleFullScreen();
     }
 
     @Override
@@ -86,6 +85,7 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     @Override
     public void onStop() {
         super.onStop();
+        if (isFullscreen()) toggleFullScreen();
     }
 
     @Override

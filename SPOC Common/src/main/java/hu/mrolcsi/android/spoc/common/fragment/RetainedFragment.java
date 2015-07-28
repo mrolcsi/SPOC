@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.common;
+package hu.mrolcsi.android.spoc.common.fragment;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;

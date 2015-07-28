@@ -1,5 +1,6 @@
-package hu.mrolcsi.android.spoc.common;
+package hu.mrolcsi.android.spoc.common.fragment;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,7 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
+import hu.mrolcsi.android.spoc.common.BuildConfig;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,8 +22,6 @@ import android.view.WindowManager;
  */
 
 public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
-
-    private boolean isFullscreen = false;
 
     @Override
     public int getNavigationItemId() {
@@ -44,8 +43,12 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
         return false;
     }
 
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     public boolean isFullscreen() {
-        return isFullscreen;
+        if (Build.VERSION.SDK_INT >= 11) {
+            final int systemUiVisibility = getActivity().getWindow().getDecorView().getSystemUiVisibility();
+            return ((systemUiVisibility | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY) == systemUiVisibility);
+        } else return false;
     }
 
     //region -- L I F E C Y C L E --
@@ -138,43 +141,50 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
 
     //endregion
 
-    // This snippet hides the system bars.
-    protected void hideSystemUI() {
-        // Set the IMMERSIVE flag.
-        // Set the content to appear under the system bars so that the content
-        // doesn't resize when the system bars hide and show.
+    /**
+     * Detects and toggles immersive mode (also known as "hidey bar" mode).
+     */
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    public void toggleFullScreen() {
 
-        if (BuildConfig.DEBUG) Log.v(getClass().getSimpleName(), "Hide system UI.");
+        if (Build.VERSION.SDK_INT >= 11) {
+            // BEGIN_INCLUDE (get_current_ui_flags)
+            // The UI options currently enabled are represented by a bitfield.
+            // getSystemUiVisibility() gives us that bitfield.
+            int newUiOptions = getActivity().getWindow().getDecorView().getSystemUiVisibility();
+            // END_INCLUDE (get_current_ui_flags)
+            // BEGIN_INCLUDE (toggle_ui_flags)
 
-        if (getView() != null) {
-            if (Build.VERSION.SDK_INT >= 11)
-            getView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE);
-            getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            isFullscreen = true;
+            // Navigation bar hiding:  Backwards compatible to ICS.
+            if (Build.VERSION.SDK_INT >= 14) {
+                newUiOptions ^= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+            }
+
+            // Status bar hiding: Backwards compatible to Jellybean
+            if (Build.VERSION.SDK_INT >= 16) {
+                newUiOptions ^= View.SYSTEM_UI_FLAG_FULLSCREEN;
+            }
+
+            // Immersive mode: Backward compatible to KitKat.
+            // Note that this flag doesn't do anything by itself, it only augments the behavior
+            // of HIDE_NAVIGATION and FLAG_FULLSCREEN.  For the purposes of this sample
+            // all three flags are being toggled together.
+            // Note that there are two immersive mode UI flags, one of which is referred to as "sticky".
+            // Sticky immersive mode differs in that it makes the navigation and status bars
+            // semi-transparent, and the UI flag does not get cleared when the user interacts with
+            // the screen.
+            if (Build.VERSION.SDK_INT >= 18) {
+                newUiOptions ^= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            }
+
+            getActivity().getWindow().getDecorView().setSystemUiVisibility(newUiOptions);
+            //END_INCLUDE (set_ui_flags)
+
+            final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                if (isFullscreen()) actionBar.hide();
+                else actionBar.show();
+            }
         }
-    }
-
-    // This snippet shows the system bars. It does this by removing all the flags
-    // except for the ones that make the content appear under the system bars.
-    protected void showSystemUI() {
-
-        if (BuildConfig.DEBUG) Log.v(getClass().getSimpleName(), "Show system UI.");
-
-        if (getView() != null) {
-            if (Build.VERSION.SDK_INT >= 11)
-            getView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        }
-
-        getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        isFullscreen = false;
     }
 }

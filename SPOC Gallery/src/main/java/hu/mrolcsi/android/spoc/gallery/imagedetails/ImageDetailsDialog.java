@@ -36,7 +36,7 @@ import java.util.Locale;
  * Time: 9:34
  */
 
-public class OtherDetailsDialog extends DialogFragment {
+public class ImageDetailsDialog extends DialogFragment {
 
     public static final String TAG = "SPOC.Gallery.ImageDetails.Dialog";
     private final SimpleDateFormat sdf;
@@ -59,7 +59,7 @@ public class OtherDetailsDialog extends DialogFragment {
     private LocationFinderTask mLocationFinderTask;
 
 
-    public OtherDetailsDialog() {
+    public ImageDetailsDialog() {
         sdf = new SimpleDateFormat("yyyy:MM:DD HH:mm:ss", Locale.getDefault());
     }
 
@@ -108,8 +108,8 @@ public class OtherDetailsDialog extends DialogFragment {
     }
 
     private void loadInfo() {
-        if (getArguments() != null && getArguments().containsKey(ImageDetailsFragment.ARG_IMAGE_PATH)) {
-            final String path = getArguments().getString(ImageDetailsFragment.ARG_IMAGE_PATH);
+        if (getArguments() != null && getArguments().containsKey(SingleImageFragment.ARG_IMAGE_PATH)) {
+            final String path = getArguments().getString(SingleImageFragment.ARG_IMAGE_PATH);
 
             try {
                 ExifInterface exif = new ExifInterface(path);

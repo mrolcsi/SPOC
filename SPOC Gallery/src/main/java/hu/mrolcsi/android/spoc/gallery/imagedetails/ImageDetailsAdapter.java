@@ -36,7 +36,7 @@ public class ImageDetailsAdapter extends FragmentStatePagerAdapter {
             cursor.moveToPosition(position);
             final String imagePath = cursor.getString(iData);
 
-            return ImageDetailsFragment.newInstance(imagePath);
+            return SingleImageFragment.newInstance(imagePath);
         }
         return null;
     }

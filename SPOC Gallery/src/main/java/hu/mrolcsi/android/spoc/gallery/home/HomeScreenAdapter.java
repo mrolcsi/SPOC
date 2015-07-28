@@ -55,16 +55,10 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
         return new ImageViewHolder(v);
     }
 
-//    @Override
-//    public void onViewRecycled(ImageViewHolder holder) {
-//        super.onViewRecycled(holder);
-//        SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
-//
-//        lp.colSpan = 1;
-//        lp.rowSpan = 1;
-//
-//        holder.img.setLayoutParams(lp);
-//    }
+    @Override
+    public void onViewRecycled(ImageViewHolder holder) {
+        Picasso.with(context).cancelRequest(holder.img);
+    }
 
     @Override
     public void onBindViewHolder(ImageViewHolder holder, int i) {
@@ -73,9 +67,6 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
         cursor.moveToPosition(i);
 
         filename = cursor.getString(iData);
-
-        Picasso.with(context).cancelRequest(holder.img);
-
         SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
 
         if (i % 7 == 1) { //TODO: expand frequently used items

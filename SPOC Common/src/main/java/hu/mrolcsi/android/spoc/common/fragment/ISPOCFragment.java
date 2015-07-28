@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.common;
+package hu.mrolcsi.android.spoc.common.fragment;
 
 /**
  * Created with IntelliJ IDEA.
