@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.gallery;
 
+import android.annotation.TargetApi;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -125,6 +126,7 @@ public class GalleryActivity extends AppCompatActivity {
         });
     }
 
+    @TargetApi(11)
     private void setUpDrawerToggle() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

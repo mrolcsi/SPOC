@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -59,6 +60,7 @@ public class SingleImageFragment extends SPOCFragment {
     }
 
     @Override
+    @TargetApi(16)
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 

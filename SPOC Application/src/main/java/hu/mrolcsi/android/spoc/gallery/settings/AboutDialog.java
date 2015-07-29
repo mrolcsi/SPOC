@@ -1,6 +1,7 @@
 package hu.mrolcsi.android.spoc.gallery.settings;
 
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -40,7 +41,7 @@ public class AboutDialog extends DialogFragment {
                     }
                 });
 
-        final View contentView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_about, null);
+        @SuppressLint("InflateParams") final View contentView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_about, null);
         builder.setView(contentView);
 
         onViewCreated(contentView, savedInstanceState);

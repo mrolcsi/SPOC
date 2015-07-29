@@ -25,8 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/margin_xsmall"
-            android:layout_weight="1"
-            android:text="Version Name" />
+            android:layout_weight="1" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -41,8 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/margin_xsmall"
-            android:layout_weight="1"
-            android:text="Build Number" />
+            android:layout_weight="1" />
     </LinearLayout>
 
     <WebView

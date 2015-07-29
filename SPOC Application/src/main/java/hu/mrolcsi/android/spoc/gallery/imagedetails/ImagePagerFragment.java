@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.Build;
@@ -32,6 +33,7 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     private int mCurrentPageIndex = -1;
 
     @Override
+    @TargetApi(18)
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);

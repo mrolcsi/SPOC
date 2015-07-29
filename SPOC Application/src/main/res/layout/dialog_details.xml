@@ -332,7 +332,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/margin_small"
                 android:layout_marginStart="@dimen/margin_small"
-                android:text="@string/details_labe_digitalZoomFactor"
+                android:text="@string/details_label_digitalZoomFactor"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textStyle="bold" />
 

@@ -1,5 +1,7 @@
 package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -77,7 +79,7 @@ public class ImageDetailsDialog extends DialogFragment {
                     }
                 });
 
-        final View contentView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_details, null);
+        @SuppressLint("InflateParams") final View contentView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_details, null);
         builder.setView(contentView);
 
         onViewCreated(contentView, savedInstanceState);
@@ -107,6 +109,7 @@ public class ImageDetailsDialog extends DialogFragment {
         loadInfo();
     }
 
+    @TargetApi(11)
     private void loadInfo() {
         if (getArguments() != null && getArguments().containsKey(SingleImageFragment.ARG_IMAGE_PATH)) {
             final String path = getArguments().getString(SingleImageFragment.ARG_IMAGE_PATH);
@@ -124,7 +127,7 @@ public class ImageDetailsDialog extends DialogFragment {
                 if (exif.getLatLong(latLong)) {
                     final String latRef = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE_REF);
                     final String longRef = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF);
-                    tvCoordinates.setText(String.format("Latitude:\t%s %f\nLongitude:\t%s %f", latRef, Math.abs(latLong[0]), longRef, Math.abs(latLong[1])));
+                    tvCoordinates.setText(String.format(getString(R.string.details_message_coordinatesFormat), latRef, Math.abs(latLong[0]), longRef, Math.abs(latLong[1])));
 
                     mLocationFinderTask = new LocationFinderTask();
                     mLocationFinderTask.execute(latLong[0], latLong[1]);
@@ -147,10 +150,10 @@ public class ImageDetailsDialog extends DialogFragment {
                 String brand = exif.getAttribute(ExifInterface.TAG_MAKE);
                 String model = exif.getAttribute(ExifInterface.TAG_MODEL);
                 if (brand == null) {
-                    brand = "<i>Unknown Brand</i>";
+                    brand = getString(R.string.details_message_unknownBrand);
                 }
                 if (model == null) {
-                    model = "<i>Unknown Model</i>";
+                    model = getString(R.string.details_message_unknownModel);
                 }
                 tvModel.setText(Html.fromHtml(brand + " " + model));
 
@@ -225,7 +228,7 @@ public class ImageDetailsDialog extends DialogFragment {
 
             if (addresses == null) {
                 //TODO: use cached value from db
-                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknowLocation)));
+                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
             } else {
                 final String locality = addresses.get(0).getLocality();
                 final String countryName = addresses.get(0).getCountryName();
