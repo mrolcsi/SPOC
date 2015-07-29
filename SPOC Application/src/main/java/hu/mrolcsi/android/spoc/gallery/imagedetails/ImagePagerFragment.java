@@ -55,7 +55,8 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_imagepager, container, false);
+        mRootView = inflater.inflate(R.layout.fragment_imagepager, container, false);
+        return mRootView;
     }
 
     @Override

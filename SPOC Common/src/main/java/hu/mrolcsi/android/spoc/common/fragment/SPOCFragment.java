@@ -23,6 +23,8 @@ import hu.mrolcsi.android.spoc.common.BuildConfig;
 
 public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
 
+    protected View mRootView;
+
     @Override
     public int getNavigationItemId() {
         return -1;
@@ -123,6 +125,14 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
         super.onDestroyView();
         if (BuildConfig.DEBUG)
             Log.v(getClass().getSimpleName(), "LIFECYCLE : onDestroyView");
+
+        if (Build.VERSION.SDK_INT == 10)
+            if (mRootView != null) {
+                ViewGroup parentViewGroup = (ViewGroup) mRootView.getParent();
+                if (parentViewGroup != null) {
+                    parentViewGroup.removeAllViews();
+                }
+            }
     }
 
     @Override

@@ -5,14 +5,14 @@ android:
   - android-22
   - extra-google-m2repository
   - extra-android-m2repository
-script: "./gradlew build"
+script: "./gradlew assembleDebug"
 before_install:
 - chmod +x gradlew
 deploy:
   provider: releases
   api_key:
     secure: dBQYJmeomQM3k0i4I85imJG8InxB3mAjKPfgzoj/dF860+y9DjO9NeF80JeSR3sfdTXjpF7QZtOddGTcYGFjukkY3Zk275tQJ+EytKXOWGUTQw8v4hs+SJouKf6+BXTi6uxsvODW1ansr1P43Mk8Vl5qSVxaenHA4mZD7fRXhqyRPrip49peskr1WsLPVQbBa0bEjdXnETUli4GMAqxRl8T35nFVOB2jdfGfXMqyoaJGYuQ/hjjWTFHlN/MxPYujhMHqRJ2vTJyNu1kiCMHYlfZnXHLFrEUU/A9142OvM4gDUgu+eX2ZS7xz7YiRRiTposmr+A9J7Gv24t5YfOdzf/dBKSVwDOzSUJMWwD2ZclsIXa2RYAiE8ZK8Y12CXGM24iWQR0wEbAh3gk8jPIoirmfOtwkWmLr3M0SMi+52pG1vxfxMHSBc7oikZGOeBderCGVGNXl/C02tgpm9xC0HMYWrGXq9Y19yRaQaK5FJRWJz3khWPsV1qUjKIrIue9ZGt/uSY0HtakQ2LAjkBsKmfXVmtA6pmN6hqLytywlHOqorRnl3AOE8v9Qeiko06OPRshDm9YPK7UhEG5cqlnJCz/V9N1B/L3X6ws+gO5pw0D4cqjjH/+6XHhsoLnzoL4mWm9vytI1AlX5t1FgcBBnR3WjZDZCisUCjexlP7ANUk3E=
-  file: "./SPOC Application/build/outputs/SPOC Application-release-unsigned.apk"
+  file: "./SPOC Application/build/outputs/SPOC Application-debug.apk"
   skip_cleanup: true
   on:
     repo: mrolcsi/SPOC

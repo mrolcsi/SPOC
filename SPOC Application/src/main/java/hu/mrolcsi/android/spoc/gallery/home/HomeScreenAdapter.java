@@ -61,8 +61,8 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
     }
 
     @Override
-    public void onViewRecycled(ImageViewHolder holder) {
-        //Glide.clear(holder.itemView);
+    public void onViewDetachedFromWindow(ImageViewHolder holder) {
+        holder.img.clearAnimation();
     }
 
     @Override
@@ -74,7 +74,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
         filename = cursor.getString(iData);
         SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
 
-        if (i % 7 == 1) { //TODO: expand frequently used items
+        if (i % 7 == 1) { //TODO: expand frequently used items (or just leave it static like this?)
             lp.colSpan = columnSpan;
             lp.rowSpan = columnSpan;
             //holder.itemView.setBackgroundColor(Color.BLUE);
@@ -86,7 +86,13 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
         holder.itemView.setLayoutParams(lp);
 
-        Glide.with(context).fromMediaStore().load(Uri.parse("file://" + filename)).override(mThumbnailSize, mThumbnailSize).centerCrop().diskCacheStrategy(DiskCacheStrategy.ALL).into(holder.img);
+        Glide.with(context)
+                .fromMediaStore()
+                .load(Uri.parse("file://" + filename))
+                .override(mThumbnailSize, mThumbnailSize)
+                .centerCrop()
+                .diskCacheStrategy(DiskCacheStrategy.RESULT)
+                .into(holder.img);
     }
 
     @Override

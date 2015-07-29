@@ -1,12 +1,16 @@
 package hu.mrolcsi.android.spoc.gallery;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -20,15 +24,17 @@ import android.view.View;
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
+import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.gallery.home.HomeFragment;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
 
 import java.util.Stack;
 
-public class GalleryActivity extends AppCompatActivity {
+public class GalleryActivity extends AppCompatActivity implements CursorLoader.OnLoadCompleteListener<Cursor> {
 
     public static final String DATA_FRAGMENT_STACK = "SPOC.Gallery.Navigation.FragmentStack";
     public static final String DATA_CURRENT_FRAGMENT = "SPOC.Gallery.Navigation.CurrentFragment";
+    private static final String DATA_IS_FIRST_START = "SPOC.Gallery.IsFirstStart";
 
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
@@ -37,6 +43,9 @@ public class GalleryActivity extends AppCompatActivity {
     private ISPOCFragment mCurrentFragment;
     private Stack<ISPOCFragment> mFragmentStack = new Stack<>();
     private RetainedFragment mRetainedFragment;
+    private boolean isFirstStart = true;
+
+    private Loader<Cursor> mLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +70,12 @@ public class GalleryActivity extends AppCompatActivity {
             fm.beginTransaction().add(mRetainedFragment, RetainedFragment.TAG).commit();
 
             retainData();
+        } else {
+            //noinspection unchecked
+            mFragmentStack = (Stack<ISPOCFragment>) mRetainedFragment.getRetainedData(DATA_FRAGMENT_STACK);
+            mCurrentFragment = (ISPOCFragment) mRetainedFragment.getRetainedData(DATA_CURRENT_FRAGMENT);
+            isFirstStart = (boolean) mRetainedFragment.getRetainedData(DATA_IS_FIRST_START);
         }
-
-        //TODO: load data from retained fragment
-        //noinspection unchecked
-        mFragmentStack = (Stack<ISPOCFragment>) mRetainedFragment.getRetainedData(DATA_FRAGMENT_STACK);
-        mCurrentFragment = (ISPOCFragment) mRetainedFragment.getRetainedData(DATA_CURRENT_FRAGMENT);
     }
 
     @Override
@@ -82,10 +91,29 @@ public class GalleryActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+//        if (isFirstStart)   //only do caching on first start
+//            mLoader = getSupportLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(this, this));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mLoader != null)
+            mLoader.startLoading();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
 
         Glide.get(this).clearMemory();
+        getSupportLoaderManager().destroyLoader(MediaStoreLoader.ID);
+
+        isFirstStart = false;
 
         retainData();
     }
@@ -93,6 +121,7 @@ public class GalleryActivity extends AppCompatActivity {
     private void retainData() {
         mRetainedFragment.putRetainedData(DATA_FRAGMENT_STACK, mFragmentStack);
         mRetainedFragment.putRetainedData(DATA_CURRENT_FRAGMENT, mCurrentFragment);
+        mRetainedFragment.putRetainedData(DATA_IS_FIRST_START, isFirstStart);
     }
 
     @Override
@@ -239,5 +268,27 @@ public class GalleryActivity extends AppCompatActivity {
         transaction.commit();
 
         Log.v(getClass().getSimpleName(), "Fragment restored from stack: " + mCurrentFragment.toString());
+    }
+
+    @Override
+    public void onLoadComplete(Loader<Cursor> loader, Cursor cursor) {
+
+        if (cursor == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("No images found.")
+                    .setNeutralButton(android.R.string.ok, null)
+                    .show();
+            return;
+        }
+
+        //preBuild disk cache
+        new CacheBuilderTask(this, getSupportFragmentManager(), cursor) {
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+
+                swapFragment(mCurrentFragment);
+            }
+        }.execute();
     }
 }

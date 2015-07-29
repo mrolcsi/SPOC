@@ -56,7 +56,8 @@ public class SingleImageFragment extends SPOCFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_singleimage, container, false);
+        mRootView = inflater.inflate(R.layout.fragment_singleimage, container, false);
+        return mRootView;
     }
 
     @Override
@@ -114,7 +115,7 @@ public class SingleImageFragment extends SPOCFragment {
         super.onStart();
 
         if (!isLoaded && mDesiredWidth > 0 && mDesiredHeight > 0) {
-            Glide.with(this).load("file://" + mImagePath).override(mDesiredWidth, mDesiredHeight).fitCenter().diskCacheStrategy(DiskCacheStrategy.ALL).into(photoView);
+            Glide.with(this).load("file://" + mImagePath).override(mDesiredWidth, mDesiredHeight).fitCenter().diskCacheStrategy(DiskCacheStrategy.RESULT).into(photoView);
             isLoaded = true;
         }
     }
@@ -134,7 +135,7 @@ public class SingleImageFragment extends SPOCFragment {
     // Create and return the Share Intent
     private Intent createShareIntent() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("image/jpeg");
+        shareIntent.setType("image/jpeg"); //TODO: get actual metadata
         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + mImagePath));
         return shareIntent;
     }

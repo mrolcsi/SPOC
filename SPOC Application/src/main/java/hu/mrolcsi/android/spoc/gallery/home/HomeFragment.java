@@ -1,7 +1,9 @@
 package hu.mrolcsi.android.spoc.gallery.home;
 
+import android.app.AlertDialog;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -28,11 +30,12 @@ import org.lucasr.twowayview.widget.TwoWayView;
 
 public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
 
-    private View mRootView;
     private TwoWayView twList;
     private HomeScreenAdapter mAdapter;
     private Loader<Cursor> mLoader;
+
     private int mSavedPosition = -1;
+    private Parcelable listInstanceState;
 
     @Override
     public int getNavigationItemId() {
@@ -74,6 +77,8 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
 
                 mSavedPosition = i;
 
+                listInstanceState = twList.getLayoutManager().onSaveInstanceState();
+                Log.d(getClass().getSimpleName(), listInstanceState.toString());
                 fragment.setArguments(args);
 
                 ((GalleryActivity) getActivity()).swapFragment(fragment);
@@ -107,15 +112,28 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     }
 
     @Override
-    public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
+    public void onLoadComplete(Loader<Cursor> loader, final Cursor data) {
         Log.v(getClass().getSimpleName(), "onLoadComplete");
+
+        if (data == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("No images found.")
+                    .setNeutralButton(android.R.string.ok, null)
+                    .show();
+            return;
+        }
 
         mAdapter = new HomeScreenAdapter(getActivity(), data);
         twList.setAdapter(mAdapter);
 
-//        if (mSavedPosition > 0) {
-//            twList.scrollToPosition(mSavedPosition);
-//        }
-//        mSavedPosition = -1;
+        if (listInstanceState != null) {
+            Log.d(getClass().getSimpleName(), listInstanceState.toString());
+            twList.getLayoutManager().onRestoreInstanceState(listInstanceState);
+        }
+
+        if (mSavedPosition > 0) {
+            twList.scrollToPosition(mSavedPosition);
+        }
+        mSavedPosition = -1;
     }
 }

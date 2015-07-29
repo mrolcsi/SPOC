@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="@dimen/margin_medium">
+
+    <ProgressBar
+        android:id="@+id/pbSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/tvMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/pbSpinner"
+        android:layout_alignTop="@+id/pbSpinner"
+        android:layout_marginLeft="@dimen/margin_small"
+        android:layout_toRightOf="@+id/pbSpinner"
+        android:gravity="center_vertical"
+        android:text="Doing something..." />
+
+    <ProgressBar
+        android:id="@+id/pbHorizontal"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/pbSpinner"
+        android:layout_marginTop="@dimen/margin_small" />
+
+    <TextView
+        android:id="@+id/tvProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/pbHorizontal"
+        android:layout_below="@+id/pbHorizontal"
+        android:text="16/152" />
+
+    <TextView
+        android:id="@+id/tvPercent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/pbHorizontal"
+        android:layout_below="@+id/pbHorizontal"
+        android:text="11%" />
+</RelativeLayout>
