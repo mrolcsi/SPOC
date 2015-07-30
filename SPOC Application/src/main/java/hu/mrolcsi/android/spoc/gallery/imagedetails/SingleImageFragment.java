@@ -5,9 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Point;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -16,11 +14,12 @@ import android.support.v7.widget.ShareActionProvider;
 import android.view.*;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
-import hu.mrolcsi.android.spoc.common.BuildConfig;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.GlideHelper;
+import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -43,7 +42,6 @@ public class SingleImageFragment extends SPOCFragment {
     private int mDesiredHeight;
 
     private String mImagePath;
-    private ShareActionProvider mShareActionProvider;
 
     public static SingleImageFragment newInstance(String imagePath) {
         final SingleImageFragment f = new SingleImageFragment();
@@ -122,16 +120,8 @@ public class SingleImageFragment extends SPOCFragment {
         MenuItem item = menu.findItem(R.id.menuShare);
 
         // Fetch and store ShareActionProvider
-        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
-        mShareActionProvider.setShareIntent(createShareIntent());
-    }
-
-    // Create and return the Share Intent
-    private Intent createShareIntent() {
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("image/jpeg"); //TODO: get actual metadata
-        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + mImagePath));
-        return shareIntent;
+        ShareActionProvider shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+        shareActionProvider.setShareIntent(FileUtils.createShareIntent(mImagePath));
     }
 
     @Override
@@ -149,47 +139,32 @@ public class SingleImageFragment extends SPOCFragment {
 
                 return true;
             case R.id.menuDelete:
-                final AlertDialog.Builder questionBuilder = new AlertDialog.Builder(getActivity());
-                questionBuilder.setIcon(R.drawable.help)
-                        .setTitle(getString(R.string.dialog_title_areYouSure))
-                        .setMessage(getString(R.string.dialog_delete_message))
+                final AlertDialog.Builder builder = DialogUtils.buildConfirmDialog(getActivity());
+                builder.setMessage(R.string.dialog_message_deletePicture)
                         .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 try {
                                     final boolean success = FileUtils.deleteFile(mImagePath);
                                     if (success)
-                                        Toast.makeText(getActivity(), "Picture deleted.", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getActivity(), R.string.message_pictureDeleted, Toast.LENGTH_SHORT).show();
                                     else
-                                        Toast.makeText(getActivity(), "Picture not deleted.", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getActivity(), R.string.message_pictureNotDeleted, Toast.LENGTH_SHORT).show();
                                 } catch (IOException e) {
                                     String message;
-                                    final AlertDialog.Builder errorBuilder = new AlertDialog.Builder(getActivity());
-                                    errorBuilder.setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            dialogInterface.dismiss();
-                                        }
-                                    });
+                                    final AlertDialog.Builder errorBuilder = DialogUtils.buildErrorDialog(getActivity());
                                     if (e instanceof FileNotFoundException) {
-                                        message = "Picture could not be deleted. File does not exist anymore.";
+                                        message = getString(R.string.message_pictureNotDeleted_fileNotExist);
                                         if (BuildConfig.DEBUG) message += "\n" + e.toString();
                                     } else {
-                                        message = "Picture could not be deleted.";
+                                        message = getString(R.string.message_pictureNotDeleted);
                                         if (BuildConfig.DEBUG) message += "\n" + e.toString();
                                     }
                                     errorBuilder.setMessage(message);
                                     errorBuilder.show();
                                 }
                             }
-                        })
-                        .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-                            }
-                        })
-                        .show();
+                        }).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

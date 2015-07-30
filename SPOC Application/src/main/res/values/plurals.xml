@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="dialog_message_deleteMultiplePictures">
+        <item quantity="one">@string/dialog_message_deletePicture</item>
+        <item quantity="other">@string/dialog_message_deleteMultiplePictures</item>
+    </plurals>
+    <plurals name="dialog_message_numPicturesDeleted">
+        <item quantity="one">@string/message_pictureDeleted</item>
+        <item quantity="other">@string/message_multiplePicturesDeleted</item>
+    </plurals>
+</resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="navigation_settings">Beállítások</string>
-    <string name="title_activity_navigation">Galéria</string>
+    <string name="title_activity_gallery">Galéria</string>
     <string name="title_home">Kezdőképernyő</string>
     <string name="navigation_people">Személyek</string>
     <string name="navigation_places">Helyek</string>
@@ -13,7 +13,7 @@
     <string name="close">Bezár</string>
     <string name="details_action_delete">Törlés</string>
     <string name="details_action_rotate">Forgatás</string>
-    <string name="details_action_share">Megoszás…</string>
+    <string name="details_action_share">Megosztás…</string>
     <string name="details_label_aperture">Rekesznyílás:</string>
     <string name="details_label_cameraModel">Model:</string>
     <string name="details_label_cameraSettings">Kamera beállítások</string>
@@ -39,7 +39,7 @@
     <string name="details_message_unknownLocation"><![CDATA[<i>Ismeretlen (Nincs internet?)</i>]]></string>
     <string name="details_message_unknownModel"><![CDATA[<i>Ismeretlen modell</i>]]></string>
     <string name="details_title">Részletek</string>
-    <string name="dialog_delete_message">Biztosan törölni akarod ezt a képet?</string>
+    <string name="dialog_message_deletePicture">Biztosan törölni akarod ezt a képet?</string>
     <string name="dialog_title_areYouSure">Biztos?</string>
     <string name="navigation_date">Dátum</string>
     <string name="navigation_drawer_close">Navigációs sáv bezárása</string>
@@ -51,4 +51,14 @@
     <string name="settings_about_label_version">Verzió:</string>
     <string name="settings_about_title">Névjegy</string>
     <string name="service_cache_title">Képeid előkészítése…</string>
+    <string name="cab_itemsSelectedFormat">%1$d kiválasztva</string>
+    <string name="cab_deselectAll">Kijelölés megszüntetése</string>
+    <string name="cab_selectAll">Mind kijelölése</string>
+    <string name="dialog_title_somethingWentWrong">Valami nem sikerült :/</string>
+    <string name="message_pictureDeleted">Kép törölve.</string>
+    <string name="message_pictureNotDeleted">A kép nem lett törölve.</string>
+    <string name="message_pictureNotDeleted_fileNotExist">A kép nem lett törölve. A fájl már nem létezik.</string>
+    <string name="dialog_message_deleteMultiplePictures">Biztosan törölni akarsz %d képet?</string>
+    <string name="message_multiplePicturesDeleted">%d kép törölve.</string>
+    <string name="message_deletingPictures">Törlés folyamatban…</string>
 </resources>

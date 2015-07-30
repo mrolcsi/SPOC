@@ -40,6 +40,7 @@ public class GalleryActivity extends AppCompatActivity {
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
     private ActionBarDrawerToggle mDrawerToggle;
+    private Toolbar mToolbar;
 
     private ISPOCFragment mCurrentFragment;
     private Stack<ISPOCFragment> mFragmentStack = new Stack<>();
@@ -78,7 +79,11 @@ public class GalleryActivity extends AppCompatActivity {
             //noinspection unchecked
             mFragmentStack = (Stack<ISPOCFragment>) mRetainedFragment.getRetainedData(DATA_FRAGMENT_STACK);
             mCurrentFragment = (ISPOCFragment) mRetainedFragment.getRetainedData(DATA_CURRENT_FRAGMENT);
-            isFirstStart = (boolean) mRetainedFragment.getRetainedData(DATA_IS_FIRST_START);
+            try {
+                isFirstStart = (boolean) mRetainedFragment.getRetainedData(DATA_IS_FIRST_START);
+            } catch (Exception e) {
+                Log.w(getClass().getName(), e);
+            }
         }
     }
 
@@ -109,15 +114,20 @@ public class GalleryActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+
+        isFirstStart = false;
+        retainData();
+
+        Glide.get(this).clearMemory();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        Glide.get(this).clearMemory();
         getSupportLoaderManager().destroyLoader(MediaStoreLoader.ID);
-
-        isFirstStart = false;
-
-        retainData();
 
         if (mCacheBuilderReceiver != null)
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mCacheBuilderReceiver);
@@ -164,10 +174,10 @@ public class GalleryActivity extends AppCompatActivity {
 
     @TargetApi(11)
     private void setUpDrawerToggle() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
 
-        this.mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
+        this.mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
 
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
@@ -210,6 +220,13 @@ public class GalleryActivity extends AppCompatActivity {
         if (item != null)
             item.setChecked(true);
     }
+
+//    @Override
+//    public ActionMode startSupportActionMode(final ActionMode.Callback callback) {
+//        if (getSupportActionBar() != null)
+//            return getSupportActionBar().startActionMode(callback);
+//        else return null;
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

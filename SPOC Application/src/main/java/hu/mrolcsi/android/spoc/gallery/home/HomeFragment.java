@@ -1,6 +1,9 @@
 package hu.mrolcsi.android.spoc.gallery.home;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -8,17 +11,21 @@ import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
+import android.widget.Toast;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
+import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.gallery.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 import hu.mrolcsi.android.spoc.gallery.imagedetails.ImagePagerFragment;
 import org.lucasr.twowayview.ItemClickSupport;
+import org.lucasr.twowayview.ItemSelectionSupport;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 import org.lucasr.twowayview.widget.TwoWayView;
 
@@ -34,10 +41,13 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     private static final String SAVED_ORIENTATION = "SPOC.Gallery.Home.SavedOrientation";
     private TwoWayView twList;
     private HomeScreenAdapter mAdapter;
-    private Loader<Cursor> mLoader;
+    private CursorLoader mLoader;
 
     private Parcelable mListInstanceState;
     private int mSavedOrientation = Configuration.ORIENTATION_UNDEFINED;
+
+    private ActionMode mActionMode;
+    private ItemSelectionSupport mItemSelectionSupport;
 
     @Override
     public int getNavigationItemId() {
@@ -69,11 +79,18 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
 
         ((SpannableGridLayoutManager) twList.getLayoutManager()).setNumColumns(getResources().getInteger(R.integer.preferredColumns));
 
-        ItemClickSupport itemClick = ItemClickSupport.addTo(twList);
+        mItemSelectionSupport = ItemSelectionSupport.addTo(twList);
+        mItemSelectionSupport.setChoiceMode(ItemSelectionSupport.ChoiceMode.MULTIPLE);
 
+        final ItemClickSupport itemClick = ItemClickSupport.addTo(twList);
         itemClick.setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
             @Override
             public void onItemClick(RecyclerView recyclerView, View view, int i, long l) {
+                if (mActionMode != null) {
+                    mActionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
+                    return;
+                }
+
                 ImagePagerFragment fragment = new ImagePagerFragment();
 
                 Bundle args = new Bundle();
@@ -87,6 +104,27 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
                 ((GalleryActivity) getActivity()).swapFragment(fragment);
             }
         });
+        itemClick.setOnItemLongClickListener(new ItemClickSupport.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(RecyclerView parent, View view, int position, long id) {
+                if (mActionMode != null) {
+                    return false;
+                }
+                mActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(new ActionModeCallback());
+                mItemSelectionSupport.setItemChecked(position, true);
+                mActionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
+                return true;
+            }
+        });
+    }
+
+    @Override
+    public boolean onBackPressed() {
+        if (mActionMode != null) {
+            mActionMode.finish();
+            return true;
+        }
+        return super.onBackPressed();
     }
 
     @Override
@@ -97,7 +135,7 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
             //TODO: process args
         }
 
-        mLoader = getLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(getActivity(), this));
+        mLoader = (CursorLoader) getLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(getActivity(), this));
     }
 
     @Override
@@ -118,6 +156,7 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
         super.onDestroy();
 
         getLoaderManager().destroyLoader(MediaStoreLoader.ID);
+        if (mActionMode != null) mActionMode.finish();
     }
 
     @Override
@@ -125,19 +164,146 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
         Log.v(getClass().getSimpleName(), "onLoadComplete");
 
         if (data == null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setMessage("No images found.")
-                    .setNeutralButton(android.R.string.ok, null)
-                    .show();
+            DialogUtils.buildErrorDialog(getActivity()).setMessage("No pictures found.").show();
             return;
         }
 
         mAdapter = new HomeScreenAdapter(getActivity(), data);
         twList.setAdapter(mAdapter);
-        
+
         if (mListInstanceState != null
                 && mSavedOrientation == getResources().getConfiguration().orientation) { //different orientation -> different layout params
             twList.getLayoutManager().onRestoreInstanceState(mListInstanceState);
+        }
+    }
+
+    private void doBatchDelete() {
+        final AlertDialog.Builder confirmDialog = DialogUtils.buildConfirmDialog(getActivity());
+        confirmDialog.setMessage(getResources().getQuantityString(R.plurals.dialog_message_deleteMultiplePictures, mItemSelectionSupport.getCheckedItemCount(), mItemSelectionSupport.getCheckedItemCount()));
+        confirmDialog.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                new FileUtils.MultiFileDeleterTask(getActivity(), mItemSelectionSupport.getCheckedItemPositions()) {
+
+                    private ProgressDialog pd;
+
+                    @Override
+                    protected void onPreExecute() {
+                        super.onPreExecute();
+                        pd = new ProgressDialog(getActivity());
+                        pd.setMessage(getString(R.string.message_deletingPictures));
+                        pd.setIndeterminate(false);
+                        pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                        pd.show();
+                    }
+
+                    @Override
+                    protected void onProgressUpdate(Integer... values) {
+                        super.onProgressUpdate(values);
+
+                        pd.setProgress(values[0]);
+                        pd.setMax(values[1]);
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+
+                        pd.dismiss();
+                        mActionMode.finish();
+                        mLoader.startLoading();
+
+                        final CharSequence text = getResources().getQuantityString(R.plurals.dialog_message_numPicturesDeleted, pd.getProgress(), pd.getProgress());
+                        Toast.makeText(getActivity(), text, Toast.LENGTH_SHORT).show();
+                    }
+                }.execute(mLoader);
+            }
+        }).show();
+    }
+
+    private void doBatchShare() {
+
+        new FileUtils.MultiFileShareTask(getActivity(), mItemSelectionSupport.getCheckedItemPositions()) {
+            public ProgressDialog pd;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                pd = new ProgressDialog(getActivity());
+                pd.setMessage(getString(R.string.message_preparingToShare));
+                pd.setIndeterminate(false);
+                pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                pd.show();
+            }
+
+            @Override
+            protected void onProgressUpdate(Integer... values) {
+                super.onProgressUpdate(values);
+
+                pd.setProgress(values[0]);
+                pd.setMax(values[1]);
+            }
+
+            @Override
+            protected void onPostExecute(Intent intent) {
+                super.onPostExecute(intent);
+
+                pd.dismiss();
+                startActivity(Intent.createChooser(intent, getString(R.string.details_action_share)));
+            }
+        }.execute(mLoader);
+
+    }
+
+    class ActionModeCallback implements android.support.v7.view.ActionMode.Callback {
+
+        @Override
+        public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+            MenuInflater inflater = actionMode.getMenuInflater();
+            inflater.inflate(R.menu.details_contextual, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+            final int id = menuItem.getItemId();
+            switch (id) {
+                case R.id.menuDelete:
+                    doBatchDelete();
+                    return true;
+                case R.id.menuShare:
+                    doBatchShare();
+                    return true;
+                case R.id.menuSelectAll:
+                    for (int i = 0; i < mAdapter.getItemCount(); i++) {
+                        mItemSelectionSupport.setItemChecked(i, true);
+                    }
+                    menuItem.setVisible(false);
+                    actionMode.getMenu().findItem(R.id.menuDeselectAll).setVisible(true);
+                    actionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
+                    return false;
+                case R.id.menuDeselectAll:
+                    for (int i = 0; i < mAdapter.getItemCount(); i++) {
+                        mItemSelectionSupport.setItemChecked(i, false);
+                    }
+                    menuItem.setVisible(false);
+                    actionMode.getMenu().findItem(R.id.menuSelectAll).setVisible(true);
+                    actionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
+                    return false;
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode actionMode) {
+            mActionMode = null;
+            mItemSelectionSupport.clearChoices();
         }
     }
 }

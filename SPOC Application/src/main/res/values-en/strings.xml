@@ -10,7 +10,7 @@
     <string name="details_label_fileSize">File size:</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="title_activity_navigation">Gallery</string>
+    <string name="title_activity_gallery">Gallery</string>
     <string name="title_home">Home</string>
     <string name="details_label_cameraSettings">Camera Settings</string>
     <string name="navigation_settings">Settings</string>
@@ -43,7 +43,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="dialog_title_areYouSure">Are you sure?</string>
-    <string name="dialog_delete_message">Are you sure you want do delete this picture?</string>
+    <string name="dialog_message_deletePicture">Are you sure you want do delete this picture?</string>
     <string name="settings_about_title">About</string>
     <string name="settings_about_label_version">Version:</string>
     <string name="settings_about_label_buildNumber">Build Number:</string>
@@ -51,4 +51,15 @@
     <string name="details_message_unknownBrand"><![CDATA[<i>Unknown Brand</i>]]></string>
     <string name="details_message_unknownModel"><![CDATA[<i>Unknown Model</i>]]></string>
     <string name="service_cache_title">Preparing your photos…</string>
+    <string name="cab_itemsSelectedFormat">%1$d selected</string>
+    <string name="cab_selectAll">Select All</string>
+    <string name="cab_deselectAll">Deselect All</string>
+    <string name="message_pictureDeleted">Picture deleted.</string>
+    <string name="message_pictureNotDeleted">Picture could not be deleted.</string>
+    <string name="message_pictureNotDeleted_fileNotExist">Picture could not be deleted. File does not exist anymore.</string>
+    <string name="dialog_title_somethingWentWrong">Something went wrong :/</string>
+    <string name="dialog_message_deleteMultiplePictures">Are you sure you want to delete %d pictures?</string>
+    <string name="message_multiplePicturesDeleted">%d pictures deleted.</string>
+    <string name="message_deletingPictures">Deleting…</string>
+    <string name="message_preparingToShare">Preparing to share…</string>
 </resources>
