@@ -1,6 +1,7 @@
 package hu.mrolcsi.android.spoc.gallery.home;
 
 import android.app.AlertDialog;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -30,12 +31,13 @@ import org.lucasr.twowayview.widget.TwoWayView;
 
 public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
 
+    private static final String SAVED_ORIENTATION = "SPOC.Gallery.Home.SavedOrientation";
     private TwoWayView twList;
     private HomeScreenAdapter mAdapter;
     private Loader<Cursor> mLoader;
 
-    private int mSavedPosition = -1;
-    private Parcelable listInstanceState;
+    private Parcelable mListInstanceState;
+    private int mSavedOrientation = Configuration.ORIENTATION_UNDEFINED;
 
     @Override
     public int getNavigationItemId() {
@@ -46,6 +48,9 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+
+        if (savedInstanceState != null)
+            mSavedOrientation = savedInstanceState.getInt(SAVED_ORIENTATION);
     }
 
     @Nullable
@@ -75,10 +80,8 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
                 args.putInt(ImagePagerFragment.ARG_LOADER_ID, mLoader.getId());
                 args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
 
-                mSavedPosition = i;
-
-                listInstanceState = twList.getLayoutManager().onSaveInstanceState();
-                Log.d(getClass().getSimpleName(), listInstanceState.toString());
+                mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
+                mSavedOrientation = getResources().getConfiguration().orientation;
                 fragment.setArguments(args);
 
                 ((GalleryActivity) getActivity()).swapFragment(fragment);
@@ -105,6 +108,12 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(SAVED_ORIENTATION, mSavedOrientation);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
 
@@ -125,15 +134,10 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
 
         mAdapter = new HomeScreenAdapter(getActivity(), data);
         twList.setAdapter(mAdapter);
-
-        if (listInstanceState != null) {
-            Log.d(getClass().getSimpleName(), listInstanceState.toString());
-            twList.getLayoutManager().onRestoreInstanceState(listInstanceState);
+        
+        if (mListInstanceState != null
+                && mSavedOrientation == getResources().getConfiguration().orientation) { //different orientation -> different layout params
+            twList.getLayoutManager().onRestoreInstanceState(mListInstanceState);
         }
-
-        if (mSavedPosition > 0) {
-            twList.scrollToPosition(mSavedPosition);
-        }
-        mSavedPosition = -1;
     }
 }

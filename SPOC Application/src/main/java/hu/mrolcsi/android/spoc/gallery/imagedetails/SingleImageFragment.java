@@ -1,9 +1,12 @@
 package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,11 +16,11 @@ import android.support.v7.widget.ShareActionProvider;
 import android.view.*;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import hu.mrolcsi.android.spoc.common.BuildConfig;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.GlideHelper;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -40,7 +43,6 @@ public class SingleImageFragment extends SPOCFragment {
     private int mDesiredHeight;
 
     private String mImagePath;
-    private boolean isLoaded = false;
     private ShareActionProvider mShareActionProvider;
 
     public static SingleImageFragment newInstance(String imagePath) {
@@ -51,6 +53,26 @@ public class SingleImageFragment extends SPOCFragment {
         f.setArguments(args);
 
         return f;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+
+        WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        if (Build.VERSION.SDK_INT >= 13) {
+            Point size = new Point();
+            display.getSize(size);
+            mDesiredWidth = size.x;
+            mDesiredHeight = size.y;
+        } else {
+            //noinspection deprecation
+            mDesiredWidth = display.getWidth();
+            //noinspection deprecation
+            mDesiredHeight = display.getHeight();
+        }
     }
 
     @Nullable
@@ -82,42 +104,14 @@ public class SingleImageFragment extends SPOCFragment {
                 toggleFullScreen();
             }
         });
-
-        final ViewTreeObserver viewTreeObserver = photoView.getViewTreeObserver();
-        if (viewTreeObserver != null && viewTreeObserver.isAlive()) {
-            viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    if (Build.VERSION.SDK_INT < 16) {
-                        //noinspection deprecation
-                        viewTreeObserver.removeGlobalOnLayoutListener(this);
-                    } else
-                        viewTreeObserver.removeOnGlobalLayoutListener(this);
-
-                    mDesiredWidth = photoView.getWidth();
-                    mDesiredHeight = photoView.getHeight();
-
-                    if (getArguments() != null && getArguments().containsKey(ARG_IMAGE_PATH)) {
-                        mImagePath = getArguments().getString(ARG_IMAGE_PATH);
-
-                        if (isAdded() && !isLoaded) {
-                            Glide.with(SingleImageFragment.this).load("file://" + mImagePath).override(mDesiredWidth, mDesiredHeight).fitCenter().diskCacheStrategy(DiskCacheStrategy.ALL).into(photoView);
-                            isLoaded = true;
-                        }
-                    }
-                }
-            });
-        }
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
-        if (!isLoaded && mDesiredWidth > 0 && mDesiredHeight > 0) {
-            Glide.with(this).load("file://" + mImagePath).override(mDesiredWidth, mDesiredHeight).fitCenter().diskCacheStrategy(DiskCacheStrategy.RESULT).into(photoView);
-            isLoaded = true;
-        }
+        mImagePath = getArguments().getString(ARG_IMAGE_PATH);
+        GlideHelper.loadBigImage(this, mImagePath, mDesiredWidth, mDesiredHeight, photoView);
     }
 
     @Override
@@ -207,5 +201,6 @@ public class SingleImageFragment extends SPOCFragment {
         super.onDestroyView();
 
         Glide.clear(photoView);
+        Glide.get(getActivity()).clearMemory();
     }
 }

@@ -3,16 +3,14 @@ package hu.mrolcsi.android.spoc.gallery.home;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.GlideHelper;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 
 /**
@@ -86,13 +84,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
         holder.itemView.setLayoutParams(lp);
 
-        Glide.with(context)
-                .fromMediaStore()
-                .load(Uri.parse("file://" + filename))
-                .override(mThumbnailSize, mThumbnailSize)
-                .centerCrop()
-                .diskCacheStrategy(DiskCacheStrategy.RESULT)
-                .into(holder.img);
+        GlideHelper.loadThumbnail(context, filename, mThumbnailSize, holder.img);
     }
 
     @Override

@@ -1,16 +1,15 @@
 package hu.mrolcsi.android.spoc.gallery;
 
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -26,11 +25,13 @@ import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.gallery.home.HomeFragment;
+import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderReceiver;
+import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
 
 import java.util.Stack;
 
-public class GalleryActivity extends AppCompatActivity implements CursorLoader.OnLoadCompleteListener<Cursor> {
+public class GalleryActivity extends AppCompatActivity {
 
     public static final String DATA_FRAGMENT_STACK = "SPOC.Gallery.Navigation.FragmentStack";
     public static final String DATA_CURRENT_FRAGMENT = "SPOC.Gallery.Navigation.CurrentFragment";
@@ -44,8 +45,8 @@ public class GalleryActivity extends AppCompatActivity implements CursorLoader.O
     private Stack<ISPOCFragment> mFragmentStack = new Stack<>();
     private RetainedFragment mRetainedFragment;
     private boolean isFirstStart = true;
-
-    private Loader<Cursor> mLoader;
+    private CacheBuilderReceiver mCacheBuilderReceiver;
+    private Intent mServiceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,9 @@ public class GalleryActivity extends AppCompatActivity implements CursorLoader.O
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mNavigationView = (NavigationView) findViewById(R.id.navigation);
+        mCacheBuilderReceiver = new CacheBuilderReceiver(this);
+        IntentFilter intentFilter = new IntentFilter(CacheBuilderService.BROADCAST_ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mCacheBuilderReceiver, intentFilter);
 
         setUpDrawerToggle();
         setUpNavigationView();
@@ -84,26 +88,24 @@ public class GalleryActivity extends AppCompatActivity implements CursorLoader.O
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
 
+        if (isFirstStart) { //only do caching on first start
+            mServiceIntent = new Intent(this, CacheBuilderService.class);
+            startService(mServiceIntent);
+        }
+
         if (mCurrentFragment == null)
             mCurrentFragment = new HomeFragment();
-
         swapFragment(mCurrentFragment);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-
-//        if (isFirstStart)   //only do caching on first start
-//            mLoader = getSupportLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(this, this));
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        if (mLoader != null)
-            mLoader.startLoading();
     }
 
     @Override
@@ -116,6 +118,11 @@ public class GalleryActivity extends AppCompatActivity implements CursorLoader.O
         isFirstStart = false;
 
         retainData();
+
+        if (mCacheBuilderReceiver != null)
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(mCacheBuilderReceiver);
+        if (mServiceIntent != null)
+            stopService(mServiceIntent);
     }
 
     private void retainData() {
@@ -268,27 +275,5 @@ public class GalleryActivity extends AppCompatActivity implements CursorLoader.O
         transaction.commit();
 
         Log.v(getClass().getSimpleName(), "Fragment restored from stack: " + mCurrentFragment.toString());
-    }
-
-    @Override
-    public void onLoadComplete(Loader<Cursor> loader, Cursor cursor) {
-
-        if (cursor == null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("No images found.")
-                    .setNeutralButton(android.R.string.ok, null)
-                    .show();
-            return;
-        }
-
-        //preBuild disk cache
-        new CacheBuilderTask(this, getSupportFragmentManager(), cursor) {
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-
-                swapFragment(mCurrentFragment);
-            }
-        }.execute();
     }
 }

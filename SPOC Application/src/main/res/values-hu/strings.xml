@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SPOC</string>
     <string name="navigation_settings">Beállítások</string>
     <string name="title_activity_navigation">Galéria</string>
     <string name="title_home">Kezdőképernyő</string>
@@ -51,4 +50,5 @@
     <string name="settings_about_label_buildNumber">Build szám:</string>
     <string name="settings_about_label_version">Verzió:</string>
     <string name="settings_about_title">Névjegy</string>
+    <string name="service_cache_title">Képeid előkészítése…</string>
 </resources>

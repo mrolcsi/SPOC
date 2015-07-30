@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SPOC</string>
+    <string name="app_name" translatable="false">SPOC</string>
     <string name="title_activity_navigation">Gallery</string>
 
     <string name="title_section1" translatable="false">Section 1</string>
@@ -57,5 +57,6 @@
     <string name="details_message_coordinatesFormat">Latitude:\t%1$s %2$f\nLongitude:\t%3$s %4$f</string>
     <string name="details_message_unknownBrand"><![CDATA[<i>Unknown Brand</i>]]></string>
     <string name="details_message_unknownModel"><![CDATA[<i>Unknown Model</i>]]></string>
+    <string name="service_cache_title">Preparing your photos…</string>
 
 </resources>
