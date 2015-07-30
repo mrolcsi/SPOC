@@ -1,6 +1,8 @@
 package hu.mrolcsi.android.spoc.gallery;
 
 import android.annotation.TargetApi;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
@@ -133,6 +135,9 @@ public class GalleryActivity extends AppCompatActivity {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mCacheBuilderReceiver);
         if (mServiceIntent != null)
             stopService(mServiceIntent);
+
+        final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(CacheBuilderReceiver.NOTIFICATION_ID);
     }
 
     private void retainData() {

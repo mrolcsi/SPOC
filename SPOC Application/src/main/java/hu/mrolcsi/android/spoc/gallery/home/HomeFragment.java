@@ -14,7 +14,6 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.*;
 import android.widget.Toast;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
@@ -36,7 +35,7 @@ import org.lucasr.twowayview.widget.TwoWayView;
  * Time: 21:12
  */
 
-public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
+public final class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
 
     private static final String SAVED_ORIENTATION = "SPOC.Gallery.Home.SavedOrientation";
     private TwoWayView twList;
@@ -45,6 +44,7 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
 
     private Parcelable mListInstanceState;
     private int mSavedOrientation = Configuration.ORIENTATION_UNDEFINED;
+    private Integer mSavedPosition;
 
     private ActionMode mActionMode;
     private ItemSelectionSupport mItemSelectionSupport;
@@ -58,9 +58,6 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-
-        if (savedInstanceState != null)
-            mSavedOrientation = savedInstanceState.getInt(SAVED_ORIENTATION);
     }
 
     @Nullable
@@ -99,6 +96,8 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
 
                 mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
                 mSavedOrientation = getResources().getConfiguration().orientation;
+                mSavedPosition = i;
+                
                 fragment.setArguments(args);
 
                 ((GalleryActivity) getActivity()).swapFragment(fragment);
@@ -146,23 +145,14 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(SAVED_ORIENTATION, mSavedOrientation);
-    }
-
-    @Override
     public void onDestroy() {
         super.onDestroy();
 
-        getLoaderManager().destroyLoader(MediaStoreLoader.ID);
         if (mActionMode != null) mActionMode.finish();
     }
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, final Cursor data) {
-        Log.v(getClass().getSimpleName(), "onLoadComplete");
-
         if (data == null) {
             DialogUtils.buildErrorDialog(getActivity()).setMessage("No pictures found.").show();
             return;
@@ -171,10 +161,15 @@ public class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCom
         mAdapter = new HomeScreenAdapter(getActivity(), data);
         twList.setAdapter(mAdapter);
 
-        if (mListInstanceState != null
-                && mSavedOrientation == getResources().getConfiguration().orientation) { //different orientation -> different layout params
+        if (mListInstanceState != null && mSavedOrientation == getResources().getConfiguration().orientation) { //different orientation -> different layout params
             twList.getLayoutManager().onRestoreInstanceState(mListInstanceState);
-        }
+            mListInstanceState = null;
+        } else if (mSavedPosition != null) {
+            twList.scrollToPosition(mSavedPosition);
+
+            mSavedPosition = null;
+            mListInstanceState = null;
+        } //else handle orientation change by itself
     }
 
     private void doBatchDelete() {

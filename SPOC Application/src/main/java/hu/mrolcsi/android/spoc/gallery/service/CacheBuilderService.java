@@ -104,8 +104,12 @@ public class CacheBuilderService extends IntentService {
                     Log.w(getClass().getName(), e);
                 }
 
-                //reduce garbage
-                handler.post(clearMemoryRunnable);
+                //reduce garbage every Nth iteration
+                // N = 1:   too frequent, too much CPU work
+                // N = 10:  looks good
+                // N > 10:  OutOfMemoryErrors
+                if (cursor.getPosition() % 10 == 0) //best results with N=10
+                    handler.post(clearMemoryRunnable);
 
 //                try {
 //                    Thread.sleep(150);
@@ -120,10 +124,11 @@ public class CacheBuilderService extends IntentService {
                 LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
             }
 
+            handler.post(clearMemoryRunnable);
+
         } finally {
             if (cursor != null)
                 cursor.close();
         }
-
     }
 }
