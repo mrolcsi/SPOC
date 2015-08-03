@@ -1,12 +1,12 @@
 package hu.mrolcsi.android.spoc.gallery;
 
 import android.annotation.TargetApi;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -60,7 +60,9 @@ public class GalleryActivity extends AppCompatActivity {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mNavigationView = (NavigationView) findViewById(R.id.navigation);
         mCacheBuilderReceiver = new CacheBuilderReceiver(this);
-        IntentFilter intentFilter = new IntentFilter(CacheBuilderService.BROADCAST_ACTION);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_FIRST);
+        intentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL);
         LocalBroadcastManager.getInstance(this).registerReceiver(mCacheBuilderReceiver, intentFilter);
 
         setUpDrawerToggle();
@@ -96,6 +98,11 @@ public class GalleryActivity extends AppCompatActivity {
 
         if (isFirstStart) { //only do caching on first start
             mServiceIntent = new Intent(this, CacheBuilderService.class);
+
+            final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+            final boolean isFirstTimeEver = sharedPreferences.getBoolean(CacheBuilderService.ARG_FIRST_TIME, true);
+            mServiceIntent.putExtra(CacheBuilderService.ARG_FIRST_TIME, isFirstTimeEver);
+
             startService(mServiceIntent);
         }
 
@@ -130,13 +137,16 @@ public class GalleryActivity extends AppCompatActivity {
 
         getSupportLoaderManager().destroyLoader(MediaStoreLoader.ID);
 
-        if (mCacheBuilderReceiver != null)
+        if (mCacheBuilderReceiver != null) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mCacheBuilderReceiver);
-        if (mServiceIntent != null)
-            stopService(mServiceIntent);
+        }
 
-        final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(CacheBuilderReceiver.NOTIFICATION_ID);
+        // TODO: should only stop service and notification when app crashes
+//        if (mServiceIntent != null)
+//            stopService(mServiceIntent);
+//
+//        final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//        notificationManager.cancel(CacheBuilderReceiver.NOTIFICATION_ID);
     }
 
     private void retainData() {

@@ -1,10 +1,12 @@
 package hu.mrolcsi.android.spoc.gallery.service;
 
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
+import android.widget.Toast;
 import hu.mrolcsi.android.spoc.gallery.R;
 
 /**
@@ -17,19 +19,15 @@ import hu.mrolcsi.android.spoc.gallery.R;
 public class CacheBuilderReceiver extends BroadcastReceiver {
 
     public static final int NOTIFICATION_ID = 32;
-    private final NotificationCompat.Builder mBuilder;
-    private final NotificationManager mNotificationManager;
+    private final Context activityContext;
 
-    public CacheBuilderReceiver(Context context) {
+    private NotificationCompat.Builder mNotificationBuilder;
+    private NotificationManager mNotificationManager;
 
-        mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+    private ProgressDialog mProgressDialog;
 
-        mBuilder = new NotificationCompat.Builder(context);
-        mBuilder.setPriority(NotificationCompat.PRIORITY_LOW);
-        mBuilder.setOngoing(true);
-        mBuilder.setCategory(NotificationCompat.CATEGORY_PROGRESS);
-        mBuilder.setSmallIcon(R.drawable.ic_notification_small);
-        mBuilder.setContentTitle(context.getString(R.string.service_cache_title));
+    public CacheBuilderReceiver(Context activityContext) {
+        this.activityContext = activityContext;
     }
 
     @Override
@@ -37,18 +35,54 @@ public class CacheBuilderReceiver extends BroadcastReceiver {
         int totalCount = intent.getIntExtra(CacheBuilderService.EXTENDED_DATA_COUNT, -1);
         if (totalCount < 0) return;
 
-        int position = intent.getIntExtra(CacheBuilderService.EXTENDED_DATA_POSITION, -1);
-        if (position < 0) return;
+        int progress = intent.getIntExtra(CacheBuilderService.EXTENDED_DATA_POSITION, -1);
+        if (progress < 0) return;
 
-        //notify user about progress
-        if (position < totalCount) {
-            mBuilder.setProgress(totalCount, position, false);
-            mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
-            mBuilder.setContentText(String.format("%1$d/%2$d\t(%3$.0f%%)", position, totalCount, (float) position / totalCount * 100f));
-        } else {
-            mBuilder.setProgress(0, 0, false);
-            mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
-            mNotificationManager.cancel(NOTIFICATION_ID);
+        if (intent.getAction().equals(CacheBuilderService.BROADCAST_ACTION_FIRST)) {
+            //show dialog
+            if (mProgressDialog == null) {
+                mProgressDialog = new ProgressDialog(activityContext);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                mProgressDialog.setMax(totalCount);
+                mProgressDialog.setTitle(R.string.service_cache_title);
+                mProgressDialog.setIcon(R.drawable.info);
+                mProgressDialog.setIndeterminate(false);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setMessage(context.getString(R.string.service_cache_message_firstTime));
+                mProgressDialog.show();
+            }
+
+            if (progress < totalCount) {
+                mProgressDialog.setProgress(progress);
+            } else {
+                mProgressDialog.dismiss();
+                Toast.makeText(activityContext, context.getString(R.string.service_cache_message_done), Toast.LENGTH_LONG).show();
+            }
+        } else if (intent.getAction().equals(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL)) {
+            //show notification
+            if (mNotificationManager == null)
+                mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+            if (mNotificationBuilder == null) {
+
+                mNotificationBuilder = new NotificationCompat.Builder(context);
+                mNotificationBuilder.setPriority(NotificationCompat.PRIORITY_LOW);
+                mNotificationBuilder.setOngoing(true);
+                mNotificationBuilder.setCategory(NotificationCompat.CATEGORY_PROGRESS);
+                mNotificationBuilder.setSmallIcon(R.drawable.ic_notification_small);
+                mNotificationBuilder.setContentTitle(context.getString(R.string.service_cache_title));
+            }
+
+            //notify user about progress
+            if (progress < totalCount) {
+                mNotificationBuilder.setProgress(totalCount, progress, false);
+                mNotificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
+                mNotificationBuilder.setContentText(String.format("%1$d/%2$d\t(%3$.0f%%)", progress, totalCount, (float) progress / totalCount * 100f));
+            } else {
+                mNotificationBuilder.setProgress(0, 0, false);
+                mNotificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
+                mNotificationManager.cancel(NOTIFICATION_ID);
+            }
         }
     }
 }

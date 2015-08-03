@@ -8,6 +8,8 @@ import android.graphics.Point;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -29,7 +31,9 @@ import java.util.concurrent.ExecutionException;
 public class CacheBuilderService extends IntentService {
 
     public static final String TAG = "SPOC.Gallery.CacheBuilderService";
-    public static final String BROADCAST_ACTION = "SPOC.Gallery.CacheBuilderService.BROADCAST";
+    public static final String ARG_FIRST_TIME = "SPOC.Gallery.CacheBuilderService.FIRST_TIME";
+    public static final String BROADCAST_ACTION_FIRST = "SPOC.Gallery.CacheBuilderService.BROADCAST_FIRST";
+    public static final String BROADCAST_ACTION_INCREMENTAL = "SPOC.Gallery.CacheBuilderService.BROADCAST_INCREMENTAL";
     public static final String EXTENDED_DATA_COUNT = "SPOC.Gallery.CacheBuilderService.COUNT";
     public static final String EXTENDED_DATA_POSITION = "SPOC.Gallery.CacheBuilderService.POSITION";
 
@@ -44,6 +48,10 @@ public class CacheBuilderService extends IntentService {
 //            Log.w(getClass().getSimpleName(), "DELETING DISK CACHE - Don't forget tot remove this!");
 //            Glide.get(getApplicationContext()).clearDiskCache();
 //        }
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SPOCWakeLockTag");
+        wakeLock.acquire();
 
         //prepare parameters
         int thumbnailSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
@@ -67,7 +75,11 @@ public class CacheBuilderService extends IntentService {
         String[] projection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA};
         String sortOrder = MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC";
 
-        Intent progressIntent = new Intent(BROADCAST_ACTION);
+        final boolean isFirstTime = intent.getBooleanExtra(ARG_FIRST_TIME, false);
+        Intent progressIntent;
+        if (isFirstTime)
+            progressIntent = new Intent(BROADCAST_ACTION_FIRST);
+        else progressIntent = new Intent(BROADCAST_ACTION_INCREMENTAL);
 
         Cursor cursor = null;
         try {
@@ -130,6 +142,8 @@ public class CacheBuilderService extends IntentService {
         } finally {
             if (cursor != null)
                 cursor.close();
+            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(ARG_FIRST_TIME, false).apply();
+            wakeLock.release();
         }
     }
 }

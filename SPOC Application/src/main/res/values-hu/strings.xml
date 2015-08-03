@@ -61,4 +61,7 @@
     <string name="dialog_message_deleteMultiplePictures">Biztosan törölni akarsz %d képet?</string>
     <string name="message_multiplePicturesDeleted">%d kép törölve.</string>
     <string name="message_deletingPictures">Törlés folyamatban…</string>
+    <string name="message_preparingToShare">Felkészülés megosztásra…</string>
+    <string name="service_cache_message_firstTime">Képeid előkészítése használatra.\n\nEz eltarthat pár percig, attól függően milyen sok képed van.\n\nNe aggódj, ezt csak egyszer kell elvégezni.</string>
+    <string name="service_cache_message_done">Kész! Most már szabadon használhatod az alkalmazást!</string>
 </resources>

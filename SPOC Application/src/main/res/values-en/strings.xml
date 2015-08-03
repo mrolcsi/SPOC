@@ -62,4 +62,6 @@
     <string name="message_multiplePicturesDeleted">%d pictures deleted.</string>
     <string name="message_deletingPictures">Deleting…</string>
     <string name="message_preparingToShare">Preparing to share…</string>
+    <string name="service_cache_message_firstTime">This might take a few minutes depending how many pictures you have.\n\nDon\'t worry, this only needs to be done once.</string>
+    <string name="service_cache_message_done">Done! You can now freely use the app!</string>
 </resources>
