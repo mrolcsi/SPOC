@@ -1,6 +1,8 @@
 package hu.mrolcsi.android.spoc.gallery.main;
 
 import android.annotation.TargetApi;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -48,6 +50,7 @@ public final class GalleryActivity extends AppCompatActivity {
     private RetainedFragment mRetainedFragment;
     private boolean isFirstStart = true;
     private CacheBuilderReceiver mCacheBuilderReceiver;
+    private Intent mServiceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,13 +99,13 @@ public final class GalleryActivity extends AppCompatActivity {
         mDrawerToggle.syncState();
 
         if (isFirstStart) { //only do caching on first start
-            Intent serviceIntent = new Intent(this, CacheBuilderService.class);
+            mServiceIntent = new Intent(this, CacheBuilderService.class);
 
             final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
             final boolean isFirstTimeEver = sharedPreferences.getBoolean(CacheBuilderService.ARG_FIRST_TIME, true);
-            serviceIntent.putExtra(CacheBuilderService.ARG_FIRST_TIME, isFirstTimeEver);
+            mServiceIntent.putExtra(CacheBuilderService.ARG_FIRST_TIME, isFirstTimeEver);
 
-            startService(serviceIntent);
+            startService(mServiceIntent);
         }
 
         if (mCurrentFragment == null)
@@ -141,11 +144,11 @@ public final class GalleryActivity extends AppCompatActivity {
         }
 
         // TODO: should only stop service and notification when app crashes
-//        if (mServiceIntent != null)
-//            stopService(mServiceIntent);
-//
-//        final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//        notificationManager.cancel(CacheBuilderReceiver.NOTIFICATION_ID);
+        if (mServiceIntent != null)
+            stopService(mServiceIntent);
+
+        final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(CacheBuilderReceiver.NOTIFICATION_ID);
     }
 
     private void retainData() {
