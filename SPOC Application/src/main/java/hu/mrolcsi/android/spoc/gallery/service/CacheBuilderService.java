@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutionException;
  * Time: 9:02
  */
 
-public class CacheBuilderService extends IntentService {
+public class CacheBuilderService extends IntentService implements Thread.UncaughtExceptionHandler {
 
     public static final String TAG = "SPOC.Gallery.CacheBuilderService";
     public static final String ARG_FIRST_TIME = "SPOC.Gallery.CacheBuilderService.FIRST_TIME";
@@ -145,5 +145,10 @@ public class CacheBuilderService extends IntentService {
             PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(ARG_FIRST_TIME, false).apply();
             wakeLock.release();
         }
+    }
+
+    @Override
+    public void uncaughtException(Thread thread, Throwable throwable) {
+        Log.w(getClass().getSimpleName(), throwable.toString());
     }
 }
