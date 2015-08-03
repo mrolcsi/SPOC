@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery;
+package hu.mrolcsi.android.spoc.gallery.main;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
@@ -26,14 +26,14 @@ import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
-import hu.mrolcsi.android.spoc.gallery.home.HomeFragment;
+import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderReceiver;
 import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
 
 import java.util.Stack;
 
-public class GalleryActivity extends AppCompatActivity {
+public final class GalleryActivity extends AppCompatActivity {
 
     public static final String DATA_FRAGMENT_STACK = "SPOC.Gallery.Navigation.FragmentStack";
     public static final String DATA_CURRENT_FRAGMENT = "SPOC.Gallery.Navigation.CurrentFragment";
@@ -48,12 +48,11 @@ public class GalleryActivity extends AppCompatActivity {
     private RetainedFragment mRetainedFragment;
     private boolean isFirstStart = true;
     private CacheBuilderReceiver mCacheBuilderReceiver;
-    private Intent mServiceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_navigation);
+        setContentView(R.layout.activity_gallery);
 
         loadRetainedData();
 
@@ -97,17 +96,17 @@ public class GalleryActivity extends AppCompatActivity {
         mDrawerToggle.syncState();
 
         if (isFirstStart) { //only do caching on first start
-            mServiceIntent = new Intent(this, CacheBuilderService.class);
+            Intent serviceIntent = new Intent(this, CacheBuilderService.class);
 
             final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
             final boolean isFirstTimeEver = sharedPreferences.getBoolean(CacheBuilderService.ARG_FIRST_TIME, true);
-            mServiceIntent.putExtra(CacheBuilderService.ARG_FIRST_TIME, isFirstTimeEver);
+            serviceIntent.putExtra(CacheBuilderService.ARG_FIRST_TIME, isFirstTimeEver);
 
-            startService(mServiceIntent);
+            startService(serviceIntent);
         }
 
         if (mCurrentFragment == null)
-            mCurrentFragment = new HomeFragment();
+            mCurrentFragment = new ThumbnailsFragment();
         swapFragment(mCurrentFragment);
     }
 
@@ -175,7 +174,7 @@ public class GalleryActivity extends AppCompatActivity {
                         break;
                     case R.id.navigation_home:
                     default:
-                        swapFragment(new HomeFragment());
+                        swapFragment(new ThumbnailsFragment());
                         break;
                 }
 

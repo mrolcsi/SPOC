@@ -40,11 +40,11 @@ public abstract class GlideHelper {
 
         Glide.with(appContext)
                 .fromMediaStore()
+                .centerCrop()
+                .listener(requestListener)
+                .diskCacheStrategy(DiskCacheStrategy.RESULT)
                 .signature(new StringSignature(filename + "_thumb"))
                 .load(Uri.parse("file://" + filename))
-                .centerCrop()
-                .diskCacheStrategy(DiskCacheStrategy.RESULT)
-                .listener(requestListener)
                 .into(thumbnailSize, thumbnailSize)
                 .get();
     }
@@ -52,23 +52,23 @@ public abstract class GlideHelper {
     public static void loadThumbnail(Context context, String filename, int thumbnailSize, ImageView target) {
         Glide.with(context)
                 .fromMediaStore()
+                .centerCrop()
+                .override(thumbnailSize, thumbnailSize)
+                .listener(requestListener)
+                .diskCacheStrategy(DiskCacheStrategy.RESULT)
                 .signature(new StringSignature(filename + "_thumb"))
                 .load(Uri.parse("file://" + filename))
-                .override(thumbnailSize, thumbnailSize)
-                .centerCrop()
-                .diskCacheStrategy(DiskCacheStrategy.RESULT)
-                .listener(requestListener)
                 .into(target);
     }
 
     public static void cacheBigImage(Context appContext, String filename, int screenWidth, int screenHeight) throws ExecutionException, InterruptedException {
         Glide.with(appContext)
                 .fromMediaStore()
+                .fitCenter()
+                .listener(requestListener)
+                .diskCacheStrategy(DiskCacheStrategy.RESULT)
                 .signature(new StringSignature(filename + "_big"))
                 .load(Uri.parse("file://" + filename))
-                .fitCenter()
-                .diskCacheStrategy(DiskCacheStrategy.RESULT)
-                .listener(requestListener)
                 .into(screenWidth, screenHeight)
                 .get();
     }
@@ -76,12 +76,12 @@ public abstract class GlideHelper {
     public static void loadBigImage(Fragment fragment, String filename, int width, int height, ImageView target) {
         Glide.with(fragment)
                 .fromMediaStore()
+                .fitCenter()
+                .override(width, height)
+                .listener(requestListener)
+                .diskCacheStrategy(DiskCacheStrategy.RESULT)
                 .signature(new StringSignature(filename + "_big"))
                 .load(Uri.parse("file://" + filename))
-                .override(width, height)
-                .fitCenter()
-                .diskCacheStrategy(DiskCacheStrategy.RESULT)
-                .listener(requestListener)
                 .into(target);
     }
 

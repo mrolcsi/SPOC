@@ -13,8 +13,8 @@ import android.util.Log;
 import android.view.*;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
-import hu.mrolcsi.android.spoc.gallery.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
 
 /**
  * Created with IntelliJ IDEA.

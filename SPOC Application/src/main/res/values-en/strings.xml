@@ -64,4 +64,7 @@
     <string name="message_preparingToShare">Preparing to share…</string>
     <string name="service_cache_message_firstTime">This might take a few minutes depending how many pictures you have.\n\nDon\'t worry, this only needs to be done once.</string>
     <string name="service_cache_message_done">Done! You can now freely use the app!</string>
+    <string name="settings_gallery_showCameraButton_summary">Show a quick launch button for Camera.</string>
+    <string name="settings_gallery_showCameraButton_title">Camera Quick Launch</string>
+    <string name="error_noPictures">No pictures found.</string>
 </resources>

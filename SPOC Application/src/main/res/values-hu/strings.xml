@@ -64,4 +64,7 @@
     <string name="message_preparingToShare">Felkészülés megosztásra…</string>
     <string name="service_cache_message_firstTime">Képeid előkészítése használatra.\n\nEz eltarthat pár percig, attól függően milyen sok képed van.\n\nNe aggódj, ezt csak egyszer kell elvégezni.</string>
     <string name="service_cache_message_done">Kész! Most már szabadon használhatod az alkalmazást!</string>
+    <string name="settings_gallery_showCameraButton_title">Kamera gyorsindító</string>
+    <string name="settings_gallery_showCameraButton_summary">Gyorsindító gomb meglenítése.</string>
+    <string name="error_noPictures">Nincsenek képek.</string>
 </resources>

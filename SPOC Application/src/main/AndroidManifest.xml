@@ -21,7 +21,7 @@
             android:name="hu.mrolcsi.android.spoc.gallery.common.GlideConfiguration"
             android:value="GlideModule" />
         <activity
-                android:name=".GalleryActivity"
+            android:name=".main.GalleryActivity"
                 android:label="@string/title_activity_gallery">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

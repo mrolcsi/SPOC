@@ -6,8 +6,8 @@ import android.view.View;
 import android.widget.FrameLayout;
 import com.github.machinarius.preferencefragment.PreferenceFragment;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
-import hu.mrolcsi.android.spoc.gallery.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,7 +16,7 @@ import hu.mrolcsi.android.spoc.gallery.R;
  * Time: 14:10
  */
 
-public class SettingsFragment extends PreferenceFragment implements ISPOCFragment {
+public final class SettingsFragment extends PreferenceFragment implements ISPOCFragment {
 
     @Override
     public void onCreate(Bundle paramBundle) {
@@ -31,9 +31,14 @@ public class SettingsFragment extends PreferenceFragment implements ISPOCFragmen
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) view.getLayoutParams();
         lp.topMargin = getResources().getDimensionPixelOffset(R.dimen.abc_action_bar_default_height_material);
+
+        lp.topMargin += getResources().getDimensionPixelOffset(R.dimen.margin_small);
+        lp.bottomMargin += getResources().getDimensionPixelOffset(R.dimen.margin_small);
+        lp.leftMargin += getResources().getDimensionPixelOffset(R.dimen.margin_small);
+        lp.rightMargin += getResources().getDimensionPixelOffset(R.dimen.margin_small);
         view.setLayoutParams(lp);
 
-        findPreference("prefAbout").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+        findPreference(getString(R.string.settings_key_about)).setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 AboutDialog dialog = new AboutDialog();

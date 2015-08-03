@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery.home;
+package hu.mrolcsi.android.spoc.gallery.main;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -20,22 +20,20 @@ import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
  * Time: 21:48
  */
 
-public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.ImageViewHolder> {
+public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.ImageViewHolder> {
 
     private final int columnSpan;
     private final Context context;
-    private final int preferredColumns;
     private final int mThumbnailSize;
 
-    private String filename;
     private int iData;
 
     private Cursor cursor;
     private int mCount = 0;
 
-    public HomeScreenAdapter(Context context) {
+    public ThumbnailsAdapter(Context context) {
         this.context = context;
-        preferredColumns = context.getResources().getInteger(R.integer.preferredColumns);
+        int preferredColumns = context.getResources().getInteger(R.integer.preferredColumns);
         if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             columnSpan = (int) Math.round((preferredColumns + 0.5) / 2);
         } else if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -45,7 +43,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
         mThumbnailSize = context.getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
     }
 
-    public HomeScreenAdapter(Context context, Cursor cursor) {
+    public ThumbnailsAdapter(Context context, Cursor cursor) {
         this(context);
         this.cursor = cursor;
 
@@ -69,10 +67,10 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Im
 
         cursor.moveToPosition(i);
 
-        filename = cursor.getString(iData);
+        String filename = cursor.getString(iData);
         SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
 
-        if (i % 7 == 1) { //TODO: expand frequently used items (or just leave it static like this?)
+        if (i % 12 == 0) { //TODO: expand frequently used items (or just leave it static like this?)
             lp.colSpan = columnSpan;
             lp.rowSpan = columnSpan;
             //holder.itemView.setBackgroundColor(Color.BLUE);

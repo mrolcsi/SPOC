@@ -1,17 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <PreferenceCategory android:title="@string/title_activity_gallery">
+
+        <SwitchPreference
+            android:id="@+id/prefShowCamera"
+            android:icon="@drawable/camera"
+            android:key="@string/settings_key_showCameraButton"
+            android:summary="@string/settings_gallery_showCameraButton_summary"
+            android:title="@string/settings_gallery_showCameraButton_title" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/preferences_about_title">
 
         <Preference
             android:icon="@drawable/info"
-            android:key="prefAbout"
+            android:key="@string/settings_key_about"
             android:summary="@string/preferences_about_summary"
             android:title="@string/preferences_about_title" />
 
         <Preference
             android:icon="@drawable/globe"
-            android:key="prefWebPage"
+            android:key="@string/settings_about_visitWebPage"
             android:summary="@string/preferences_webPage_summary"
             android:title="@string/preferences_webPage_title">
             <intent

@@ -1,2 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="settings_key_showCameraButton" translatable="false">prefShowCameraButton</string>
+    <string name="settings_key_about" translatable="false">prefAbout</string>
+    <string name="settings_about_visitWebPage" translatable="false">prefWebPage</string>
+</resources>

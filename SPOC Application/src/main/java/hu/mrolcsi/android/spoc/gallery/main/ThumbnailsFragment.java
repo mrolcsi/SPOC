@@ -1,26 +1,35 @@
-package hu.mrolcsi.android.spoc.gallery.home;
+package hu.mrolcsi.android.spoc.gallery.main;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
 import android.view.*;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Toast;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
-import hu.mrolcsi.android.spoc.gallery.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.HideOnScrollListener;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 import hu.mrolcsi.android.spoc.gallery.imagedetails.ImagePagerFragment;
 import org.lucasr.twowayview.ItemClickSupport;
@@ -35,11 +44,11 @@ import org.lucasr.twowayview.widget.TwoWayView;
  * Time: 21:12
  */
 
-public final class HomeFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
+public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
 
-    private static final String SAVED_ORIENTATION = "SPOC.Gallery.Home.SavedOrientation";
+    private static final int PRELOAD_AHEAD_ITEMS = 5;
     private TwoWayView twList;
-    private HomeScreenAdapter mAdapter;
+    private ThumbnailsAdapter mAdapter;
     private CursorLoader mLoader;
 
     private Parcelable mListInstanceState;
@@ -115,6 +124,41 @@ public final class HomeFragment extends SPOCFragment implements CursorLoader.OnL
                 return true;
             }
         });
+
+        final FloatingActionButton fabCamera = (FloatingActionButton) view.findViewById(R.id.fabCamera);
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        final boolean showCameraButton = sharedPrefs.getBoolean(getString(R.string.settings_key_showCameraButton), true);
+        if (showCameraButton) {
+            fabCamera.setVisibility(View.VISIBLE);
+
+            final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
+                @Override
+                public void hide() {
+                    int fabMargin = ((ViewGroup.MarginLayoutParams) fabCamera.getLayoutParams()).bottomMargin;
+                    ViewCompat.animate(fabCamera).translationY(fabCamera.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
+                }
+
+                @Override
+                public void show() {
+                    ViewCompat.animate(fabCamera).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
+                }
+            };
+            twList.setOnScrollListener(hideOnScrollListener);
+
+            fabCamera.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    final ResolveInfo resolveInfo = getActivity().getPackageManager().resolveActivity(cameraIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                    final Intent appIntent = getActivity().getPackageManager().getLaunchIntentForPackage(resolveInfo.activityInfo.packageName);
+                    startActivity(appIntent);
+                }
+            });
+        } else {
+            fabCamera.setVisibility(View.GONE);
+        }
+
+
     }
 
     @Override
@@ -154,22 +198,23 @@ public final class HomeFragment extends SPOCFragment implements CursorLoader.OnL
     @Override
     public void onLoadComplete(Loader<Cursor> loader, final Cursor data) {
         if (data == null) {
-            DialogUtils.buildErrorDialog(getActivity()).setMessage("No pictures found.").show();
+            DialogUtils.buildErrorDialog(getActivity()).setMessage(getString(R.string.error_noPictures)).show();
             return;
         }
 
-        mAdapter = new HomeScreenAdapter(getActivity(), data);
+        mAdapter = new ThumbnailsAdapter(getActivity(), data);
         twList.setAdapter(mAdapter);
 
         if (mListInstanceState != null && mSavedOrientation == getResources().getConfiguration().orientation) { //different orientation -> different layout params
             twList.getLayoutManager().onRestoreInstanceState(mListInstanceState);
             mListInstanceState = null;
         } else if (mSavedPosition != null) {
+            twList.invalidate();
             twList.scrollToPosition(mSavedPosition);
 
             mSavedPosition = null;
             mListInstanceState = null;
-        } //else handle orientation change by itself
+        } //else handle orientation change internally
     }
 
     private void doBatchDelete() {
