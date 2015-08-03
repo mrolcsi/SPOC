@@ -1,17 +1,21 @@
 buildscript {
     repositories {
         jcenter()
+        maven { url 'https://maven.fabric.io/public' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.1.1'
+        classpath 'io.fabric.tools:gradle:1.+'
     }
 }
 apply plugin: 'com.android.application'
+apply plugin: 'io.fabric'
 
 repositories {
     jcenter()
     mavenCentral()
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { url 'https://maven.fabric.io/public' }
 }
 
 def makeVersionCode = { ->
@@ -124,4 +128,7 @@ dependencies {
     compile project(':core')
     compile project(':layouts')
     compile 'com.github.machinarius:preferencefragment:0.1.2'
+    compile('com.crashlytics.sdk.android:crashlytics:2.5.0@aar') {
+        transitive = true;
+    }
 }

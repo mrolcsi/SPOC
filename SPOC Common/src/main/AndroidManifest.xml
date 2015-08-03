@@ -1,8 +1,2 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="hu.mrolcsi.android.spoc.common">
-
-    <application android:allowBackup="true">
-
-    </application>
-
+<manifest package="hu.mrolcsi.android.spoc.common">
 </manifest>

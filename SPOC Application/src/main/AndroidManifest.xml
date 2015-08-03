@@ -32,6 +32,9 @@
         <service
             android:name=".service.CacheBuilderService"
             android:exported="false" />
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="ed56220fdb5988cc5c8783bba5ebbf57313f06c0" />
     </application>
 
 </manifest>
