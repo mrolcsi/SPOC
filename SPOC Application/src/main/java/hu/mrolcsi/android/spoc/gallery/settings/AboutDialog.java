@@ -54,7 +54,8 @@ public class AboutDialog extends DialogFragment {
 
         WebView webView = (WebView) view.findViewById(R.id.wvAbout);
         final String html = FileUtils.readRawResource(getActivity(), R.raw.about);
-        webView.loadData(html, "text/html", null);
+        //webView.loadData(html, "text/html", "utf-8");
+        webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
 
         final TextView tvVersionName = (TextView) view.findViewById(R.id.tvVersionName);
         final TextView tvBuildNumber = (TextView) view.findViewById(R.id.tvBuildNumber);

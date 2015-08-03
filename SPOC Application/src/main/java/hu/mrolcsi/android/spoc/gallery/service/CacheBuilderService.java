@@ -65,12 +65,13 @@ public class CacheBuilderService extends IntentService {
         //prepare query
         Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         String[] projection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA};
+        String sortOrder = MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC";
 
         Intent progressIntent = new Intent(BROADCAST_ACTION);
 
         Cursor cursor = null;
         try {
-            cursor = getContentResolver().query(uri, projection, null, null, null);
+            cursor = getContentResolver().query(uri, projection, null, null, sortOrder);
             if (cursor == null) return;
 
             int columnIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
