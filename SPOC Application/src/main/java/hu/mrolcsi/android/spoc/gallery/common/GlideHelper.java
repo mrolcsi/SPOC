@@ -11,6 +11,7 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.signature.StringSignature;
+import hu.mrolcsi.android.spoc.gallery.R;
 
 import java.util.concurrent.ExecutionException;
 
@@ -37,7 +38,6 @@ public abstract class GlideHelper {
     };
 
     public static void cacheThumbnail(Context appContext, String filename, int thumbnailSize) throws ExecutionException, InterruptedException {
-
         Glide.with(appContext)
                 .fromMediaStore()
                 .centerCrop()
@@ -55,6 +55,7 @@ public abstract class GlideHelper {
                 .centerCrop()
                 .override(thumbnailSize, thumbnailSize)
                 .listener(requestListener)
+                .error(R.drawable.error)
                 .diskCacheStrategy(DiskCacheStrategy.RESULT)
                 .signature(new StringSignature(filename + "_thumb"))
                 .load(Uri.parse("file://" + filename))
@@ -79,10 +80,10 @@ public abstract class GlideHelper {
                 .fitCenter()
                 .override(width, height)
                 .listener(requestListener)
+                .error(R.drawable.error)
                 .diskCacheStrategy(DiskCacheStrategy.RESULT)
                 .signature(new StringSignature(filename + "_big"))
                 .load(Uri.parse("file://" + filename))
                 .into(target);
     }
-
 }
