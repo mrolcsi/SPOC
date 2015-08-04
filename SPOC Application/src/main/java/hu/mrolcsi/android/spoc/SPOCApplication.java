@@ -1,9 +1,12 @@
 package hu.mrolcsi.android.spoc;
 
 import android.app.Application;
+import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 import com.crashlytics.android.Crashlytics;
+import hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService;
+import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import io.fabric.sdk.android.Fabric;
 
@@ -23,9 +26,9 @@ public class SPOCApplication extends Application {
             Log.i(getClass().getSimpleName(), "API Level: " + Build.VERSION.SDK_INT);
 
         Fabric.with(this, new Crashlytics());
+        DatabaseHelper.init(this);
 
-        //TODO: scan MediaStore & white-listed folders for Images
-        //  update library if needed
-        //TODO: do this in a background service
+        Intent serviceIntent = new Intent(this, DatabaseBuilderService.class);
+        startService(serviceIntent);
     }
 }
