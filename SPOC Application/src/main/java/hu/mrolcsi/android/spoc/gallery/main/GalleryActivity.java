@@ -38,6 +38,7 @@ public final class GalleryActivity extends AppCompatActivity {
     public static final String DATA_FRAGMENT_STACK = "SPOC.Gallery.Navigation.FragmentStack";
     public static final String DATA_CURRENT_FRAGMENT = "SPOC.Gallery.Navigation.CurrentFragment";
     private static final String DATA_IS_FIRST_START = "SPOC.Gallery.IsFirstStart";
+    private static final String DATA_CACHE_BUILDER_SERVICE = "SPOC.Gallery.CacheBuilder";
 
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
@@ -49,6 +50,7 @@ public final class GalleryActivity extends AppCompatActivity {
     private boolean isFirstStart = true;
     private CacheBuilderReceiver mCacheBuilderReceiver;
     private Intent mServiceIntent;
+    private IntentFilter mReceiverIntentFilter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +62,10 @@ public final class GalleryActivity extends AppCompatActivity {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mNavigationView = (NavigationView) findViewById(R.id.navigation);
         mCacheBuilderReceiver = new CacheBuilderReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_FIRST);
-        intentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL);
-        LocalBroadcastManager.getInstance(this).registerReceiver(mCacheBuilderReceiver, intentFilter);
+
+        mReceiverIntentFilter = new IntentFilter();
+        mReceiverIntentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_FIRST);
+        mReceiverIntentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL);
 
         setUpDrawerToggle();
         setUpNavigationView();
@@ -84,9 +86,10 @@ public final class GalleryActivity extends AppCompatActivity {
             mCurrentFragment = (ISPOCFragment) mRetainedFragment.getRetainedData(DATA_CURRENT_FRAGMENT);
             try {
                 isFirstStart = (boolean) mRetainedFragment.getRetainedData(DATA_IS_FIRST_START);
-            } catch (Exception e) {
-                Log.w(getClass().getName(), e);
+            } catch (NullPointerException e) {
+                Log.w(getClass().getName(), "Why is this here?" + e.toString());
             }
+            mServiceIntent = (Intent) mRetainedFragment.getRetainedData(DATA_CACHE_BUILDER_SERVICE);
         }
     }
 
@@ -96,8 +99,6 @@ public final class GalleryActivity extends AppCompatActivity {
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
 
-        mServiceIntent = new Intent(this, CacheBuilderService.class);
-
         if (mCurrentFragment == null)
             mCurrentFragment = new ThumbnailsFragment();
         swapFragment(mCurrentFragment);
@@ -106,6 +107,8 @@ public final class GalleryActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mCacheBuilderReceiver, mReceiverIntentFilter);
     }
 
     @Override
@@ -120,7 +123,12 @@ public final class GalleryActivity extends AppCompatActivity {
         isFirstStart = false;
         retainData();
 
-        Glide.get(this).clearMemory();
+        if (mCacheBuilderReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(mCacheBuilderReceiver);
+        }
+
+        final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(CacheBuilderReceiver.NOTIFICATION_ID);
     }
 
     @Override
@@ -129,22 +137,18 @@ public final class GalleryActivity extends AppCompatActivity {
 
         getSupportLoaderManager().destroyLoader(MediaStoreLoader.ID);
 
-        if (mCacheBuilderReceiver != null) {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(mCacheBuilderReceiver);
+        if (mServiceIntent != null) {
+            stopService(mServiceIntent);
         }
 
-        // TODO: should only stop service and notification when app crashes
-        if (mServiceIntent != null)
-            stopService(mServiceIntent);
-
-        final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(CacheBuilderReceiver.NOTIFICATION_ID);
+        Glide.get(this).clearMemory();
     }
 
     private void retainData() {
         mRetainedFragment.putRetainedData(DATA_FRAGMENT_STACK, mFragmentStack);
         mRetainedFragment.putRetainedData(DATA_CURRENT_FRAGMENT, mCurrentFragment);
         mRetainedFragment.putRetainedData(DATA_IS_FIRST_START, isFirstStart);
+        mRetainedFragment.putRetainedData(DATA_CACHE_BUILDER_SERVICE, mServiceIntent);
     }
 
     @Override
