@@ -41,17 +41,24 @@ def makeVersionNameRelease = { ->
             standardOutput = lastTag
         }
 
+        logger.info("*** Last Tag: " + lastTag.toString().trim())
+
         def lastCommits = new ByteArrayOutputStream()
         exec {
-            commandLine 'git', 'rev-list', lastTag.toString().trim() + '..HEAD'
+            commandLine 'git', 'rev-list', lastTag.toString().trim() + '..HEAD', '--count'
             standardOutput = lastCommits
         }
+
+        logger.info("*** Last Commits: " + lastCommits.toString().trim())
 
         def versionName = new ByteArrayOutputStream()
         exec {
             commandLine 'git', 'describe', '--tags', '--abbrev=0'
             standardOutput = versionName
         }
+
+        logger.info("*** Version Name: " + versionName.toString().trim())
+
         if (lastCommits.toString().equals(''))
             return 'v' + versionName.toString().trim()
         else
@@ -65,23 +72,10 @@ def makeVersionNameRelease = { ->
 
 def makeVersionNameDebug = { ->
     try {
-        def lastTag = new ByteArrayOutputStream()
-        exec {
-            commandLine 'git', 'rev-list', '--tags', '--no-walk', '--max-count=1'
-            standardOutput = lastTag
-        }
 
-        def lastCommits = new ByteArrayOutputStream()
-        exec {
-            commandLine 'git', 'rev-list', lastTag.toString().trim() + '..HEAD', '--count'
-            standardOutput = lastCommits
-        }
+        def releaseName = makeVersionNameRelease()
 
-        def versionName = new ByteArrayOutputStream()
-        exec {
-            commandLine 'git', 'describe', '--tags', '--abbrev=0'
-            standardOutput = versionName
-        }
+        logger.info("*** Release Name: " + releaseName)
 
         def currentBranch = new ByteArrayOutputStream()
         exec {
@@ -89,7 +83,9 @@ def makeVersionNameDebug = { ->
             standardOutput = currentBranch
         }
 
-        return 'v' + versionName.toString().trim() + '.' + lastCommits.toString().trim() + '/' + currentBranch.toString().trim()
+        logger.info("*** Current Branch: " + currentBranch.toString().trim())
+
+        return releaseName + '/' + currentBranch.toString().trim()
     }
     catch (ignored) {
         logger.error(ignored.printStackTrace())
@@ -103,8 +99,10 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
+            def file = output.outputFile
             //output.outputFile = new File(file.parent, file.name.replace(".apk", "-" + makeVersionNameRelease() + ".apk"))
-            output.outputFile = new File("apk/SPOC-" + makeVersionNameRelease() + ".apk")
+            def name = "SPOC-" + makeVersionNameRelease() + "-" + variant.buildType.getName() + ".apk"
+            output.outputFile = new File(file.parent, name)
         }
     }
 

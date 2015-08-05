@@ -5,7 +5,7 @@ android:
   - android-22
   - extra-google-m2repository
   - extra-android-m2repository
-script: "./gradlew build"
+script: "./gradlew assembleRelease"
 before_install:
 - chmod +x gradlew
 #before_deploy:
