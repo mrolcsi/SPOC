@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.gallery.service;
 
+import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
@@ -43,6 +44,7 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
         super(TAG);
     }
 
+    @TargetApi(13)
     @Override
     protected void onHandleIntent(Intent intent) {
 //        if (BuildConfig.DEBUG) {

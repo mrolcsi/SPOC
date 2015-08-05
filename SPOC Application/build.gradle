@@ -52,8 +52,10 @@ def makeVersionNameRelease = { ->
             commandLine 'git', 'describe', '--tags', '--abbrev=0'
             standardOutput = versionName
         }
-
-        return 'v' + versionName.toString().trim() + '-' + lastCommits.toString().trim()
+        if (lastCommits.toString().equals(''))
+            return 'v' + versionName.toString().trim()
+        else
+            return 'v' + versionName.toString().trim() + '.' + lastCommits.toString().trim()
     }
     catch (ignored) {
         logger.error(ignored.printStackTrace())
@@ -99,6 +101,13 @@ android {
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
 
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            //output.outputFile = new File(file.parent, file.name.replace(".apk", "-" + makeVersionNameRelease() + ".apk"))
+            output.outputFile = new File("apk/SPOC-" + makeVersionNameRelease() + ".apk")
+        }
+    }
+
     defaultConfig {
         applicationId "hu.mrolcsi.android.spoc"
         minSdkVersion 10
@@ -106,10 +115,21 @@ android {
         versionCode makeVersionCode()
         versionName makeVersionNameDebug()
     }
+
+    signingConfigs {
+        release {
+            storeFile file("keystore.jks")
+            storePassword "p4SsW0rd"
+            keyAlias "SPOC KeyStore"
+            keyPassword "p4SsW0rd"
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }
