@@ -17,4 +17,6 @@
     <dimen name="margin_xlarge">24dp</dimen>
     <dimen name="margin_xxlarge">48dp</dimen>
     <dimen name="fab_compat_margin">0dp</dimen>
+    <dimen name="logo_size">96dp</dimen>
+    <dimen name="logo_offset">-36dp</dimen>
 </resources>

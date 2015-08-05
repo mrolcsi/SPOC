@@ -18,24 +18,30 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.SPOC"
         tools:ignore="UnusedAttribute">
-        <meta-data
-            android:name="hu.mrolcsi.android.spoc.gallery.common.GlideConfiguration"
-            android:value="GlideModule" />
         <activity
             android:name=".main.GalleryActivity"
-                android:label="@string/title_activity_gallery">
+            android:label="@string/title_activity_gallery">
+        </activity>
+        <activity
+            android:name=".main.SplashScreenActivity"
+            android:label="@string/title_activity_gallery">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <service
             android:name=".service.CacheBuilderService"
             android:exported="false" />
         <service
             android:name="hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService"
             android:exported="false" />
+
+        <meta-data
+            android:name="hu.mrolcsi.android.spoc.gallery.common.GlideConfiguration"
+            android:value="GlideModule" />
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="ed56220fdb5988cc5c8783bba5ebbf57313f06c0" />

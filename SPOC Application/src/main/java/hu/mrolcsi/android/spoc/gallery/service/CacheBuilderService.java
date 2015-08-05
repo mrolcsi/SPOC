@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.gallery.service;
 
+import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
@@ -20,6 +21,7 @@ import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.GlideHelper;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,12 +44,15 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
         super(TAG);
     }
 
+    @TargetApi(13)
     @Override
     protected void onHandleIntent(Intent intent) {
 //        if (BuildConfig.DEBUG) {
 //            Log.w(getClass().getSimpleName(), "DELETING DISK CACHE - Don't forget tot remove this!");
 //            Glide.get(getApplicationContext()).clearDiskCache();
 //        }
+
+        long startTime = System.currentTimeMillis();
 
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SPOCWakeLockTag");
@@ -144,6 +149,10 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
                 cursor.close();
             PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(ARG_FIRST_TIME, false).apply();
             wakeLock.release();
+
+            long endTime = System.currentTimeMillis();
+
+            Log.i(getClass().getSimpleName(), String.format("Caching done in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
         }
     }
 

@@ -5,10 +5,8 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -61,7 +59,7 @@ public final class GalleryActivity extends AppCompatActivity {
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mNavigationView = (NavigationView) findViewById(R.id.navigation);
-        mCacheBuilderReceiver = new CacheBuilderReceiver(this);
+        mCacheBuilderReceiver = new CacheBuilderReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_FIRST);
         intentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL);
@@ -98,15 +96,7 @@ public final class GalleryActivity extends AppCompatActivity {
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
 
-        if (isFirstStart) { //only do caching on first start
-            mServiceIntent = new Intent(this, CacheBuilderService.class);
-
-            final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-            final boolean isFirstTimeEver = sharedPreferences.getBoolean(CacheBuilderService.ARG_FIRST_TIME, true);
-            mServiceIntent.putExtra(CacheBuilderService.ARG_FIRST_TIME, isFirstTimeEver);
-
-            startService(mServiceIntent);
-        }
+        mServiceIntent = new Intent(this, CacheBuilderService.class);
 
         if (mCurrentFragment == null)
             mCurrentFragment = new ThumbnailsFragment();

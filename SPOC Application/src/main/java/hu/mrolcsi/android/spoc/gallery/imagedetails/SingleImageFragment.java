@@ -53,6 +53,7 @@ public class SingleImageFragment extends SPOCFragment {
         return f;
     }
 
+    @TargetApi(13)
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);

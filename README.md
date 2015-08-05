@@ -1,4 +1,4 @@
-# <u>SPOC:</u> Smart Photo Organizer & Camera
+# <u>SPOC:</u> Smart Photo Organizer & Camera [![Build Status](https://travis-ci.org/mrolcsi/SPOC.svg?branch=master)](https://travis-ci.org/mrolcsi/SPOC)
 
 _A graduation project by [Matusinka Roland](mailto:matusinka.roland@outlook.com)_
 
