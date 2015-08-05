@@ -1,12 +1,10 @@
 package hu.mrolcsi.android.spoc.gallery.service;
 
 import android.app.NotificationManager;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
-import android.widget.Toast;
 import hu.mrolcsi.android.spoc.gallery.R;
 
 /**
@@ -19,15 +17,11 @@ import hu.mrolcsi.android.spoc.gallery.R;
 public class CacheBuilderReceiver extends BroadcastReceiver {
 
     public static final int NOTIFICATION_ID = 32;
-    private final Context activityContext;
 
     private NotificationCompat.Builder mNotificationBuilder;
     private NotificationManager mNotificationManager;
 
-    private ProgressDialog mProgressDialog;
-
-    public CacheBuilderReceiver(Context activityContext) {
-        this.activityContext = activityContext;
+    public CacheBuilderReceiver() {
     }
 
     @Override
@@ -38,27 +32,7 @@ public class CacheBuilderReceiver extends BroadcastReceiver {
         int progress = intent.getIntExtra(CacheBuilderService.EXTENDED_DATA_POSITION, -1);
         if (progress < 0) return;
 
-        if (intent.getAction().equals(CacheBuilderService.BROADCAST_ACTION_FIRST)) {
-            //show dialog
-            if (mProgressDialog == null) {
-                mProgressDialog = new ProgressDialog(activityContext);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                mProgressDialog.setMax(totalCount);
-                mProgressDialog.setTitle(R.string.service_cache_title);
-                mProgressDialog.setIcon(R.drawable.info);
-                mProgressDialog.setIndeterminate(false);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.setMessage(context.getString(R.string.service_cache_message_firstTime));
-                mProgressDialog.show();
-            }
-
-            if (progress < totalCount) {
-                mProgressDialog.setProgress(progress);
-            } else {
-                mProgressDialog.dismiss();
-                Toast.makeText(activityContext, context.getString(R.string.service_cache_message_done), Toast.LENGTH_LONG).show();
-            }
-        } else if (intent.getAction().equals(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL)) {
+        if (intent.getAction().equals(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL)) {
             //show notification
             if (mNotificationManager == null)
                 mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
