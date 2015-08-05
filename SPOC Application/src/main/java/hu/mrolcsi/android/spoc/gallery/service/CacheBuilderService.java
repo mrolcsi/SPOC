@@ -126,8 +126,8 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
                 // N = 1:   too frequent, too much CPU work
                 // N = 10:  looks good
                 // N > 10:  OutOfMemoryErrors
-                if (cursor.getPosition() % 10 == 0) //best results with N=10
-                    handler.post(clearMemoryRunnable);
+//                if (cursor.getPosition() % 10 == 0) //best results with N=10
+//                    handler.post(clearMemoryRunnable);
 
 //                try {
 //                    Thread.sleep(150);
@@ -151,7 +151,6 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
             wakeLock.release();
 
             long endTime = System.currentTimeMillis();
-
             Log.i(getClass().getSimpleName(), String.format("Caching done in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
         }
     }

@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.gallery.main;
 
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -25,7 +26,6 @@ public final class SplashScreenActivity extends AppCompatActivity {
 
     private BroadcastReceiver mReceiver = new FirstTimeSetupReceiver();
     private boolean isFirstStart;
-    private boolean isBackPressed = false;
 
     private ProgressBar progressBar;
     private ProgressBar progressCircle;
@@ -42,7 +42,9 @@ public final class SplashScreenActivity extends AppCompatActivity {
 
         Intent serviceIntent = new Intent(this, CacheBuilderService.class);
         serviceIntent.putExtra(CacheBuilderService.ARG_FIRST_TIME, isFirstStart);
-        startService(serviceIntent);
+
+        if (!isServiceRunning(CacheBuilderService.class))
+            startService(serviceIntent);
 
         if (!isFirstStart) {
             Intent galleryIntent = new Intent(SplashScreenActivity.this, GalleryActivity.class);
@@ -61,7 +63,6 @@ public final class SplashScreenActivity extends AppCompatActivity {
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_FIRST);
-        intentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, intentFilter);
     }
 
@@ -79,6 +80,16 @@ public final class SplashScreenActivity extends AppCompatActivity {
         if (mReceiver != null) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         }
+    }
+
+    public boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     class FirstTimeSetupReceiver extends BroadcastReceiver {
