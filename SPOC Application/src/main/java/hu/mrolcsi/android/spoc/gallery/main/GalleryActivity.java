@@ -26,9 +26,9 @@ import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
+import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderReceiver;
-import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
 
 import java.util.Stack;

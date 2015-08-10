@@ -10,6 +10,20 @@
             android:summary="@string/settings_gallery_showCameraButton_summary"
             android:title="@string/settings_gallery_showCameraButton_title" />
 
+        <Preference
+            android:id="@+id/prefWhitelist"
+            android:icon="@drawable/add_ticket"
+            android:key="@string/settings_key_whiteList"
+            android:summary="@string/settings_whitelist_summary"
+            android:title="@string/settings_whitelist_title" />
+
+        <Preference
+            android:id="@+id/prefBlacklist"
+            android:icon="@drawable/delete_ticket"
+            android:key="@string/settings_key_blackList"
+            android:summary="@string/settings_blacklist_summary"
+            android:title="@string/settings_blacklist_title" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/preferences_about_title">

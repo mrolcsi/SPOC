@@ -3,14 +3,14 @@ package hu.mrolcsi.android.spoc.gallery.main;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import hu.mrolcsi.android.spoc.common.GlideHelper;
+import hu.mrolcsi.android.spoc.database.models.Image;
 import hu.mrolcsi.android.spoc.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.common.GlideHelper;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 
 /**
@@ -47,7 +47,7 @@ public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.Im
         this(context);
         this.cursor = cursor;
 
-        iData = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+        iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
     }
 
     @Override

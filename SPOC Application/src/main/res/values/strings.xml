@@ -70,5 +70,10 @@
     <string name="settings_gallery_showCameraButton_title">Camera Quick Launch</string>
     <string name="settings_gallery_showCameraButton_summary">Show Camera quick launch button</string>
     <string name="error_noPictures">No pictures found.</string>
+    <string name="settings_whitelist_title">Whitelist</string>
+    <string name="settings_blacklist_title">Blacklist</string>
+    <string name="settings_whitelist_summary">Select directories to include in Gallery</string>
+    <string name="settings_blacklist_summary">Select directories to exclude from Gallery</string>
+    <string name="settings_directoryList_add">Add directory…</string>
 
 </resources>

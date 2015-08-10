@@ -33,14 +33,14 @@
         </activity>
 
         <service
-            android:name=".service.CacheBuilderService"
+            android:name="hu.mrolcsi.android.spoc.common.service.CacheBuilderService"
             android:exported="false" />
         <service
             android:name="hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService"
             android:exported="false" />
 
         <meta-data
-            android:name="hu.mrolcsi.android.spoc.gallery.common.GlideConfiguration"
+            android:name="hu.mrolcsi.android.spoc.common.GlideConfiguration"
             android:value="GlideModule" />
         <meta-data
             android:name="io.fabric.ApiKey"

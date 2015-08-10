@@ -12,8 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderService;
 
 /**
  * Created with IntelliJ IDEA.

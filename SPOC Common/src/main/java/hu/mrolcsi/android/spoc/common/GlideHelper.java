@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery.common;
+package hu.mrolcsi.android.spoc.common;
 
 import android.content.Context;
 import android.net.Uri;
@@ -11,7 +11,6 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.signature.StringSignature;
-import hu.mrolcsi.android.spoc.gallery.R;
 
 import java.util.concurrent.ExecutionException;
 

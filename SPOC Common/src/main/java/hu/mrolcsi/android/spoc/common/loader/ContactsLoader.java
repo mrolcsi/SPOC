@@ -5,10 +5,8 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,14 +15,12 @@ import android.util.Log;
  * Time: 10:44
  */
 
-public class ContactsLoader implements LoaderManager.LoaderCallbacks<Cursor> {
+public class ContactsLoader extends LoaderBase {
 
-    private final Context context;
-    private final Loader.OnLoadCompleteListener<Cursor> onLoadCompleteListener;
+    public static final int ID = 23;
 
     public ContactsLoader(Context context, Loader.OnLoadCompleteListener<Cursor> onLoadCompleteListener) {
-        this.context = context;
-        this.onLoadCompleteListener = onLoadCompleteListener;
+        super(context, onLoadCompleteListener);
     }
 
     @Override
@@ -36,17 +32,5 @@ public class ContactsLoader implements LoaderManager.LoaderCallbacks<Cursor> {
         loader.setSortOrder(MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC");
 
         return loader;
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (onLoadCompleteListener != null) {
-            onLoadCompleteListener.onLoadComplete(loader, data);
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        Log.v(getClass().getSimpleName(), "onLoaderReset");
     }
 }

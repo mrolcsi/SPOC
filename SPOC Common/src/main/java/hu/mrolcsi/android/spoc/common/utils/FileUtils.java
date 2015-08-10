@@ -22,6 +22,8 @@ import java.util.ArrayList;
 
 public abstract class FileUtils {
 
+    public static final String[] ACCEPTED_FORMATS = new String[]{"jpg", "jpeg", "gif", "png"};
+
     public static String getHumanReadableSize(long rawSize) {
         if (rawSize > 1000000000) return String.format("%.2f GB", (float) rawSize / 1000000000);
         else if (rawSize > 1000000) return String.format("%.2f MB", (float) rawSize / 1000000);

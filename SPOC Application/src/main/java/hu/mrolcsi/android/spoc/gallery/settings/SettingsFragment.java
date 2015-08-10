@@ -46,6 +46,9 @@ public final class SettingsFragment extends PreferenceFragment implements ISPOCF
                 return true;
             }
         });
+
+        findPreference(getString(R.string.settings_key_whiteList)).setOnPreferenceClickListener(new OnDirectoryPreferenceClick(DirectoryListFragment.TYPE_WHITELIST));
+        findPreference(getString(R.string.settings_key_blackList)).setOnPreferenceClickListener(new OnDirectoryPreferenceClick(DirectoryListFragment.TYPE_BLACKLIST));
     }
 
     @Override
@@ -67,5 +70,27 @@ public final class SettingsFragment extends PreferenceFragment implements ISPOCF
     public boolean onBackPressed() {
         ((GalleryActivity) getActivity()).restoreFragmentFromStack();
         return true;
+    }
+
+    class OnDirectoryPreferenceClick implements Preference.OnPreferenceClickListener {
+
+        private final int mType;
+
+        public OnDirectoryPreferenceClick(int type) {
+            mType = type;
+        }
+
+        @Override
+        public boolean onPreferenceClick(Preference preference) {
+            Bundle args = new Bundle();
+            args.putInt(DirectoryListFragment.ARG_TYPE, mType);
+
+            final DirectoryListFragment listFragment = new DirectoryListFragment();
+            listFragment.setArguments(args);
+
+            ((GalleryActivity) getActivity()).swapFragment(listFragment);
+
+            return true;
+        }
     }
 }

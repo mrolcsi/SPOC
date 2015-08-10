@@ -41,7 +41,6 @@ import java.util.Locale;
 public class ImageDetailsDialog extends DialogFragment {
 
     public static final String TAG = "SPOC.Gallery.ImageDetails.Dialog";
-    private final SimpleDateFormat sdf;
 
     private TextView tvDateTaken;
     private TextView tvLocation;
@@ -59,11 +58,6 @@ public class ImageDetailsDialog extends DialogFragment {
     private TextView tvIsoValue;
 
     private LocationFinderTask mLocationFinderTask;
-
-
-    public ImageDetailsDialog() {
-        sdf = new SimpleDateFormat("yyyy:MM:DD HH:mm:ss", Locale.getDefault());
-    }
 
     @NonNull
     @Override
@@ -116,12 +110,17 @@ public class ImageDetailsDialog extends DialogFragment {
 
             try {
                 ExifInterface exif = new ExifInterface(path);
+                SimpleDateFormat sdf = new SimpleDateFormat(getString(hu.mrolcsi.android.spoc.common.R.string.spoc_exifParser), Locale.getDefault());
 
                 final String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
                 if (dateString != null) {
-                final Date date = sdf.parse(dateString);
+                    final Date date = sdf.parse(dateString);
                     tvDateTaken.setText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date));
-                } else tvDateTaken.setText(getString(R.string.not_available));
+                } else {
+                    final long l = new File(path).lastModified();
+                    final String s = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(l));
+                    tvDateTaken.setText(s);
+                }
 
                 float latLong[] = new float[2];
                 if (exif.getLatLong(latLong)) {

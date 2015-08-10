@@ -12,7 +12,7 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.*;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
-import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
+import hu.mrolcsi.android.spoc.common.loader.database.ImageTableLoader;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
 
@@ -37,7 +37,7 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        
+
         if (Build.VERSION.SDK_INT > 18) {
             WindowManager.LayoutParams params = getActivity().getWindow().getAttributes();
             params.rotationAnimation = WindowManager.LayoutParams.ROTATION_ANIMATION_ROTATE;
@@ -79,14 +79,15 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
     public void onStart() {
         super.onStart();
 
+        int loaderId = ImageTableLoader.ID;
         if (getArguments() != null && getArguments().containsKey(ARG_LOADER_ID)) {
-            int loaderId = getArguments().getInt(ARG_LOADER_ID);
-            getLoaderManager().initLoader(loaderId, null, new MediaStoreLoader(getActivity(), this));
-
-            mLoader = getLoaderManager().getLoader(loaderId);
-            if (!mLoader.isStarted())
-                mLoader.startLoading();
+            loaderId = getArguments().getInt(ARG_LOADER_ID);
         }
+        getLoaderManager().initLoader(loaderId, null, new ImageTableLoader(getActivity(), this));
+
+        mLoader = getLoaderManager().getLoader(loaderId);
+        if (!mLoader.isStarted())
+            mLoader.startLoading();
     }
 
     @Override

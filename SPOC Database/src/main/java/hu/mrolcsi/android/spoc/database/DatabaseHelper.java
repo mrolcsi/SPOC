@@ -56,10 +56,10 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         Log.i(getClass().getSimpleName(), "onCreate");
         try {
             TableUtils.createTable(connectionSource, Image.class);
-            TableUtils.createTable(connectionSource, Contact.class);
-            TableUtils.createTable(connectionSource, Label.class);
-            TableUtils.createTable(connectionSource, Contact2Image.class);
-            TableUtils.createTable(connectionSource, Label2Image.class);
+            //TableUtils.createTable(connectionSource, Contact.class);
+            //TableUtils.createTable(connectionSource, Label.class);
+            //TableUtils.createTable(connectionSource, Contact2Image.class);
+            //TableUtils.createTable(connectionSource, Label2Image.class);
         } catch (SQLException e) {
             Log.w(getClass().getName(), e);
         }

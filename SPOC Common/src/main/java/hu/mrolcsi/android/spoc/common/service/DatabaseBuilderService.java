@@ -4,18 +4,28 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.util.Log;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
+import hu.mrolcsi.android.spoc.common.R;
+import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.common.utils.ListHelper;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.models.Contact;
 import hu.mrolcsi.android.spoc.database.models.Image;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created with IntelliJ IDEA.
@@ -37,27 +47,30 @@ public class DatabaseBuilderService extends IntentService {
 
         cleanUpImages();
 
-        cleanUpContacts();
-
         updateImagesFromMediaStore();
 
         updateImagesFromWhiteList();
 
-        updateContactsFromContactsProvider();
+        //cleanUpContacts();
 
-        updateContactsFromFacebook();
+        //updateContactsFromContactsProvider();
+
+        //updateContactsFromFacebook();
     }
 
     private void cleanUpImages() {
         //TODO: delete not existing images from db
         final List<Image> images = DatabaseHelper.getInstance().getImagesDao().queryForAll();
         final List<Image> toDelete = new ArrayList<>();
+
+        final ListHelper listHelper = new ListHelper(this);
+
         for (Image image : images) {
-            if (!new File(image.getFilename()).exists()) {
+            if (!new File(image.getFilename()).exists() || listHelper.isInBlacklist(image.getFilename())) {
                 toDelete.add(image);
             }
         }
-        DatabaseHelper.getInstance().getImagesDao().delete(toDelete);
+        final int numRowsDeleted = DatabaseHelper.getInstance().getImagesDao().delete(toDelete);
     }
 
     private void cleanUpContacts() {
@@ -66,7 +79,6 @@ public class DatabaseBuilderService extends IntentService {
     }
 
     private void updateImagesFromMediaStore() {
-        //TODO: collect images from MediaStore > createOrUpdate
         //prepare query
         Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         String[] projection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA, MediaStore.Images.ImageColumns.DATE_TAKEN};
@@ -74,6 +86,8 @@ public class DatabaseBuilderService extends IntentService {
         Cursor cursor = null;
         final SQLiteDatabase db = DatabaseHelper.getInstance().getWritableDatabase();
         final RuntimeExceptionDao<Image, Integer> imagesDao = DatabaseHelper.getInstance().getImagesDao();
+
+        final ListHelper listHelper = new ListHelper(this);
 
         db.beginTransaction();
         try {
@@ -96,14 +110,17 @@ public class DatabaseBuilderService extends IntentService {
                 dateTaken = cursor.getLong(indexDateTaken);
 
                 images = imagesDao.queryForEq(Image.COLUMN_MEDIASTORE_ID, id);
-                if (images.size() > 0) {
-                    image = images.get(0);
-                    image.setFilename(filename);
-                    image.setDateTaken(new Date(dateTaken));
-                } else {
-                    image = new Image(filename, id, new Date(dateTaken));
+
+                if (new File(filename).exists() && !listHelper.isInBlacklist(filename)) {
+                    if (images.size() > 0) {
+                        image = images.get(0);
+                        image.setFilename(filename);
+                        image.setDateTaken(new Date(dateTaken));
+                    } else {
+                        image = new Image(filename, id, new Date(dateTaken));
+                    }
+                    imagesDao.createOrUpdate(image);
                 }
-                imagesDao.createOrUpdate(image);
             }
             db.setTransactionSuccessful();
         } finally {
@@ -113,7 +130,57 @@ public class DatabaseBuilderService extends IntentService {
     }
 
     private void updateImagesFromWhiteList() {
-        //TODO: collect images from whiteList > createOrUpdate
+
+        final List<String> whitelist = new ListHelper(this).getWhitelist();
+        final FilenameFilter filter = new FilenameFilter() {
+            @Override
+            public boolean accept(File parent, String filename) {
+                for (String format : FileUtils.ACCEPTED_FORMATS) {
+                    if (filename.contains(format)) return true;
+                }
+                return false;
+            }
+        };
+
+        final RuntimeExceptionDao<Image, Integer> imagesDao = DatabaseHelper.getInstance().getImagesDao();
+        final SQLiteDatabase db = DatabaseHelper.getInstance().getWritableDatabase();
+        final SimpleDateFormat sdf = new SimpleDateFormat(getString(R.string.spoc_exifParser), Locale.getDefault());
+
+        db.beginTransaction();
+        try {
+            File dir;
+            for (String s : whitelist) {
+                dir = new File(s);
+                for (File file : dir.listFiles(filter)) {
+
+                    List<Image> images = imagesDao.queryForEq(Image.COLUMN_FILENAME, file.getAbsolutePath());
+                    Image image;
+                    if (images.size() == 0) {
+                        image = new Image();
+
+                        image.setFilename(file.getAbsolutePath());
+
+                        Date date;
+                        if (file.getAbsolutePath().contains("jpg") || file.getAbsolutePath().contains("jpeg")) {
+                            ExifInterface exif = new ExifInterface(file.getAbsolutePath());
+                            String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
+                            date = sdf.parse(dateString);
+                        } else {
+                            date = new Date(file.lastModified());
+                        }
+                        image.setDateTaken(date);
+
+                        imagesDao.createOrUpdate(image);
+                    }
+                }
+            }
+
+            db.setTransactionSuccessful();
+        } catch (IOException | ParseException e) {
+            Log.w(getClass().getName(), e);
+        } finally {
+            db.endTransaction();
+        }
     }
 
     private void updateContactsFromContactsProvider() {

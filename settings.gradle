@@ -1,5 +1,7 @@
 include ':SPOC Database', ':SPOC Common'
 include ':core', ':layouts'
+include ':FileBrowser'
+include ':SPOC Application'
 project(':core').projectDir = new File('Libraries/twoway-view/core')
 project(':layouts').projectDir = new File('Libraries/twoway-view/layouts')
-include ':SPOC Application'
+project(':FileBrowser').projectDir = new File('Libraries/FileBrowser-Android/FileBrowser')

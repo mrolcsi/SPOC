@@ -5,10 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,14 +15,11 @@ import android.util.Log;
  * Time: 17:50
  */
 
-public class MediaStoreLoader implements LoaderManager.LoaderCallbacks<Cursor> {
+public class MediaStoreLoader extends LoaderBase {
     public static final int ID = 12;
-    private final Context context;
-    private final Loader.OnLoadCompleteListener<Cursor> onLoadCompleteListener;
 
     public MediaStoreLoader(Context context, Loader.OnLoadCompleteListener<Cursor> onLoadCompleteListener) {
-        this.context = context;
-        this.onLoadCompleteListener = onLoadCompleteListener;
+        super(context, onLoadCompleteListener);
     }
 
     @Override
@@ -36,17 +31,5 @@ public class MediaStoreLoader implements LoaderManager.LoaderCallbacks<Cursor> {
         loader.setSortOrder(MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC");
 
         return loader;
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (onLoadCompleteListener != null) {
-            onLoadCompleteListener.onLoadComplete(loader, data);
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        Log.v(getClass().getSimpleName(), "onLoaderReset");
     }
 }

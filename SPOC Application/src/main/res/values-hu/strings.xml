@@ -67,4 +67,8 @@
     <string name="settings_gallery_showCameraButton_title">Kamera gyorsindító</string>
     <string name="settings_gallery_showCameraButton_summary">Gyorsindító gomb meglenítése.</string>
     <string name="error_noPictures">Nincsenek képek.</string>
+    <string name="settings_blacklist_summary">Galériából kihagyandó mappák kiválasztása</string>
+    <string name="settings_blacklist_title">Fekete lista</string>
+    <string name="settings_whitelist_title">Fehér lista</string>
+    <string name="settings_whitelist_summary">Galériához hozzáadandó mappák kiválasztása</string>
 </resources>

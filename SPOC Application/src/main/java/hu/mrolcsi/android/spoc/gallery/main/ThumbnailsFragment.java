@@ -26,7 +26,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Toast;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
-import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
+import hu.mrolcsi.android.spoc.common.loader.database.ImageTableLoader;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.HideOnScrollListener;
@@ -178,7 +178,8 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
             //TODO: process args
         }
 
-        mLoader = (CursorLoader) getLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(getActivity(), this));
+        //mLoader = (CursorLoader) getLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(getActivity(), this));
+        mLoader = (CursorLoader) getLoaderManager().initLoader(ImageTableLoader.ID, null, new ImageTableLoader(getActivity(), this));
     }
 
     @Override

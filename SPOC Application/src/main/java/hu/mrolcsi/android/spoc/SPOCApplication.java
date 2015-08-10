@@ -69,7 +69,9 @@ public class SPOCApplication extends Application {
                 });
         }
 
-        Fabric.with(this, new Crashlytics());
+        if (!BuildConfig.DEBUG)
+            Fabric.with(this, new Crashlytics());
+
         DatabaseHelper.init(this);
 
         Intent serviceIntent = new Intent(this, DatabaseBuilderService.class);

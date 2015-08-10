@@ -1,10 +1,10 @@
 package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.database.Cursor;
-import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import hu.mrolcsi.android.spoc.database.models.Image;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,7 +22,7 @@ public class ImageDetailsAdapter extends FragmentStatePagerAdapter {
     public ImageDetailsAdapter(FragmentManager fm, Cursor cursor) {
         super(fm);
         this.cursor = cursor;
-        iData = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+        iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
     }
 
     public ImageDetailsAdapter(FragmentManager childFragmentManager) {

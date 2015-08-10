@@ -1,3 +1,6 @@
 [submodule "Libraries/twoway-view"]
 	path = Libraries/twoway-view
 	url = git://github.com/mrolcsi/twoway-view.git
+[submodule "Libraries/FileBrowser-Android"]
+	path = Libraries/FileBrowser-Android
+	url = https://github.com/mrolcsi/FileBrowser-Android

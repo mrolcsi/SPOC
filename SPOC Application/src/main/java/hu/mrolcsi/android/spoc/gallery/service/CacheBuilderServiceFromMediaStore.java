@@ -17,8 +17,8 @@ import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 import com.bumptech.glide.Glide;
+import hu.mrolcsi.android.spoc.common.GlideHelper;
 import hu.mrolcsi.android.spoc.gallery.R;
-import hu.mrolcsi.android.spoc.gallery.common.GlideHelper;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +30,8 @@ import java.util.concurrent.TimeUnit;
  * Time: 9:02
  */
 
-public class CacheBuilderService extends IntentService implements Thread.UncaughtExceptionHandler {
+@Deprecated
+public class CacheBuilderServiceFromMediaStore extends IntentService implements Thread.UncaughtExceptionHandler {
 
     public static final String TAG = "SPOC.Gallery.CacheBuilderService";
     public static final String ARG_FIRST_TIME = "SPOC.Gallery.CacheBuilderService.FIRST_TIME";
@@ -40,7 +41,7 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
     public static final String EXTENDED_DATA_POSITION = "SPOC.Gallery.CacheBuilderService.POSITION";
 
     @SuppressWarnings("unused") //needed by manifest xml
-    public CacheBuilderService() {
+    public CacheBuilderServiceFromMediaStore() {
         super(TAG);
     }
 
