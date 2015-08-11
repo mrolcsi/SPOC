@@ -1,8 +1,17 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="hu.mrolcsi.android.spoc.database">
+<manifest
+    package="hu.mrolcsi.android.spoc.database"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application android:allowBackup="true">
 
+        <provider
+            android:name=".provider.SPOCContentProvider"
+            android:authorities="hu.mrolcsi.android.spoc.database.provider"
+            android:exported="false"
+            android:grantUriPermissions="false"
+            android:label="SPOCDatabaseProvider"
+            android:readPermission="hu.mrolcsi.android.spoc.database.READ"
+            android:writePermission="hu.mrolcsi.android.spoc.database.WRITE" />
     </application>
 
 </manifest>
