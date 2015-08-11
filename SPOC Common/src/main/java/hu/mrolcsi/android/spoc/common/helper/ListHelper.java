@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.common.utils;
+package hu.mrolcsi.android.spoc.common.helper;
 
 import android.content.Context;
 import android.preference.PreferenceManager;
@@ -41,8 +41,10 @@ public class ListHelper {
     }
 
     private List<String> getListFromSharedPrefs(String prefKey) {
-        final String listString = PreferenceManager.getDefaultSharedPreferences(context).getString(prefKey, null);
+        String listString = PreferenceManager.getDefaultSharedPreferences(context).getString(prefKey, "[]");
         List<String> list = new ArrayList<>();
+
+
         try {
             JSONArray jWhitelist = new JSONArray(listString);
             for (int i = 0; i < jWhitelist.length(); i++) {

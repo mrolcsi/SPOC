@@ -2,10 +2,12 @@ package hu.mrolcsi.android.spoc.common.loader.database;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import hu.mrolcsi.android.spoc.common.loader.LoaderBase;
+import hu.mrolcsi.android.spoc.database.models.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 /**
@@ -27,7 +29,7 @@ public class ImageTableLoader extends LoaderBase {
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         final CursorLoader loader = new CursorLoader(context);
-        loader.setUri(SPOCContentProvider.CONTENT_URI);
+        loader.setUri(Uri.withAppendedPath(SPOCContentProvider.CONTENT_URI, Image.TABLE_NAME));
 
         if (args != null) {
             String[] projection = null;

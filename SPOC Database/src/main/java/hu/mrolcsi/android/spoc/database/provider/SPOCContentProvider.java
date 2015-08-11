@@ -37,6 +37,7 @@ public class SPOCContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
+        DatabaseHelper.init(getContext());
         dbHelper = DatabaseHelper.getInstance();
         return true;
     }

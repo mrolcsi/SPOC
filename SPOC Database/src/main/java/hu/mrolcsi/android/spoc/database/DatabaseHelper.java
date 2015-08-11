@@ -42,6 +42,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     public static void init(Context appContext) {
         context = appContext;
+        ourInstance = new DatabaseHelper(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     public static DatabaseHelper getInstance() {

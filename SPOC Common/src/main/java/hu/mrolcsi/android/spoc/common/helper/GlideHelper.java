@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.common;
+package hu.mrolcsi.android.spoc.common.helper;
 
 import android.content.Context;
 import android.net.Uri;
@@ -11,6 +11,7 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.signature.StringSignature;
+import hu.mrolcsi.android.spoc.common.R;
 
 import java.util.concurrent.ExecutionException;
 

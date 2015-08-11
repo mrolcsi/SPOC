@@ -17,7 +17,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 import com.bumptech.glide.Glide;
-import hu.mrolcsi.android.spoc.common.GlideHelper;
+import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
 import hu.mrolcsi.android.spoc.gallery.R;
 
 import java.util.concurrent.ExecutionException;

@@ -8,7 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import hu.mrolcsi.android.spoc.common.GlideHelper;
+import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
 import hu.mrolcsi.android.spoc.database.models.Image;
 import hu.mrolcsi.android.spoc.gallery.R;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;

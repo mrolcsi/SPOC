@@ -64,7 +64,7 @@ public final class GalleryActivity extends AppCompatActivity {
         mCacheBuilderReceiver = new CacheBuilderReceiver();
 
         mReceiverIntentFilter = new IntentFilter();
-        mReceiverIntentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_FIRST);
+        mReceiverIntentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_CACHING);
         mReceiverIntentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL);
 
         setUpDrawerToggle();

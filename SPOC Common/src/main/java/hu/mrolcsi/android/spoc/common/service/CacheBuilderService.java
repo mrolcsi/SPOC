@@ -16,7 +16,7 @@ import android.util.TypedValue;
 import android.view.Display;
 import android.view.WindowManager;
 import com.bumptech.glide.Glide;
-import hu.mrolcsi.android.spoc.common.GlideHelper;
+import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.models.Image;
 
@@ -34,7 +34,7 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
 
     public static final String TAG = "SPOC.Gallery.CacheBuilderService";
     public static final String ARG_FIRST_TIME = "SPOC.Gallery.CacheBuilderService.FIRST_TIME";
-    public static final String BROADCAST_ACTION_FIRST = "SPOC.Gallery.CacheBuilderService.BROADCAST_FIRST";
+    public static final String BROADCAST_ACTION_CACHING = "SPOC.Gallery.CacheBuilderService.BROADCAST_CACHING";
     public static final String BROADCAST_ACTION_INCREMENTAL = "SPOC.Gallery.CacheBuilderService.BROADCAST_INCREMENTAL";
     public static final String EXTENDED_DATA_COUNT = "SPOC.Gallery.CacheBuilderService.COUNT";
     public static final String EXTENDED_DATA_POSITION = "SPOC.Gallery.CacheBuilderService.POSITION";
@@ -79,11 +79,7 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
         String[] projection = new String[]{"_id", Image.COLUMN_FILENAME};
         String sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
 
-        final boolean isFirstTime = intent.getBooleanExtra(ARG_FIRST_TIME, false);
-        Intent progressIntent;
-        if (isFirstTime)
-            progressIntent = new Intent(BROADCAST_ACTION_FIRST);
-        else progressIntent = new Intent(BROADCAST_ACTION_INCREMENTAL);
+        Intent progressIntent = new Intent(BROADCAST_ACTION_CACHING);
 
         Cursor cursor = null;
         try {
@@ -143,14 +139,13 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
 
             handler.post(clearMemoryRunnable);
 
+            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(ARG_FIRST_TIME, false).apply();
+            long endTime = System.currentTimeMillis();
+            Log.i(getClass().getSimpleName(), String.format("Caching done in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
         } finally {
             if (cursor != null)
                 cursor.close();
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(ARG_FIRST_TIME, false).apply();
             wakeLock.release();
-
-            long endTime = System.currentTimeMillis();
-            Log.i(getClass().getSimpleName(), String.format("Caching done in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
         }
     }
 
@@ -159,3 +154,4 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
         Log.w(getClass().getSimpleName(), throwable.toString());
     }
 }
+

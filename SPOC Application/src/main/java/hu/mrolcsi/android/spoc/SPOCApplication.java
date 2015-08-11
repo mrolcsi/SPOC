@@ -3,14 +3,11 @@ package hu.mrolcsi.android.spoc;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import com.bumptech.glide.Glide;
 import com.crashlytics.android.Crashlytics;
-import hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService;
-import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import io.fabric.sdk.android.Fabric;
 
@@ -71,11 +68,6 @@ public class SPOCApplication extends Application {
 
         if (!BuildConfig.DEBUG)
             Fabric.with(this, new Crashlytics());
-
-        DatabaseHelper.init(this);
-
-        Intent serviceIntent = new Intent(this, DatabaseBuilderService.class);
-        startService(serviceIntent);
     }
 
     @Override

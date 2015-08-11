@@ -1,18 +1,21 @@
 package hu.mrolcsi.android.spoc.common.service;
 
+import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import hu.mrolcsi.android.spoc.common.R;
+import hu.mrolcsi.android.spoc.common.helper.ListHelper;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
-import hu.mrolcsi.android.spoc.common.utils.ListHelper;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.models.Contact;
 import hu.mrolcsi.android.spoc.database.models.Image;
@@ -20,6 +23,7 @@ import hu.mrolcsi.android.spoc.database.models.Image;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,6 +41,7 @@ import java.util.Locale;
 public class DatabaseBuilderService extends IntentService {
 
     public static final String TAG = "SPOC.Common.DatabaseBuilder";
+    public static final String BROADCAST_ACTION_FINISHED = "SPOC.Common.DatabaseBuilder.BROADCAST_FINISHED";
 
     public DatabaseBuilderService() {
         super(TAG);
@@ -44,6 +49,9 @@ public class DatabaseBuilderService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        Log.v(getClass().getSimpleName(), "DatabaseBuilder started.");
+
+        DatabaseHelper.init(getApplicationContext());
 
         cleanUpImages();
 
@@ -56,29 +64,48 @@ public class DatabaseBuilderService extends IntentService {
         //updateContactsFromContactsProvider();
 
         //updateContactsFromFacebook();
+
+        Intent progressIntent = new Intent(BROADCAST_ACTION_FINISHED);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
+
+        Intent cacheIntent = new Intent(getApplicationContext(), CacheBuilderService.class);
+        startService(cacheIntent);
+
+        Log.v(getClass().getSimpleName(), "DatabaseBuilder finished.");
     }
 
     private void cleanUpImages() {
         //TODO: delete not existing images from db
-        final List<Image> images = DatabaseHelper.getInstance().getImagesDao().queryForAll();
+        Log.v(getClass().getSimpleName(), "Cleaning up images...");
         final List<Image> toDelete = new ArrayList<>();
 
-        final ListHelper listHelper = new ListHelper(this);
+        final ListHelper listHelper = new ListHelper(getApplicationContext());
 
-        for (Image image : images) {
+
+        for (Image image : DatabaseHelper.getInstance().getImagesDao()) {
             if (!new File(image.getFilename()).exists() || listHelper.isInBlacklist(image.getFilename())) {
                 toDelete.add(image);
             }
         }
+
         final int numRowsDeleted = DatabaseHelper.getInstance().getImagesDao().delete(toDelete);
+        Log.v(getClass().getSimpleName(), "Image clean up done. Deleted " + numRowsDeleted + " images.");
     }
 
     private void cleanUpContacts() {
         //TODO: delete invalid contacts from db
-        DatabaseHelper.getInstance().getContactsDao();
+        Log.v(getClass().getSimpleName(), "Cleaning up contacts...");
+        try {
+            //delete everything for now
+            final int deletedRows = DatabaseHelper.getInstance().getContactsDao().deleteBuilder().delete();
+            Log.v(getClass().getSimpleName(), "Contacts clean up done. Deleted " + deletedRows + " contacts");
+        } catch (SQLException e) {
+            Log.w(getClass().getName(), e);
+        }
     }
 
     private void updateImagesFromMediaStore() {
+        Log.v(getClass().getSimpleName(), "Updating images from MediaStore...");
         //prepare query
         Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         String[] projection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA, MediaStore.Images.ImageColumns.DATE_TAKEN};
@@ -87,7 +114,7 @@ public class DatabaseBuilderService extends IntentService {
         final SQLiteDatabase db = DatabaseHelper.getInstance().getWritableDatabase();
         final RuntimeExceptionDao<Image, Integer> imagesDao = DatabaseHelper.getInstance().getImagesDao();
 
-        final ListHelper listHelper = new ListHelper(this);
+        final ListHelper listHelper = new ListHelper(getApplicationContext());
 
         db.beginTransaction();
         try {
@@ -127,11 +154,12 @@ public class DatabaseBuilderService extends IntentService {
             if (cursor != null) cursor.close();
             db.endTransaction();
         }
+        Log.v(getClass().getSimpleName(), "Update from MediaStore done.");
     }
 
     private void updateImagesFromWhiteList() {
-
-        final List<String> whitelist = new ListHelper(this).getWhitelist();
+        Log.v(getClass().getSimpleName(), "Updating images from Whitelist...");
+        final List<String> whitelist = new ListHelper(getApplicationContext()).getWhitelist();
         final FilenameFilter filter = new FilenameFilter() {
             @Override
             public boolean accept(File parent, String filename) {
@@ -181,12 +209,19 @@ public class DatabaseBuilderService extends IntentService {
         } finally {
             db.endTransaction();
         }
+        Log.v(getClass().getSimpleName(), "Update from Whitelist done.");
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void updateContactsFromContactsProvider() {
         //TODO: collect contacts from ContactProvider > createOrUpdate
         Uri uri = ContactsContract.Contacts.CONTENT_URI;
-        String[] projection = new String[]{ContactsContract.Contacts.LOOKUP_KEY, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.PHOTO_ID};
+        String[] projection = new String[]{
+                ContactsContract.Contacts._ID,
+                ContactsContract.Contacts.LOOKUP_KEY,
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? ContactsContract.Contacts.DISPLAY_NAME_PRIMARY : ContactsContract.Contacts.DISPLAY_NAME,
+                ContactsContract.Contacts.PHOTO_ID
+        };
 
         Cursor cursor = null;
         final SQLiteDatabase db = DatabaseHelper.getInstance().getWritableDatabase();
@@ -196,9 +231,10 @@ public class DatabaseBuilderService extends IntentService {
         try {
             cursor = getContentResolver().query(uri, null, null, null, null);
 
-            int indexKey = cursor.getColumnIndex(projection[0]);
-            int indexName = cursor.getColumnIndex(projection[1]);
-            int indexPhoto = cursor.getColumnIndex(projection[2]);
+            int indexId = cursor.getColumnIndex(projection[0]);
+            int indexKey = cursor.getColumnIndex(projection[1]);
+            int indexName = cursor.getColumnIndex(projection[2]);
+            int indexPhoto = cursor.getColumnIndex(projection[3]);
 
             String key;
             String displayName;
@@ -230,7 +266,9 @@ public class DatabaseBuilderService extends IntentService {
     }
 
     private void updateContactsFromFacebook() {
+        Log.v(getClass().getSimpleName(), "Updating contacts from Facebook...");
         //TODO: update contacts from Facebook
+        Log.v(getClass().getSimpleName(), "Update from Facebook done.");
     }
 
     private byte[] queryContactImage(int photoId) {
