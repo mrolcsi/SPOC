@@ -38,7 +38,7 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        if (Build.VERSION.SDK_INT > 18) {
+        if (Build.VERSION.SDK_INT >= 18) {
             WindowManager.LayoutParams params = getActivity().getWindow().getAttributes();
             params.rotationAnimation = WindowManager.LayoutParams.ROTATION_ANIMATION_ROTATE;
             getActivity().getWindow().setAttributes(params);

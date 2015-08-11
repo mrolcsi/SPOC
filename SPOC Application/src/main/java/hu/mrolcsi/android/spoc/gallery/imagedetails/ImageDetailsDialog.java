@@ -159,7 +159,7 @@ public class ImageDetailsDialog extends DialogFragment {
                 String aperture;
                 String exposureTimeString;
                 String isoValue;
-                if (Build.VERSION.SDK_INT > 11) {
+                if (Build.VERSION.SDK_INT >= 11) {
                     aperture = exif.getAttribute(ExifInterface.TAG_APERTURE);
                     exposureTimeString = exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME);
                     isoValue = exif.getAttribute(ExifInterface.TAG_ISO);

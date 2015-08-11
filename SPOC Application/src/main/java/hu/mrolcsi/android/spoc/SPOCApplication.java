@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import com.bumptech.glide.Glide;
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import io.fabric.sdk.android.Fabric;
 
@@ -27,7 +28,7 @@ public class SPOCApplication extends Application {
         if (BuildConfig.DEBUG) {
             Log.i(getClass().getSimpleName(), "API Level: " + Build.VERSION.SDK_INT);
 
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
                 registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
                     @Override
                     public void onActivityCreated(Activity activity, Bundle bundle) {
@@ -67,7 +68,7 @@ public class SPOCApplication extends Application {
         }
 
         if (!BuildConfig.DEBUG)
-            Fabric.with(this, new Crashlytics());
+            Fabric.with(this, new Crashlytics(), new Answers());
     }
 
     @Override

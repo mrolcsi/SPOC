@@ -71,4 +71,12 @@
     <string name="settings_blacklist_title">Fekete lista</string>
     <string name="settings_whitelist_title">Fehér lista</string>
     <string name="settings_whitelist_summary">Galériához hozzáadandó mappák kiválasztása</string>
+    <string name="settings_directoryList_add">Mappa hozzáadása…</string>
+    <string name="settings_message_alreadyInTheList">Már szerepel a listában.</string>
+    <string name="settings_message_directoryAdded">\'%s\' hozzáadva.</string>
+    <string name="settings_message_listIsEmpty">A lista üres.</string>
+    <string name="settings_message_removeThisDirectory">Eltávolítod ezt a mappát a listából?</string>
+    <string name="settings_blacklist_help"><![CDATA[Azok a képek, melyek a <b>Feketelistában</b> szereplő mappákban találhatóak, nem jelennek meg a Galériában.]]></string>
+    <string name="settings_message_restartNote"><![CDATA[<i>Megjegyzés: A változtatások érvénybe léptetéséhez újra kell indítani az alkalmazást!</i>)]]></string>
+    <string name="settings_whitelist_help"><![CDATA[Ha valamiért bizonyos képek nem jelennek meg a Galériában, add hozzá a mappájukat a <b>Fehérlistához</b>.]]></string>
 </resources>

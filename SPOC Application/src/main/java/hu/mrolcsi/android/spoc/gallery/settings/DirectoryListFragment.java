@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
+import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -51,7 +52,7 @@ public class DirectoryListFragment extends PreferenceFragment implements ISPOCFr
         @Override
         public boolean onPreferenceClick(final Preference preference) {
             DialogUtils.buildConfirmDialog(getActivity())
-                    .setMessage("Do you want to remove this directory?")
+                    .setMessage(R.string.settings_message_removeThisDirectory)
                     .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
@@ -75,6 +76,22 @@ public class DirectoryListFragment extends PreferenceFragment implements ISPOCFr
 
         if (!getArguments().containsKey(ARG_TYPE)) throw new IllegalArgumentException();
         mType = getArguments().getInt(ARG_TYPE);
+
+
+        Preference helpPref = new Preference(getActivity());
+        if (mType == TYPE_WHITELIST)
+            helpPref.setSummary(Html.fromHtml(getString(R.string.settings_whitelist_help)));
+        if (mType == TYPE_BLACKLIST)
+            helpPref.setSummary(Html.fromHtml(getString(R.string.settings_blacklist_help)));
+        if (Build.VERSION.SDK_INT >= 11)
+            helpPref.setIcon(R.drawable.help);
+
+        getPreferenceScreen().addPreference(helpPref);
+
+        Preference restartNotePref = new Preference(getActivity());
+        restartNotePref.setSummary(Html.fromHtml(getString(R.string.settings_message_restartNote)));
+
+        getPreferenceScreen().addPreference(restartNotePref);
 
         mListCategory = new PreferenceCategory(getActivity());
         if (mType == TYPE_WHITELIST) mListCategory.setTitle(R.string.settings_whitelist_title);
@@ -145,7 +162,9 @@ public class DirectoryListFragment extends PreferenceFragment implements ISPOCFr
 
         if (mDirectories.isEmpty()) {
             Preference empty = new Preference(getActivity());
-            empty.setTitle("Empty.");
+            empty.setTitle(R.string.settings_message_listIsEmpty);
+            if (Build.VERSION.SDK_INT >= 11)
+                empty.setIcon(R.drawable.info);
             mListCategory.addPreference(empty);
         }
 
@@ -181,12 +200,12 @@ public class DirectoryListFragment extends PreferenceFragment implements ISPOCFr
                     public void onPositiveResult(String path) {
                         //noinspection SuspiciousMethodCalls
                         if (!mDirectories.contains(path)) {
-                            Toast.makeText(getActivity(), String.format("'%s' added.", path), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), String.format(getString(R.string.settings_message_directoryAdded), path), Toast.LENGTH_SHORT).show();
                             mDirectories.add(path);
                             save();
                             load();
                         } else
-                            Toast.makeText(getActivity(), "Already in the list.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), R.string.settings_message_alreadyInTheList, Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
