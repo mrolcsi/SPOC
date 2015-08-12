@@ -42,6 +42,7 @@ public class DatabaseBuilderService extends IntentService {
 
     public static final String TAG = "SPOC.Common.DatabaseBuilder";
     public static final String BROADCAST_ACTION_FINISHED = "SPOC.Common.DatabaseBuilder.BROADCAST_FINISHED";
+    public static final String ARG_FIRST_START = "SPOC.Common.FIRST_START";
 
     public DatabaseBuilderService() {
         super(TAG);
@@ -68,8 +69,12 @@ public class DatabaseBuilderService extends IntentService {
         Intent progressIntent = new Intent(BROADCAST_ACTION_FINISHED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
 
-        Intent cacheIntent = new Intent(getApplicationContext(), CacheBuilderService.class);
-        startService(cacheIntent);
+        final boolean isFirstStart = intent.getBooleanExtra(ARG_FIRST_START, false);
+
+        if (isFirstStart) {
+            Intent cacheIntent = new Intent(getApplicationContext(), CacheBuilderService.class);
+            startService(cacheIntent);
+        }
 
         Log.v(getClass().getSimpleName(), "DatabaseBuilder finished.");
     }
