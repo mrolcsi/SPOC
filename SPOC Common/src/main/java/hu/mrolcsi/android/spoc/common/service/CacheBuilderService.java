@@ -144,8 +144,8 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
         } finally {
             if (cursor != null)
                 cursor.close();
-            wakeLock.release();
         }
+        wakeLock.release();
     }
 
     @Override
