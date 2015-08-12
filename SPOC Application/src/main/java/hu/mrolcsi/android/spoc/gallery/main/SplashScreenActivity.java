@@ -39,7 +39,7 @@ public final class SplashScreenActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        isFirstStart = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(CacheBuilderService.ARG_FIRST_TIME, true);
+        isFirstStart = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(DatabaseBuilderService.ARG_FIRST_START, true);
         //isFirstStart = true;
         if (isFirstStart) {
             Log.i(getClass().getSimpleName(), "It's a First Start!");
@@ -54,6 +54,7 @@ public final class SplashScreenActivity extends AppCompatActivity {
         tvMessage = (TextView) findViewById(R.id.tvMessage);
 
         Intent serviceIntent = new Intent(this, DatabaseBuilderService.class);
+        serviceIntent.putExtra(DatabaseBuilderService.ARG_FIRST_START, isFirstStart);
         startService(serviceIntent);
 
         IntentFilter dbBuilderIntentFilter = new IntentFilter(DatabaseBuilderService.BROADCAST_ACTION_FINISHED);
