@@ -4,19 +4,15 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
@@ -47,16 +43,17 @@ import org.lucasr.twowayview.widget.TwoWayView;
 public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
 
     private static final int PRELOAD_AHEAD_ITEMS = 5;
+    protected ThumbnailsAdapter mAdapter;
+    protected CursorLoader mLoader;
+    protected FloatingActionButton fabSearch;
     private TwoWayView twList;
-    private ThumbnailsAdapter mAdapter;
-    private CursorLoader mLoader;
-
     private Parcelable mListInstanceState;
     private int mSavedOrientation = Configuration.ORIENTATION_UNDEFINED;
     private Integer mSavedPosition;
-
     private ActionMode mActionMode;
     private ItemSelectionSupport mItemSelectionSupport;
+    private MenuItem mSearchMenuItem;
+    //protected FloatingActionButton fabCamera;
 
     @Override
     public int getNavigationItemId() {
@@ -73,7 +70,7 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (mRootView == null)
-            mRootView = inflater.inflate(R.layout.fragment_home, container, false);
+            mRootView = inflater.inflate(R.layout.fragment_thumbnails, container, false);
 
         return mRootView;
     }
@@ -106,7 +103,7 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
                 mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
                 mSavedOrientation = getResources().getConfiguration().orientation;
                 mSavedPosition = i;
-                
+
                 fragment.setArguments(args);
 
                 ((GalleryActivity) getActivity()).swapFragment(fragment);
@@ -125,40 +122,68 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
             }
         });
 
-        final FloatingActionButton fabCamera = (FloatingActionButton) view.findViewById(R.id.fabCamera);
-        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        final boolean showCameraButton = sharedPrefs.getBoolean(getString(R.string.settings_key_showCameraButton), true);
-        if (showCameraButton) {
-            fabCamera.setVisibility(View.VISIBLE);
+//        fabCamera = (FloatingActionButton) view.findViewById(R.id.fabCamera);
+//        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+//        final boolean showCameraButton = sharedPrefs.getBoolean(getString(R.string.settings_key_showCameraButton), true);
+//        if (showCameraButton) {
+//            fabCamera.setVisibility(View.VISIBLE);
+//
+//            final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
+//                @Override
+//                public void hide() {
+//                    int fabMargin = ((ViewGroup.MarginLayoutParams) fabCamera.getLayoutParams()).bottomMargin;
+//                    ViewCompat.animate(fabCamera).translationY(fabCamera.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
+//                }
+//
+//                @Override
+//                public void show() {
+//                    ViewCompat.animate(fabCamera).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
+//                }
+//            };
+//            twList.setOnScrollListener(hideOnScrollListener);
+//
+//            fabCamera.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//                    final ResolveInfo resolveInfo = getActivity().getPackageManager().resolveActivity(cameraIntent, PackageManager.MATCH_DEFAULT_ONLY);
+//                    final Intent appIntent = getActivity().getPackageManager().getLaunchIntentForPackage(resolveInfo.activityInfo.packageName);
+//                    startActivity(appIntent);
+//                }
+//            });
+//        } else {
+//            fabCamera.setVisibility(View.GONE);
+//        }
 
-            final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
-                @Override
-                public void hide() {
-                    int fabMargin = ((ViewGroup.MarginLayoutParams) fabCamera.getLayoutParams()).bottomMargin;
-                    ViewCompat.animate(fabCamera).translationY(fabCamera.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
+        fabSearch = (FloatingActionButton) view.findViewById(R.id.fabSearch);
+        fabSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mSearchMenuItem != null) {
+                    MenuItemCompat.expandActionView(mSearchMenuItem);
                 }
+            }
+        });
+        final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
+            @Override
+            public void hide() {
+                int fabMargin = ((ViewGroup.MarginLayoutParams) fabSearch.getLayoutParams()).bottomMargin;
+                ViewCompat.animate(fabSearch).translationY(fabSearch.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
+            }
 
-                @Override
-                public void show() {
-                    ViewCompat.animate(fabCamera).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
-                }
-            };
-            twList.setOnScrollListener(hideOnScrollListener);
+            @Override
+            public void show() {
+                ViewCompat.animate(fabSearch).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
+            }
+        };
+        twList.setOnScrollListener(hideOnScrollListener);
+    }
 
-            fabCamera.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    final ResolveInfo resolveInfo = getActivity().getPackageManager().resolveActivity(cameraIntent, PackageManager.MATCH_DEFAULT_ONLY);
-                    final Intent appIntent = getActivity().getPackageManager().getLaunchIntentForPackage(resolveInfo.activityInfo.packageName);
-                    startActivity(appIntent);
-                }
-            });
-        } else {
-            fabCamera.setVisibility(View.GONE);
-        }
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
 
-
+        mSearchMenuItem = menu.findItem(R.id.menuSearch);
     }
 
     @Override

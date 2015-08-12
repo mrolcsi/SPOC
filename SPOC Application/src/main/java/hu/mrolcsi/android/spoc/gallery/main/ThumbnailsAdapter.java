@@ -31,6 +31,8 @@ public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.Im
     private Cursor cursor;
     private int mCount = 0;
 
+    private boolean mUseColumnSpan = true;
+
     public ThumbnailsAdapter(Context context) {
         this.context = context;
         int preferredColumns = context.getResources().getInteger(R.integer.preferredColumns);
@@ -70,7 +72,7 @@ public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.Im
         String filename = cursor.getString(iData);
         SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
 
-        if (i % 12 == 0) { //TODO: expand frequently used items (or just leave it static like this?)
+        if (mUseColumnSpan && i % 11 == 0) { //TODO: expand frequently used items (or just leave it static like this?)
             lp.colSpan = columnSpan;
             lp.rowSpan = columnSpan;
             //holder.itemView.setBackgroundColor(Color.BLUE);
@@ -90,6 +92,14 @@ public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.Im
         if (cursor != null && !cursor.isClosed())
             mCount = cursor.getCount();
         return mCount;
+    }
+
+    public boolean useColumnSpan() {
+        return mUseColumnSpan;
+    }
+
+    public void setUseColumnSpan(boolean useColumnSpan) {
+        this.mUseColumnSpan = useColumnSpan;
     }
 
     class ImageViewHolder extends RecyclerView.ViewHolder {

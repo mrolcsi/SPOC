@@ -3,13 +3,13 @@
 
     <PreferenceCategory android:title="@string/title_activity_gallery">
 
-        <SwitchPreference
-            android:id="@+id/prefShowCamera"
-            android:defaultValue="true"
-            android:icon="@drawable/camera"
-            android:key="@string/settings_key_showCameraButton"
-            android:summary="@string/settings_gallery_showCameraButton_summary"
-            android:title="@string/settings_gallery_showCameraButton_title" />
+        <!--<SwitchPreference-->
+        <!--android:id="@+id/prefShowCamera"-->
+        <!--android:defaultValue="true"-->
+        <!--android:icon="@drawable/camera"-->
+        <!--android:key="@string/settings_key_showCameraButton"-->
+        <!--android:summary="@string/settings_gallery_showCameraButton_summary"-->
+        <!--android:title="@string/settings_gallery_showCameraButton_title" />-->
 
         <Preference
             android:id="@+id/prefWhitelist"

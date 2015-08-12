@@ -18,9 +18,11 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.SPOC"
         tools:ignore="UnusedAttribute">
+
         <activity
             android:name=".main.GalleryActivity"
-            android:label="@string/title_activity_gallery">
+            android:label="@string/title_activity_gallery"
+            android:launchMode="singleTop">
         </activity>
         <activity
             android:name=".main.SplashScreenActivity"

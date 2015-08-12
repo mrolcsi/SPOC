@@ -79,4 +79,6 @@
     <string name="settings_blacklist_help"><![CDATA[Azok a képek, melyek a <b>Feketelistában</b> szereplő mappákban találhatóak, nem jelennek meg a Galériában.]]></string>
     <string name="settings_message_restartNote"><![CDATA[<i>Megjegyzés: A változtatások érvénybe léptetéséhez újra kell indítani az alkalmazást!</i>)]]></string>
     <string name="settings_whitelist_help"><![CDATA[Ha valamiért bizonyos képek nem jelennek meg a Galériában, add hozzá a mappájukat a <b>Fehérlistához</b>.]]></string>
+    <string name="search_title">Keresés</string>
+    <string name="search_hint">Keresés a fájlnévben… (többi később)</string>
 </resources>

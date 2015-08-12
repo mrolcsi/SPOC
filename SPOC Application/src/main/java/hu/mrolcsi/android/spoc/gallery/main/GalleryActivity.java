@@ -13,10 +13,12 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -28,6 +30,7 @@ import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.search.SearchResultsFragment;
 import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderReceiver;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
 
@@ -220,6 +223,7 @@ public final class GalleryActivity extends AppCompatActivity {
         }
     }
 
+    @TargetApi(22)
     public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -231,30 +235,26 @@ public final class GalleryActivity extends AppCompatActivity {
             item.setChecked(true);
     }
 
-//    @Override
-//    public ActionMode startSupportActionMode(final ActionMode.Callback callback) {
-//        if (getSupportActionBar() != null)
-//            return getSupportActionBar().startActionMode(callback);
-//        else return null;
-//    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.global, menu);
+
+        final MenuItem searchItem = menu.findItem(R.id.menuSearch);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (b) {
+                    if (!(mCurrentFragment instanceof SearchResultsFragment)) {
+                        final SearchResultsFragment resultsFragment = new SearchResultsFragment();
+                        swapFragment(resultsFragment);
+                    }
+                }
+            }
+        });
+
         restoreActionBar();
         return true;
-    }
-
-    /* Called whenever we call invalidateOptionsMenu() */
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        // If the nav drawer is open, hide action items related to the content view
-
-        //noinspection SimplifiableIfStatement
-        boolean drawerOpen = mDrawerLayout.isDrawerOpen(GravityCompat.START);
-        //menu.findItem(R.id.action_websearch).setVisible(!drawerOpen);
-
-        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override

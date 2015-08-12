@@ -79,4 +79,6 @@
     <string name="settings_whitelist_help"><![CDATA[If by any chance you don\'t see some of your images in the Gallery, add the directories containing those images to the <b>Whitelist</b>.]]></string>
     <string name="settings_blacklist_help"><![CDATA[Images inside directories included in the <b>Blacklist</b> will not appear in your Gallery.]]></string>
     <string name="settings_message_restartNote"><![CDATA[<i>Note: You must restart the application for changes to take effect!</i>)]]></string>
+    <string name="search_title">Search</string>
+    <string name="search_hint">Search in filenames… (more later)</string>
 </resources>
