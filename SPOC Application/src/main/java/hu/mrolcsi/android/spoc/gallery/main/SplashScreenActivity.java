@@ -95,12 +95,10 @@ public final class SplashScreenActivity extends AppCompatActivity {
     class FirstTimeSetupReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_FINISHED)) {
-                if (!isFirstStart) {
-                    Intent galleryIntent = new Intent(SplashScreenActivity.this, GalleryActivity.class);
-                    startActivity(galleryIntent);
-                    finish();
-                }
+            if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_FINISHED) && !isFirstStart) {
+                Intent galleryIntent = new Intent(SplashScreenActivity.this, GalleryActivity.class);
+                startActivity(galleryIntent);
+                finish();
             }
 
             if (intent.getAction().equals(CacheBuilderService.BROADCAST_ACTION_CACHING)) {
