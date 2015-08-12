@@ -15,6 +15,7 @@ import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.database.ImageTableLoader;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
+import hu.mrolcsi.android.spoc.gallery.main.ThumbnailsFragment;
 
 /**
  * Created with IntelliJ IDEA.
@@ -80,14 +81,14 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
         super.onStart();
 
         int loaderId = ImageTableLoader.ID;
-        if (getArguments() != null && getArguments().containsKey(ARG_LOADER_ID)) {
-            loaderId = getArguments().getInt(ARG_LOADER_ID);
+        Bundle loaderArgs = null;
+        if (getArguments() != null) {
+            if (getArguments().containsKey(ARG_LOADER_ID)) {
+                loaderId = getArguments().getInt(ARG_LOADER_ID);
+            }
+            loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
         }
-        getLoaderManager().initLoader(loaderId, null, new ImageTableLoader(getActivity(), this));
-
-        mLoader = getLoaderManager().getLoader(loaderId);
-        if (!mLoader.isStarted())
-            mLoader.startLoading();
+        mLoader = getLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(getActivity(), this));
     }
 
     @Override

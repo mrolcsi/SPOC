@@ -22,6 +22,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Toast;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
+import hu.mrolcsi.android.spoc.common.loader.LoaderBase;
 import hu.mrolcsi.android.spoc.common.loader.database.ImageTableLoader;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -42,17 +43,20 @@ import org.lucasr.twowayview.widget.TwoWayView;
 
 public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
 
+    public static final String ARG_QUERY_BUNDLE = "SPOC.Gallery.Thumbnails.ARGUMENT_BUNDLE";
     private static final int PRELOAD_AHEAD_ITEMS = 5;
+    private static final String ARG_LOADER_ID = "SPOC.Gallery.Thumbnails.LOADER_ID";
     protected ThumbnailsAdapter mAdapter;
     protected CursorLoader mLoader;
     protected FloatingActionButton fabSearch;
-    private TwoWayView twList;
+    protected TwoWayView twList;
     private Parcelable mListInstanceState;
     private int mSavedOrientation = Configuration.ORIENTATION_UNDEFINED;
     private Integer mSavedPosition;
     private ActionMode mActionMode;
     private ItemSelectionSupport mItemSelectionSupport;
     private MenuItem mSearchMenuItem;
+    private Bundle mQueryArgs = new Bundle();
     //protected FloatingActionButton fabCamera;
 
     @Override
@@ -99,6 +103,7 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
                 Bundle args = new Bundle();
                 args.putInt(ImagePagerFragment.ARG_LOADER_ID, mLoader.getId());
                 args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
+                args.putBundle(ARG_QUERY_BUNDLE, mQueryArgs);
 
                 mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
                 mSavedOrientation = getResources().getConfiguration().orientation;
@@ -199,19 +204,20 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
     public void onStart() {
         super.onStart();
 
+        int loaderId = ImageTableLoader.ID;
+        Bundle loaderArgs = null;
         if (getArguments() != null) {
-            //TODO: process args
+            if (getArguments().containsKey(ARG_LOADER_ID)) {
+                loaderId = getArguments().getInt(ARG_LOADER_ID);
+            }
+            loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
         }
-
-        //mLoader = (CursorLoader) getLoaderManager().initLoader(MediaStoreLoader.ID, null, new MediaStoreLoader(getActivity(), this));
-        mLoader = (CursorLoader) getLoaderManager().initLoader(ImageTableLoader.ID, null, new ImageTableLoader(getActivity(), this));
+        mLoader = (CursorLoader) getLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(getActivity(), this));
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
-        mLoader.startLoading();
     }
 
     @Override
@@ -227,6 +233,11 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
             DialogUtils.buildErrorDialog(getActivity()).setMessage(getString(R.string.error_noPictures)).show();
             return;
         }
+
+        mQueryArgs.putStringArray(ImageTableLoader.ARG_PROJECTION, ((CursorLoader) loader).getProjection());
+        mQueryArgs.putString(ImageTableLoader.ARG_SELECTION, ((CursorLoader) loader).getSelection());
+        mQueryArgs.putStringArray(LoaderBase.ARG_SELECTION_ARGS, ((CursorLoader) loader).getSelectionArgs());
+        mQueryArgs.putString(LoaderBase.ARG_SORT_ORDER, ((CursorLoader) loader).getSortOrder());
 
         mAdapter = new ThumbnailsAdapter(getActivity(), data);
         twList.setAdapter(mAdapter);

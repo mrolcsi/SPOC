@@ -24,10 +24,14 @@ import hu.mrolcsi.android.spoc.gallery.main.ThumbnailsFragment;
 
 public class SearchResultsFragment extends ThumbnailsFragment {
 
-    public static final String ARG_SEARCH_QUERY = "SPOC.Gallery.Search.QUERY";
-
     private TextView tvMessage;
-    private SearchView mSearchView;
+    private String mQuery;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
 
     @Nullable
     @Override
@@ -46,10 +50,15 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         lp.topMargin = getResources().getDimensionPixelOffset(R.dimen.abc_action_bar_default_height_material);
         view.setLayoutParams(lp);
 
-        //fabCamera.setVisibility(View.GONE);
         fabSearch.setVisibility(View.GONE);
 
         tvMessage = (TextView) view.findViewById(R.id.tvMessage);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mLoader.reset();
     }
 
     @Override
@@ -57,15 +66,15 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         super.onCreateOptionsMenu(menu, inflater);
 
         final MenuItem searchItem = menu.findItem(R.id.menuSearch);
-        mSearchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
 
-        mSearchView.setQueryHint(getString(R.string.search_hint));
-
+        searchView.setQueryHint(getString(R.string.search_hint));
         MenuItemCompat.expandActionView(searchItem);
+
         MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
-                return false;
+                return true;
             }
 
             @Override
@@ -75,10 +84,10 @@ public class SearchResultsFragment extends ThumbnailsFragment {
             }
         });
 
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                //do nothing?
+                searchView.clearFocus();
                 return true;
             }
 
@@ -88,11 +97,14 @@ public class SearchResultsFragment extends ThumbnailsFragment {
 
                 mLoader.reset();
                 mAdapter = null;
+                twList.setAdapter(null);
                 performSearch(newText);
 
                 return true;
             }
         });
+
+        searchView.setQuery(mQuery, true);
     }
 
     @Override
@@ -102,8 +114,12 @@ public class SearchResultsFragment extends ThumbnailsFragment {
     }
 
     private void performSearch(String searchText) {
+        if (TextUtils.isEmpty(searchText)) {
+            tvMessage.setText(R.string.error_noPictures);
+            return;
+        }
 
-        if (TextUtils.isEmpty(searchText)) return;
+        mQuery = searchText;
 
         String[] projection = new String[]{Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN};
         String selection = "lower(" + Image.COLUMN_FILENAME + ") LIKE lower(?)";
