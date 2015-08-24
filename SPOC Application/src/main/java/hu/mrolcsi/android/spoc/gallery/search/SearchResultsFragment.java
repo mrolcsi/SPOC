@@ -115,7 +115,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
 
     private void performSearch(String searchText) {
         if (TextUtils.isEmpty(searchText)) {
-            tvMessage.setText(R.string.error_noPictures);
+            tvMessage.setText(R.string.error_noResults);
             return;
         }
 
@@ -137,6 +137,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         super.onLoadComplete(loader, data);
 
         mAdapter.setUseColumnSpan(false);
-        tvMessage.setText("Result count: " + data.getCount());
+        final String quantityString = getResources().getQuantityString(R.plurals.message_numberOfResults, data.getCount(), data.getCount());
+        tvMessage.setText(quantityString);
     }
 }

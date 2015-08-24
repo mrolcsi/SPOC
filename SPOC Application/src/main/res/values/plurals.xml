@@ -8,4 +8,9 @@
         <item quantity="one">@string/message_pictureDeleted</item>
         <item quantity="other">@string/message_multiplePicturesDeleted</item>
     </plurals>
+    <plurals name="message_numberOfResults">
+        <item quantity="zero">@string/error_noResults</item>
+        <item quantity="one">@string/message_onePictureFound</item>
+        <item quantity="other">@string/message_multiplePicturesFound</item>
+    </plurals>
 </resources>

@@ -81,4 +81,7 @@
     <string name="settings_message_restartNote"><![CDATA[<i>Note: You must restart the application for changes to take effect!</i>)]]></string>
     <string name="search_title">Search</string>
     <string name="search_hint">Search in filenames… (more later)</string>
+    <string name="error_noResults">No results.</string>
+    <string name="message_onePictureFound">%d picture found.</string>
+    <string name="message_multiplePicturesFound">%d pictures found.</string>
 </resources>
