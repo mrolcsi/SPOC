@@ -143,7 +143,6 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
         } finally {
             if (cursor != null)
                 cursor.close();
-            wakeLock.release();
 
             //let's assume it's finished, even when it's not
             PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean(DatabaseBuilderService.ARG_FIRST_START, false).apply();
