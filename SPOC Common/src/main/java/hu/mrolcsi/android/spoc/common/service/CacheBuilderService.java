@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 public class CacheBuilderService extends IntentService implements Thread.UncaughtExceptionHandler {
 
     public static final String TAG = "SPOC.Gallery.CacheBuilderService";
-    public static final String ARG_FIRST_TIME = "SPOC.Gallery.CacheBuilderService.FIRST_TIME";
     public static final String BROADCAST_ACTION_CACHING = "SPOC.Gallery.CacheBuilderService.BROADCAST_CACHING";
     public static final String BROADCAST_ACTION_INCREMENTAL = "SPOC.Gallery.CacheBuilderService.BROADCAST_INCREMENTAL";
     public static final String EXTENDED_DATA_COUNT = "SPOC.Gallery.CacheBuilderService.COUNT";
@@ -138,7 +137,7 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
             }
 
             handler.post(clearMemoryRunnable);
-
+            
             long endTime = System.currentTimeMillis();
             Log.i(getClass().getSimpleName(), String.format("Caching done in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
         } finally {
@@ -147,8 +146,9 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
             wakeLock.release();
 
             //let's assume it's finished, even when it's not
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(ARG_FIRST_TIME, false).apply();
+            PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean(DatabaseBuilderService.ARG_FIRST_START, false).apply();
         }
+        wakeLock.release();
     }
 
     @Override

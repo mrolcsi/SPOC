@@ -18,6 +18,7 @@ import android.view.Display;
 import android.view.WindowManager;
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
+import hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
 
 import java.util.concurrent.ExecutionException;
@@ -34,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 public class CacheBuilderServiceFromMediaStore extends IntentService implements Thread.UncaughtExceptionHandler {
 
     public static final String TAG = "SPOC.Gallery.CacheBuilderService";
-    public static final String ARG_FIRST_TIME = "SPOC.Gallery.CacheBuilderService.FIRST_TIME";
     public static final String BROADCAST_ACTION_FIRST = "SPOC.Gallery.CacheBuilderService.BROADCAST_FIRST";
     public static final String BROADCAST_ACTION_INCREMENTAL = "SPOC.Gallery.CacheBuilderService.BROADCAST_INCREMENTAL";
     public static final String EXTENDED_DATA_COUNT = "SPOC.Gallery.CacheBuilderService.COUNT";
@@ -81,7 +81,7 @@ public class CacheBuilderServiceFromMediaStore extends IntentService implements 
         String[] projection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA};
         String sortOrder = MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC";
 
-        final boolean isFirstTime = intent.getBooleanExtra(ARG_FIRST_TIME, false);
+        final boolean isFirstTime = intent.getBooleanExtra(DatabaseBuilderService.ARG_FIRST_START, false);
         Intent progressIntent;
         if (isFirstTime)
             progressIntent = new Intent(BROADCAST_ACTION_FIRST);
@@ -148,7 +148,7 @@ public class CacheBuilderServiceFromMediaStore extends IntentService implements 
         } finally {
             if (cursor != null)
                 cursor.close();
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(ARG_FIRST_TIME, false).apply();
+            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(DatabaseBuilderService.ARG_FIRST_START, false).apply();
             wakeLock.release();
 
             long endTime = System.currentTimeMillis();

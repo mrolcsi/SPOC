@@ -67,6 +67,7 @@ public class DirectoryListFragment extends PreferenceFragment implements ISPOCFr
         }
     };
 
+    @TargetApi(11)
     @Override
     public void onCreate(Bundle paramBundle) {
         super.onCreate(paramBundle);
@@ -143,6 +144,7 @@ public class DirectoryListFragment extends PreferenceFragment implements ISPOCFr
         save();
     }
 
+    @TargetApi(11)
     private void load() {
 
         mListCategory.removeAll();
