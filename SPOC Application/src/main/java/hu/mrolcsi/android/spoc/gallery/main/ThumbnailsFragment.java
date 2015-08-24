@@ -288,6 +288,7 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
 
                         pd.dismiss();
                         mActionMode.finish();
+
                         mLoader.startLoading();
 
                         final CharSequence text = getResources().getQuantityString(R.plurals.dialog_message_numPicturesDeleted, pd.getProgress(), pd.getProgress());
