@@ -139,13 +139,15 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
 
             handler.post(clearMemoryRunnable);
 
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(ARG_FIRST_TIME, false).apply();
             long endTime = System.currentTimeMillis();
             Log.i(getClass().getSimpleName(), String.format("Caching done in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
         } finally {
             if (cursor != null)
                 cursor.close();
             wakeLock.release();
+
+            //let's assume it's finished, even when it's not
+            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(ARG_FIRST_TIME, false).apply();
         }
     }
 
