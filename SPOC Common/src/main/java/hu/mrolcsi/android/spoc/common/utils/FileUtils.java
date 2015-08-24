@@ -5,10 +5,11 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.provider.MediaStore;
 import android.support.v4.content.CursorLoader;
 import android.util.Log;
 import android.util.SparseBooleanArray;
+import hu.mrolcsi.android.spoc.database.models.Image;
+import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -74,19 +75,25 @@ public abstract class FileUtils {
         }
 
         protected Void processCursor(Cursor cursor) {
-            int columnIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+            int iFilename = cursor.getColumnIndex(Image.COLUMN_FILENAME);
             String filename;
+
+            int iID = cursor.getColumnIndex("_id");
 
             int i = 0;
             int size = mCheckedPositions.size();
 
+            Uri imagesUri = Uri.withAppendedPath(SPOCContentProvider.CONTENT_URI, Image.TABLE_NAME);
+
             while (cursor.moveToNext()) {
 
                 if (mCheckedPositions.get(cursor.getPosition())) {
-                    filename = cursor.getString(columnIndex);
+                    filename = cursor.getString(iFilename);
 
                     try {
                         if (FileUtils.deleteFile(filename)) publishProgress(++i, size);
+
+                        context.getContentResolver().delete(Uri.withAppendedPath(imagesUri, cursor.getString(iID)), null, null);
                     } catch (IOException e) {
                         Log.w(getClass().getName(), e);
                         // TODO: pass exception to UI
@@ -104,7 +111,7 @@ public abstract class FileUtils {
 
         @Override
         protected Intent processCursor(Cursor cursor) {
-            int columnIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+            int columnIndex = cursor.getColumnIndex(Image.COLUMN_FILENAME);
             String filename;
 
             int i = 0;
@@ -133,7 +140,7 @@ public abstract class FileUtils {
 
     private static abstract class MultiFileProcessorTask<Result> extends AsyncTask<CursorLoader, Integer, Result> {
         protected final SparseBooleanArray mCheckedPositions;
-        private final Context context;
+        protected final Context context;
 
         public MultiFileProcessorTask(Context context, SparseBooleanArray checkedPositions) {
             this.context = context;
