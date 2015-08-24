@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.ExifInterface;
 import android.net.Uri;
@@ -151,7 +152,12 @@ public class DatabaseBuilderService extends IntentService {
                     } else {
                         image = new Image(filename, id, new Date(dateTaken));
                     }
-                    imagesDao.createOrUpdate(image);
+                    try {
+                        imagesDao.createOrUpdate(image);
+                    } catch (SQLiteConstraintException e) {
+                        Log.w(getClass().getName(), e);
+                        Log.w(getClass().getSimpleName(), "filename = " + filename);
+                    }
                 }
             }
             db.setTransactionSuccessful();
