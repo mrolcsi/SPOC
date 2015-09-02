@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Address;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
@@ -16,6 +17,7 @@ import android.util.Log;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import hu.mrolcsi.android.spoc.common.R;
 import hu.mrolcsi.android.spoc.common.helper.ListHelper;
+import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.models.Contact;
@@ -60,6 +62,8 @@ public class DatabaseBuilderService extends IntentService {
         updateImagesFromMediaStore();
 
         updateImagesFromWhiteList();
+
+        //everything else can be done in the background, can it not?
 
         //cleanUpContacts();
 
@@ -154,6 +158,9 @@ public class DatabaseBuilderService extends IntentService {
                     }
                     try {
                         imagesDao.createOrUpdate(image);
+                        if (image.getLocation() == null) {
+                            findLocation(image);
+                        }
                     } catch (SQLiteConstraintException e) {
                         Log.w(getClass().getName(), e);
                         Log.w(getClass().getSimpleName(), "filename = " + filename);
@@ -210,6 +217,9 @@ public class DatabaseBuilderService extends IntentService {
                         image.setDateTaken(date);
 
                         imagesDao.createOrUpdate(image);
+                        if (image.getLocation() == null) {
+                            findLocation(image);
+                        }
                     }
                 }
             }
@@ -221,6 +231,31 @@ public class DatabaseBuilderService extends IntentService {
             db.endTransaction();
         }
         Log.v(getClass().getSimpleName(), "Update from Whitelist done.");
+    }
+
+    private void findLocation(final Image image) {
+        try {
+            ExifInterface exif = new ExifInterface(image.getFilename());
+            float[] latLong = new float[2];
+            exif.getLatLong(latLong);
+
+            LocationFinderTask task = new LocationFinderTask(this) {
+                @Override
+                protected void onPostExecute(List<Address> addresses) {
+                    super.onPostExecute(addresses);
+
+                    if (addresses != null && addresses.size() > 0) {
+                        final String locality = addresses.get(0).getLocality();
+                        final String countryName = addresses.get(0).getCountryName();
+                        image.setLocation(locality + ", " + countryName);
+                        DatabaseHelper.getInstance().getImagesDao().update(image);
+                    }
+                }
+            };
+            task.execute(latLong[0], latLong[1]);
+        } catch (IOException e) {
+            Log.w(getClass().getSimpleName(), e);
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)

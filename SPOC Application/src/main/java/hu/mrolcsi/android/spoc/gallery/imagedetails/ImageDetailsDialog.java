@@ -141,7 +141,6 @@ public class ImageDetailsDialog extends DialogFragment {
                             if (isCancelled()) return;
 
                             if (addresses == null) {
-                                //TODO: use cached value from db
                                 tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
                             } else {
                                 final String locality = addresses.get(0).getLocality();
