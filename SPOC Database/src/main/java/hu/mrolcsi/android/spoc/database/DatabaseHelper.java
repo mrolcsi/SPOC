@@ -25,7 +25,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -57,10 +57,10 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         Log.i(getClass().getSimpleName(), "onCreate");
         try {
             TableUtils.createTable(connectionSource, Image.class);
+            TableUtils.createTable(connectionSource, Label.class);
+            TableUtils.createTable(connectionSource, Label2Image.class);
             //TableUtils.createTable(connectionSource, Contact.class);
-            //TableUtils.createTable(connectionSource, Label.class);
             //TableUtils.createTable(connectionSource, Contact2Image.class);
-            //TableUtils.createTable(connectionSource, Label2Image.class);
         } catch (SQLException e) {
             Log.w(getClass().getName(), e);
         }
@@ -70,8 +70,17 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     public void onUpgrade(SQLiteDatabase database, ConnectionSource connectionSource, int oldVersion, int newVersion) {
         Log.i(getClass().getSimpleName(), "onUpgrade | oldVersion=" + oldVersion + " newVersion=" + newVersion);
         if (oldVersion < 2) {
-            //Add location string to Images table
+            //Add location text to Images table.
             database.execSQL("ALTER TABLE " + Image.TABLE_NAME + " ADD COLUMN " + Image.COLUMN_LOCATION + " VARCHAR");
+        }
+        if (oldVersion < 3) {
+            //Create Labels table and Label2Image table.
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, Label.class);
+                TableUtils.createTableIfNotExists(connectionSource, Label2Image.class);
+            } catch (SQLException e) {
+                Log.w(getClass().getSimpleName(), e);
+            }
         }
     }
 

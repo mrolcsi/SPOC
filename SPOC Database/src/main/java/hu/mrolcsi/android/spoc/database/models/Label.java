@@ -19,13 +19,16 @@ public class Label {
     public static final String COLUMN_FOREIGN_ID = "label_id";
     public static final String COLUMN_NAME = "name";
     public static final String COLUMN_CREATION_DATE = "creation_date";
+    public static final String COLUMN_TYPE = "type";
 
     @DatabaseField(generatedId = true)
     private int _id;
-    @DatabaseField(columnName = COLUMN_NAME, canBeNull = false)
+    @DatabaseField(columnName = COLUMN_NAME, canBeNull = false, unique = true, index = true)
     private String name;
     @DatabaseField(columnName = COLUMN_CREATION_DATE, dataType = DataType.DATE_LONG)
     private Date creationDate;
+    @DatabaseField(columnName = COLUMN_TYPE, dataType = DataType.ENUM_STRING)
+    private LabelType type;
 
     public Label() {
     }
@@ -35,8 +38,13 @@ public class Label {
     }
 
     public Label(String name, Date creationDate) {
-        this.name = name;
+        this(name);
         this.creationDate = creationDate;
+    }
+
+    public Label(String name, Date creationDate, LabelType type) {
+        this(name, creationDate);
+        this.type = type;
     }
 
     public int get_id() {
@@ -61,5 +69,13 @@ public class Label {
 
     public void setCreationDate(Date creationDate) {
         this.creationDate = creationDate;
+    }
+
+    public LabelType getType() {
+        return type;
+    }
+
+    public void setType(LabelType type) {
+        this.type = type;
     }
 }

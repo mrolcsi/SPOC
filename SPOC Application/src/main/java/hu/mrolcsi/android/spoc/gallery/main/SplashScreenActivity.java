@@ -57,7 +57,7 @@ public final class SplashScreenActivity extends AppCompatActivity {
         serviceIntent.putExtra(DatabaseBuilderService.ARG_FIRST_START, isFirstStart);
         startService(serviceIntent);
 
-        IntentFilter dbBuilderIntentFilter = new IntentFilter(DatabaseBuilderService.BROADCAST_ACTION_FINISHED);
+        IntentFilter dbBuilderIntentFilter = new IntentFilter(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, dbBuilderIntentFilter);
 
         if (isFirstStart) {
@@ -95,7 +95,7 @@ public final class SplashScreenActivity extends AppCompatActivity {
     class FirstTimeSetupReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_FINISHED) && !isFirstStart) {
+            if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY) && !isFirstStart) {
                 Intent galleryIntent = new Intent(SplashScreenActivity.this, GalleryActivity.class);
                 startActivity(galleryIntent);
                 finish();
