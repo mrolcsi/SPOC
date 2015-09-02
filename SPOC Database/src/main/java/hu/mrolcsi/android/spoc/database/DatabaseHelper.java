@@ -25,7 +25,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -69,6 +69,10 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase database, ConnectionSource connectionSource, int oldVersion, int newVersion) {
         Log.i(getClass().getSimpleName(), "onUpgrade | oldVersion=" + oldVersion + " newVersion=" + newVersion);
+        if (oldVersion < 2) {
+            //Add location string to Images table
+            database.execSQL("ALTER TABLE " + Image.TABLE_NAME + " ADD COLUMN " + Image.COLUMN_LOCATION + " VARCHAR");
+        }
     }
 
     @Override

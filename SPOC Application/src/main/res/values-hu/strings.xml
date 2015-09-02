@@ -9,7 +9,7 @@
     <string name="no">Nem</string>
     <string name="preferences_about_title">Névjegy</string>
     <string name="yes">Igen</string>
-    <string name="not_available">N/A</string>
+    <string name="not_available">--</string>
     <string name="close">Bezár</string>
     <string name="details_action_delete">Törlés</string>
     <string name="details_action_rotate">Forgatás</string>

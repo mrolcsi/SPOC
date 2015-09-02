@@ -1,7 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.v4.view.ViewPager
-        xmlns:android="http://schemas.android.com/apk/res/android"
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/vpDetailsPager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/vpDetailsPager"/>
+        android:layout_height="match_parent" />
+
+    <RelativeLayout
+        android:id="@+id/rlInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom">
+
+        <ImageView
+            android:id="@+id/imgLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_margin="@dimen/margin_small"
+            android:src="@drawable/map_marker" />
+
+        <ImageView
+            android:id="@+id/imgDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="false"
+            android:layout_below="@+id/imgLocation"
+            android:layout_margin="@dimen/margin_small"
+            android:src="@drawable/calendar" />
+
+        <ImageView
+            android:id="@+id/imgLabels"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/imgDate"
+            android:layout_margin="@dimen/margin_small"
+            android:src="@drawable/tag"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/imgLocation"
+            android:layout_alignParentLeft="false"
+            android:layout_alignTop="@+id/imgLocation"
+            android:layout_toRightOf="@+id/imgLocation"
+            android:gravity="center"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="1"
+            android:text="Budapest, Hungary" />
+
+        <TextView
+            android:id="@+id/tvDateTaken"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/imgDate"
+            android:layout_alignParentLeft="false"
+            android:layout_alignTop="@+id/imgDate"
+            android:layout_toRightOf="@+id/imgDate"
+            android:gravity="center"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="1"
+            android:text="2015. aug. 24. 15:09" />
+
+        <TextView
+            android:id="@+id/tvLabels"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/imgLabels"
+            android:layout_alignTop="@+id/imgLabels"
+            android:layout_toRightOf="@+id/imgLabels"
+            android:gravity="center"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="1"
+            android:text="Labels"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:id="@+id/btnRefresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/imgDate"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/imgLocation"
+            android:layout_margin="@dimen/margin_small"
+            android:src="@android:drawable/stat_notify_sync"
+            android:visibility="gone" />
+
+    </RelativeLayout>
+
+</FrameLayout>

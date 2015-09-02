@@ -28,7 +28,7 @@
     <string name="details_label_digitalZoomFactor">Digital zoom amount:</string>
     <string name="details_message_flashOn">On</string>
     <string name="details_message_flashOff">Off</string>
-    <string name="not_available">N/A</string>
+    <string name="not_available">--</string>
     <string name="navigation_date">Date</string>
     <string name="navigation_places">Places</string>
     <string name="navigation_people">People</string>

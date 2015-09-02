@@ -4,6 +4,7 @@ import android.database.Cursor;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.util.SparseArray;
 import hu.mrolcsi.android.spoc.database.models.Image;
 
 /**
@@ -13,30 +14,36 @@ import hu.mrolcsi.android.spoc.database.models.Image;
  * Time: 20:10
  */
 
-public class ImageDetailsAdapter extends FragmentStatePagerAdapter {
+public class ImagePagerAdapter extends FragmentStatePagerAdapter {
 
+    private int iID = -1;
     private int iData = -1;
     private Cursor cursor;
     private int mCount;
 
-    public ImageDetailsAdapter(FragmentManager fm, Cursor cursor) {
-        super(fm);
-        this.cursor = cursor;
-        iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
-    }
+    private SparseArray<Fragment> mFragmentCache = new SparseArray<>();
 
-    public ImageDetailsAdapter(FragmentManager childFragmentManager) {
-        super(childFragmentManager);
+    public ImagePagerAdapter(FragmentManager fm, Cursor cursor) {
+        super(fm);
+        if (cursor != null) {
+            this.cursor = cursor;
+            iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
+            iID = cursor.getColumnIndex("_id");
+        }
     }
 
     @Override
     public Fragment getItem(int position) {
 
-        if (cursor != null && !cursor.isClosed()) {
+        if (mFragmentCache.get(position) != null) return mFragmentCache.get(position);
+        else if (cursor != null && !cursor.isClosed()) {
             cursor.moveToPosition(position);
             final String imagePath = cursor.getString(iData);
+            final long imageId = cursor.getLong(iID);
 
-            return SingleImageFragment.newInstance(imagePath);
+            final SingleImageFragment fragment = SingleImageFragment.newInstance(imageId, imagePath);
+            mFragmentCache.put(position, fragment);
+            return fragment;
         }
         return null;
     }

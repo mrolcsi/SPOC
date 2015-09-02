@@ -14,6 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import hu.mrolcsi.android.spoc.common.BuildConfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Matusinka Roland
@@ -23,6 +26,7 @@ import hu.mrolcsi.android.spoc.common.BuildConfig;
 
 public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
 
+    private static List<OnFullscreenChangeListener> onFullscreenChangeListeners = new ArrayList<>();
     protected View mRootView;
 
     @Override
@@ -196,5 +200,21 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
                 else actionBar.show();
             }
         }
+
+        for (OnFullscreenChangeListener listener : onFullscreenChangeListeners) {
+            listener.onFullScreenChanged(isFullscreen());
+        }
+    }
+
+    public void addOnFullscreenChangeListener(OnFullscreenChangeListener listener) {
+        onFullscreenChangeListeners.add(listener);
+    }
+
+    public void removeOnFullscreenChangeListener(OnFullscreenChangeListener listener) {
+        onFullscreenChangeListeners.remove(listener);
+    }
+
+    public interface OnFullscreenChangeListener {
+        void onFullScreenChanged(boolean isFullscreen);
     }
 }

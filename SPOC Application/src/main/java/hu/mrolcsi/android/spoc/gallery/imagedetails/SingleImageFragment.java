@@ -35,18 +35,22 @@ import java.io.IOException;
 
 public class SingleImageFragment extends SPOCFragment {
 
+    public static final String ARG_IMAGE_ID = "SPOC.Gallery.Details.ImageId";
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
+
     private PhotoView photoView;
 
     private int mDesiredWidth;
     private int mDesiredHeight;
 
+    private long mImageId;
     private String mImagePath;
 
-    public static SingleImageFragment newInstance(String imagePath) {
+    public static SingleImageFragment newInstance(long imageId, String imagePath) {
         final SingleImageFragment f = new SingleImageFragment();
 
         final Bundle args = new Bundle();
+        args.putLong(ARG_IMAGE_ID, imageId);
         args.putString(ARG_IMAGE_PATH, imagePath);
         f.setArguments(args);
 
@@ -110,7 +114,13 @@ public class SingleImageFragment extends SPOCFragment {
         super.onStart();
 
         mImagePath = getArguments().getString(ARG_IMAGE_PATH);
+        mImageId = getArguments().getLong(ARG_IMAGE_ID);
         GlideHelper.loadBigImage(this, mImagePath, mDesiredWidth, mDesiredHeight, photoView);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     @Override
@@ -170,6 +180,14 @@ public class SingleImageFragment extends SPOCFragment {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public String getImagePath() {
+        return mImagePath;
+    }
+
+    public long getImageId() {
+        return mImageId;
     }
 
     @Override

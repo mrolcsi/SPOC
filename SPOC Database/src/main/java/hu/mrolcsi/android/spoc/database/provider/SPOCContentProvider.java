@@ -17,7 +17,7 @@ import hu.mrolcsi.android.spoc.database.models.Image;
  * Time: 10:05
  */
 
-public class SPOCContentProvider extends ContentProvider {
+public final class SPOCContentProvider extends ContentProvider {
 
     private static final String AUTHORITY = "hu.mrolcsi.android.spoc.database.provider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);

@@ -21,6 +21,7 @@ public class Image {
     public static final String COLUMN_FILENAME = "filename";
     public static final String COLUMN_MEDIASTORE_ID = "MediaStore_id";
     public static final String COLUMN_DATE_TAKEN = "date_taken";
+    public static final String COLUMN_LOCATION = "location";
 
     @DatabaseField(generatedId = true)
     private int _id;
@@ -30,6 +31,8 @@ public class Image {
     private long mediaStoreId;
     @DatabaseField(columnName = COLUMN_DATE_TAKEN, dataType = DataType.DATE_LONG)
     private Date dateTaken;
+    @DatabaseField(columnName = COLUMN_LOCATION)
+    private String location;
 
     public Image() {
     }
@@ -68,12 +71,19 @@ public class Image {
         this.mediaStoreId = mediaStoreId;
     }
 
-
     public Date getDateTaken() {
         return dateTaken;
     }
 
     public void setDateTaken(Date dateTaken) {
         this.dateTaken = dateTaken;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 }
