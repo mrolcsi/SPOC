@@ -72,6 +72,13 @@ public class DatabaseBuilderService extends IntentService {
         progressIntent = new Intent(BROADCAST_ACTION_IMAGES_READY);
         LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
 
+        final boolean isFirstStart = intent.getBooleanExtra(ARG_FIRST_START, false);
+
+        if (isFirstStart) {
+            Intent cacheIntent = new Intent(getApplicationContext(), CacheBuilderService.class);
+            startService(cacheIntent);
+        }
+
         updateLocations();
 
         //TODO: cleanUpContacts();
@@ -84,13 +91,6 @@ public class DatabaseBuilderService extends IntentService {
 
         progressIntent = new Intent(BROADCAST_ACTION_FINISHED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
-
-        final boolean isFirstStart = intent.getBooleanExtra(ARG_FIRST_START, false);
-
-        if (isFirstStart) {
-            Intent cacheIntent = new Intent(getApplicationContext(), CacheBuilderService.class);
-            startService(cacheIntent);
-        }
 
         Log.v(getClass().getSimpleName(), "DatabaseBuilder finished.");
     }
@@ -258,11 +258,13 @@ public class DatabaseBuilderService extends IntentService {
                     exif.getLatLong(latLong);
 
                     addresses = geocoder.getFromLocation(latLong[0], latLong[1], 1);
-                    locality = addresses.get(0).getLocality();
-                    countryName = addresses.get(0).getCountryName();
+                    if (addresses != null && addresses.size() > 0) {
+                        locality = addresses.get(0).getLocality();
+                        countryName = addresses.get(0).getCountryName();
 
-                    image.setLocation(locality + ", " + countryName);
-                    DatabaseHelper.getInstance().getImagesDao().update(image);
+                        image.setLocation(locality + ", " + countryName);
+                        DatabaseHelper.getInstance().getImagesDao().update(image);
+                    }
                 } catch (IOException e) {
                     Log.w(getClass().getSimpleName(), e);
                 }
