@@ -2,21 +2,24 @@ package hu.mrolcsi.android.spoc.common.service;
 
 import android.annotation.TargetApi;
 import android.app.IntentService;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
 import android.location.Geocoder;
 import android.media.ExifInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.util.Log;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
-import com.j256.ormlite.stmt.PreparedQuery;
 import hu.mrolcsi.android.spoc.common.R;
 import hu.mrolcsi.android.spoc.common.helper.ListHelper;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
@@ -26,6 +29,7 @@ import hu.mrolcsi.android.spoc.database.models.Image;
 import hu.mrolcsi.android.spoc.database.models.Label;
 import hu.mrolcsi.android.spoc.database.models.LabelType;
 import hu.mrolcsi.android.spoc.database.models.binders.Label2Image;
+import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -34,6 +38,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -49,13 +54,23 @@ public class DatabaseBuilderService extends IntentService {
     public static final String BROADCAST_ACTION_FINISHED = "SPOC.Common.DatabaseBuilder.BROADCAST_FINISHED";
     public static final String ARG_FIRST_START = "SPOC.Common.FIRST_START";
 
+    private boolean mInternet;
+
+    private Map<String, Integer> mLabelCache = new TreeMap<>();
+
     public DatabaseBuilderService() {
         super(TAG);
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.v(getClass().getSimpleName(), "DatabaseBuilder started.");
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        mInternet = activeNetworkInfo != null && activeNetworkInfo.isConnected();
+
+        long startTime = System.currentTimeMillis();
+
+        Log.i(getClass().getSimpleName(), "DatabaseBuilder started.");
 
         Intent progressIntent;
 
@@ -66,6 +81,9 @@ public class DatabaseBuilderService extends IntentService {
         updateImagesFromMediaStore();
 
         updateImagesFromWhiteList();
+
+        long endTime = System.currentTimeMillis();
+        Log.i(getClass().getSimpleName(), String.format("Images updated in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
 
         //everything else should be done in the background
 
@@ -79,8 +97,6 @@ public class DatabaseBuilderService extends IntentService {
             startService(cacheIntent);
         }
 
-        updateLocations();
-
         //TODO: cleanUpContacts();
 
         //TODO: updateContactsFromContactsProvider();
@@ -92,24 +108,29 @@ public class DatabaseBuilderService extends IntentService {
         progressIntent = new Intent(BROADCAST_ACTION_FINISHED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
 
-        Log.v(getClass().getSimpleName(), "DatabaseBuilder finished.");
+
+        endTime = System.currentTimeMillis();
+        Log.i(getClass().getSimpleName(), String.format("DatabaseBuilder finished in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
     }
 
     private void cleanUpImages() {
         //TODO: delete not existing images from db
         Log.v(getClass().getSimpleName(), "Cleaning up images...");
-        final List<Image> toDelete = new ArrayList<>();
 
         final ListHelper listHelper = new ListHelper(getApplicationContext());
+        String filename;
+        int numRowsDeleted = 0;
 
+        final Cursor cursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI, new String[]{"_id", Image.COLUMN_FILENAME}, null, null, null);
 
-        for (Image image : DatabaseHelper.getInstance().getImagesDao()) {
-            if (!new File(image.getFilename()).exists() || listHelper.isInBlacklist(image.getFilename())) {
-                toDelete.add(image);
+        while (cursor.moveToNext()) {
+            filename = cursor.getString(1);
+            if (!new File(filename).exists() || listHelper.isInBlacklist(filename)) {
+                numRowsDeleted += getContentResolver().delete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0))), null, null);
             }
         }
+        cursor.close();
 
-        final int numRowsDeleted = DatabaseHelper.getInstance().getImagesDao().delete(toDelete);
         Log.v(getClass().getSimpleName(), "Image clean up done. Deleted " + numRowsDeleted + " images.");
     }
 
@@ -130,55 +151,71 @@ public class DatabaseBuilderService extends IntentService {
         //prepare query
         Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         String[] projection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA, MediaStore.Images.ImageColumns.DATE_TAKEN};
+        String sortOrder = MediaStore.Images.Media.DATE_TAKEN + " DESC";
 
-        Cursor cursor = null;
-        final SQLiteDatabase db = DatabaseHelper.getInstance().getWritableDatabase();
-        final RuntimeExceptionDao<Image, Integer> imagesDao = DatabaseHelper.getInstance().getImagesDao();
+        Cursor mediaStoreCursor = null;
+        //final SQLiteDatabase db = DatabaseHelper.getInstance().getWritableDatabase();
+        //final RuntimeExceptionDao<Image, Integer> imagesDao = DatabaseHelper.getInstance().getImagesDao();
 
         final ListHelper listHelper = new ListHelper(getApplicationContext());
 
-        db.beginTransaction();
+        //db.beginTransaction();
         try {
-            cursor = getContentResolver().query(uri, projection, null, null, null);
+            mediaStoreCursor = getContentResolver().query(uri, projection, null, null, sortOrder);
 
-            int indexID = cursor.getColumnIndex(projection[0]);
-            int indexData = cursor.getColumnIndex(projection[1]);
-            int indexDateTaken = cursor.getColumnIndex(projection[2]);
+            int indexID = mediaStoreCursor.getColumnIndex(projection[0]);
+            int indexData = mediaStoreCursor.getColumnIndex(projection[1]);
+            int indexDateTaken = mediaStoreCursor.getColumnIndex(projection[2]);
 
-            int id;
+            int mediaStoreId;
             String filename;
             long dateTaken;
+            String location;
+            ContentValues values;
+            Uri imagesByMediaStoreIdUri = Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, Image.COLUMN_MEDIASTORE_ID);
 
-            Image image;
-            List<Image> images;
-
-            while (cursor.moveToNext()) {
-                id = cursor.getInt(indexID);
-                filename = cursor.getString(indexData);
-                dateTaken = cursor.getLong(indexDateTaken);
-
-                images = imagesDao.queryForEq(Image.COLUMN_MEDIASTORE_ID, id);
+            while (mediaStoreCursor.moveToNext()) {
+                mediaStoreId = mediaStoreCursor.getInt(indexID);
+                filename = mediaStoreCursor.getString(indexData);
+                dateTaken = mediaStoreCursor.getLong(indexDateTaken);
 
                 if (new File(filename).exists() && !listHelper.isInBlacklist(filename)) {
-                    if (images.size() > 0) {
-                        image = images.get(0);
-                        image.setFilename(filename);
-                        image.setDateTaken(new Date(dateTaken));
+                    values = new ContentValues();
+                    values.put(Image.COLUMN_MEDIASTORE_ID, mediaStoreId);
+                    values.put(Image.COLUMN_FILENAME, filename);
+                    values.put(Image.COLUMN_DATE_TAKEN, dateTaken);
+
+
+                    final Cursor imageCursor = getContentResolver().query(Uri.withAppendedPath(imagesByMediaStoreIdUri, String.valueOf(mediaStoreId)),
+                            new String[]{"_id", Image.COLUMN_LOCATION},
+                            null, null, null);
+
+                    if (imageCursor.moveToFirst()) {
+                        //update db with mediastore values
+                        if (mInternet && TextUtils.isEmpty(imageCursor.getString(1))) {
+                            location = buildLocationString(filename);
+                            if (location != null) {
+                                values.put(Image.COLUMN_LOCATION, location);
+                            }
+                        }
+                        getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
                     } else {
-                        image = new Image(filename, id, new Date(dateTaken));
+                        //add new db entry with mediastore values
+                        if (mInternet) {
+                            location = buildLocationString(filename);
+                            if (location != null) {
+                                values.put(Image.COLUMN_LOCATION, location);
+                            }
+                        }
+                        getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
                     }
-                    try {
-                        imagesDao.createOrUpdate(image);
-                    } catch (SQLiteConstraintException e) {
-                        Log.w(getClass().getName(), e);
-                        Log.w(getClass().getSimpleName(), "filename = " + filename);
-                    }
+                    imageCursor.close();
                 }
             }
-            db.setTransactionSuccessful();
+            //db.setTransactionSuccessful();
         } finally {
-            if (cursor != null) cursor.close();
-            db.endTransaction();
+            if (mediaStoreCursor != null) mediaStoreCursor.close();
+            //db.endTransaction();
         }
         Log.v(getClass().getSimpleName(), "Update from MediaStore done.");
     }
@@ -196,82 +233,87 @@ public class DatabaseBuilderService extends IntentService {
             }
         };
 
-        final RuntimeExceptionDao<Image, Integer> imagesDao = DatabaseHelper.getInstance().getImagesDao();
-        final SQLiteDatabase db = DatabaseHelper.getInstance().getWritableDatabase();
         final SimpleDateFormat sdf = new SimpleDateFormat(getString(R.string.spoc_exifParser), Locale.getDefault());
+        String location;
+        ContentValues values;
 
-        db.beginTransaction();
+        //db.beginTransaction();
+        //noinspection EmptyFinallyBlock
         try {
             File dir;
             for (String s : whitelist) {
                 dir = new File(s);
                 for (File file : dir.listFiles(filter)) {
+                    values = new ContentValues();
+                    values.put(Image.COLUMN_FILENAME, file.getAbsolutePath());
 
-                    List<Image> images = imagesDao.queryForEq(Image.COLUMN_FILENAME, file.getAbsolutePath());
-                    Image image;
-                    if (images.size() == 0) {
-                        image = new Image();
-
-                        image.setFilename(file.getAbsolutePath());
-
-                        Date date;
-                        if (file.getAbsolutePath().contains("jpg") || file.getAbsolutePath().contains("jpeg")) {
-                            ExifInterface exif = new ExifInterface(file.getAbsolutePath());
-                            String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
-                            date = sdf.parse(dateString);
-                        } else {
-                            date = new Date(file.lastModified());
-                        }
-                        image.setDateTaken(date);
-
-                        imagesDao.createOrUpdate(image);
+                    Date date;
+                    if (file.getAbsolutePath().contains("jpg") || file.getAbsolutePath().contains("jpeg")) { //TODO: additional extensions
+                        ExifInterface exif = new ExifInterface(file.getAbsolutePath());
+                        String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
+                        date = sdf.parse(dateString);
+                    } else {
+                        date = new Date(file.lastModified());
                     }
+                    values.put(Image.COLUMN_DATE_TAKEN, date.getTime());
+
+                    final Cursor imageCursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI,
+                            new String[]{"_id"},
+                            Image.COLUMN_FILENAME + " = ?",
+                            new String[]{file.getAbsolutePath()},
+                            null);
+
+                    if (imageCursor.moveToFirst()) {
+                        if (mInternet && TextUtils.isEmpty(imageCursor.getString(1))) {
+                            location = buildLocationString(file.getAbsolutePath());
+                            if (location != null) {
+                                values.put(Image.COLUMN_LOCATION, location);
+                            }
+                        }
+                        getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
+                    } else {
+                        if (mInternet) {
+                            location = buildLocationString(file.getAbsolutePath());
+                            if (location != null) {
+                                values.put(Image.COLUMN_LOCATION, location);
+                            }
+                        }
+                        getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
+                    }
+
+                    imageCursor.close();
                 }
             }
 
-            db.setTransactionSuccessful();
+            //db.setTransactionSuccessful();
         } catch (IOException | ParseException e) {
             Log.w(getClass().getName(), e);
         } finally {
-            db.endTransaction();
+            //db.endTransaction();
         }
         Log.v(getClass().getSimpleName(), "Update from Whitelist done.");
     }
 
-    private void updateLocations() {
-        Log.v(getClass().getSimpleName(), "Updating locations...");
+    private String buildLocationString(String filename) {
+        try {
+            ExifInterface exif = new ExifInterface(filename);
 
-        final List<Image> images = DatabaseHelper.getInstance().getImagesDao().queryForAll();
+            float[] latLong = new float[2];
+            exif.getLatLong(latLong);
 
-        Geocoder geocoder = new Geocoder(this);
+            Geocoder geocoder = new Geocoder(this);
 
-        ExifInterface exif;
-        float[] latLong = new float[2];
-        List<Address> addresses;
-        String locality;
-        String countryName;
+            List<Address> addresses = geocoder.getFromLocation(latLong[0], latLong[1], 1);
+            if (addresses != null && addresses.size() > 0) {
+                String locality = addresses.get(0).getLocality();
+                String countryName = addresses.get(0).getCountryName();
 
-        for (final Image image : images) {
-            if (image.getLocation() == null) {
-                try {
-                    exif = new ExifInterface(image.getFilename());
-                    exif.getLatLong(latLong);
-
-                    addresses = geocoder.getFromLocation(latLong[0], latLong[1], 1);
-                    if (addresses != null && addresses.size() > 0) {
-                        locality = addresses.get(0).getLocality();
-                        countryName = addresses.get(0).getCountryName();
-
-                        image.setLocation(locality + ", " + countryName);
-                        DatabaseHelper.getInstance().getImagesDao().update(image);
-                    }
-                } catch (IOException e) {
-                    Log.w(getClass().getSimpleName(), e);
-                }
+                return locality + ", " + countryName;
             }
+        } catch (IOException e) {
+            Log.w(getClass().getSimpleName(), e.toString());
         }
-
-        Log.v(getClass().getSimpleName(), "Location update done.");
+        return null;
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -350,62 +392,90 @@ public class DatabaseBuilderService extends IntentService {
     }
 
     private void generateLabels() {
+        long startTime = System.currentTimeMillis();
         Log.v(getClass().getSimpleName(), "Generating labels...");
 
-        final List<Image> images = DatabaseHelper.getInstance().getImagesDao().queryForAll();
+        final Cursor cursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI,
+                new String[]{"_id", Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION},
+                null, null, null);
 
-        for (Image image : images) {
-            generateLabelsFromDate(image);
-            generateLabelsFromLocation(image);
-            //generateLabelsFromPeople(image);
+        while (cursor.moveToNext()) {
+            generateLabelsFromDate(cursor);
+            generateLabelsFromLocation(cursor);
+            //generateLabelsFromPeople(cursor);
         }
 
-        Log.v(getClass().getSimpleName(), "Labels generated.");
+        cursor.close();
+
+        long endTime = System.currentTimeMillis();
+        Log.v(getClass().getSimpleName(), String.format("Labels generated in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
     }
 
-    private void createLabel(Image image, String labelName, LabelType type) {
-        try {
-            final PreparedQuery<Label> preparedQuery = DatabaseHelper.getInstance().getLabelsDao().queryBuilder().selectColumns(new String[]{Label.COLUMN_NAME}).where().eq(Label.COLUMN_NAME, labelName).prepare();
-            Label label = DatabaseHelper.getInstance().getLabelsDao().queryForFirst(preparedQuery);
-            if (label == null) {
-                label = new Label(labelName, Calendar.getInstance().getTime(), type);
-                DatabaseHelper.getInstance().getLabelsDao().create(label);
+    private void createLabel(long imageId, String labelName, LabelType type) {
+
+        int labelId;
+        if (mLabelCache.containsKey(labelName)) {
+            labelId = mLabelCache.get(labelName);
+        } else {
+            final Uri labelNameUri = SPOCContentProvider.LABELS_URI.buildUpon().appendPath(Label.COLUMN_NAME).appendPath(labelName).build();
+            final Cursor labelCursor = getContentResolver().query(labelNameUri, new String[]{"_id"}, null, null, null);
+
+            if (labelCursor.moveToFirst()) {
+                labelId = labelCursor.getInt(0);
+            } else {
+                ContentValues values = new ContentValues();
+                values.put(Label.COLUMN_NAME, labelName);
+                values.put(Label.COLUMN_CREATION_DATE, Calendar.getInstance().getTimeInMillis());
+                values.put(Label.COLUMN_TYPE, type.toString());
+
+                final Uri insert = getContentResolver().insert(SPOCContentProvider.LABELS_URI, values);
+                labelId = Integer.parseInt(insert.getLastPathSegment());
             }
-            Label2Image binder = new Label2Image(label, image, Calendar.getInstance().getTime());
-            DatabaseHelper.getInstance().getLabels2ImagesDao().createOrUpdate(binder);
-        } catch (SQLException e) {
-            Log.w(getClass().getSimpleName(), e);
+            labelCursor.close();
         }
+
+        mLabelCache.put(labelName, labelId);
+
+        ContentValues values = new ContentValues();
+        values.put(Label2Image.COLUMN_DATE, Calendar.getInstance().getTimeInMillis());
+        values.put(Label2Image.COLUMN_IMAGE_ID, imageId);
+        values.put(Label2Image.COLUMN_LABEL_ID, labelId);
+
+        getContentResolver().insert(SPOCContentProvider.LABELS_2_IMAGES_URI, values);
     }
 
-    private void generateLabelsFromDate(Image image) {
+    private void generateLabelsFromDate(Cursor cursorWithImage) {
 
         final Calendar calendar = Calendar.getInstance();
-        calendar.setTime(image.getDateTaken());
+        calendar.setTime(new Date(cursorWithImage.getLong(1)));
+
+        final long imageId = cursorWithImage.getLong(0);
 
         final String year = String.valueOf(calendar.get(Calendar.YEAR));
-        createLabel(image, year, LabelType.DATE_NUMERIC);
+        createLabel(imageId, year, LabelType.DATE_NUMERIC);
 
         final String month = String.valueOf(calendar.get(Calendar.MONTH) + 1);
-        createLabel(image, month, LabelType.DATE_NUMERIC);
+        createLabel(imageId, month, LabelType.DATE_NUMERIC);
 
         final String dayOfMonth = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
-        createLabel(image, dayOfMonth, LabelType.DATE_NUMERIC);
+        createLabel(imageId, dayOfMonth, LabelType.DATE_NUMERIC);
 
         final String monthText = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
-        createLabel(image, monthText, LabelType.DATE_TEXT);
+        createLabel(imageId, monthText, LabelType.DATE_TEXT);
 
         final String dayOfWeek = calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault());
-        createLabel(image, dayOfWeek, LabelType.DATE_TEXT);
+        createLabel(imageId, dayOfWeek, LabelType.DATE_TEXT);
     }
 
-    private void generateLabelsFromLocation(Image image) {
-        if (image.getLocation() == null) return;
+    private void generateLabelsFromLocation(Cursor cursorWithImage) {
+        if (cursorWithImage.getString(2) == null) return;
 
-        final String[] locationStrings = image.getLocation().split(", ");
+        final String[] locationStrings = cursorWithImage.getString(2).split(", ");
 
-        createLabel(image, locationStrings[0], LabelType.LOCATION_LOCALITY);
-        createLabel(image, locationStrings[1], LabelType.LOCATION_COUNTRY);
+        final long imageId = cursorWithImage.getLong(0);
+
+        createLabel(imageId, locationStrings[0], LabelType.LOCATION_LOCALITY);
+        createLabel(imageId, locationStrings[1], LabelType.LOCATION_COUNTRY);
     }
 
     private void generateLabelsFromPeople(Image image) {

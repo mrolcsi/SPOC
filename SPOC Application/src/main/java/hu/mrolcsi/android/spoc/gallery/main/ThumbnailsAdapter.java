@@ -84,7 +84,7 @@ public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.Im
 
         holder.itemView.setLayoutParams(lp);
 
-        GlideHelper.loadThumbnail(context, filename, mThumbnailSize, holder.img);
+        GlideHelper.loadThumbnail(context.getApplicationContext(), filename, mThumbnailSize, holder.img);
     }
 
     @Override

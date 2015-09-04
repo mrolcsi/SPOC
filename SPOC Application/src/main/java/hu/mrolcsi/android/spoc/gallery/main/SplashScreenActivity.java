@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -39,8 +38,8 @@ public final class SplashScreenActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        isFirstStart = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(DatabaseBuilderService.ARG_FIRST_START, true);
-        //isFirstStart = true;
+        //isFirstStart = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(DatabaseBuilderService.ARG_FIRST_START, true);
+        isFirstStart = false;
         if (isFirstStart) {
             Log.i(getClass().getSimpleName(), "It's a First Start!");
         }
@@ -64,6 +63,10 @@ public final class SplashScreenActivity extends AppCompatActivity {
             IntentFilter cacheIntentFilter = new IntentFilter(CacheBuilderService.BROADCAST_ACTION_CACHING);
             LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, cacheIntentFilter);
         }
+
+        Intent galleryIntent = new Intent(SplashScreenActivity.this, GalleryActivity.class);
+        startActivity(galleryIntent);
+        finish();
     }
 
     @Override

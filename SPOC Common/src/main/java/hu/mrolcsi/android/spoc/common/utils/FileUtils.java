@@ -83,8 +83,6 @@ public abstract class FileUtils {
             int i = 0;
             int size = mCheckedPositions.size();
 
-            Uri imagesUri = Uri.withAppendedPath(SPOCContentProvider.CONTENT_URI, Image.TABLE_NAME);
-
             while (cursor.moveToNext()) {
 
                 if (mCheckedPositions.get(cursor.getPosition())) {
@@ -93,7 +91,7 @@ public abstract class FileUtils {
                     try {
                         if (FileUtils.deleteFile(filename)) publishProgress(++i, size);
 
-                        context.getContentResolver().delete(Uri.withAppendedPath(imagesUri, cursor.getString(iID)), null, null);
+                        context.getContentResolver().delete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, cursor.getString(iID)), null, null);
                     } catch (IOException e) {
                         Log.w(getClass().getName(), e);
                         // TODO: pass exception to UI

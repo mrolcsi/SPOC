@@ -2,13 +2,14 @@ package hu.mrolcsi.android.spoc.database.provider;
 
 import android.content.*;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.models.Image;
+import hu.mrolcsi.android.spoc.database.models.Label;
+import hu.mrolcsi.android.spoc.database.models.binders.Label2Image;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,16 +21,34 @@ import hu.mrolcsi.android.spoc.database.models.Image;
 public final class SPOCContentProvider extends ContentProvider {
 
     private static final String AUTHORITY = "hu.mrolcsi.android.spoc.database.provider";
-    public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
-    private static final int IMAGE_LIST = 1;
-    private static final int IMAGE_ID = 2;
+    private static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
+    public static final Uri IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Image.TABLE_NAME);
+    public static final Uri LABELS_URI = Uri.withAppendedPath(CONTENT_URI, Label.TABLE_NAME);
+    public static final Uri LABELS_2_IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Label2Image.TABLE_NAME);
+
+    private static final int IMAGES_LIST = 10;
+    private static final int IMAGE_BY_ID = 11;
+    private static final int IMAGE_BY_MEDIASTORE_ID = 12;
+    private static final int LABELS_LIST = 20;
+    private static final int LABEL_BY_ID = 21;
+    private static final int LABEL_BY_NAME = 22;
+    private static final int LABELS_BY_IMAGE_ID = 30;
+    private static final int LABELS_2_IMAGES = 40;
     //and so on
     private static final UriMatcher URI_MATCHER;
 
     static {
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
-        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME, IMAGE_LIST);
-        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/#", IMAGE_ID);
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME, IMAGES_LIST);
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/#", IMAGE_BY_ID);
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Image.COLUMN_MEDIASTORE_ID + "/#", IMAGE_BY_MEDIASTORE_ID);
+
+        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME, LABELS_LIST);
+        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/#", LABEL_BY_ID);
+        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label.COLUMN_NAME + "/*", LABEL_BY_NAME);
+        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label2Image.COLUMN_IMAGE_ID + "/#", LABELS_BY_IMAGE_ID);
+
+        URI_MATCHER.addURI(AUTHORITY, Label2Image.TABLE_NAME, LABELS_2_IMAGES);
     }
 
     private DatabaseHelper dbHelper;
@@ -50,15 +69,37 @@ public final class SPOCContentProvider extends ContentProvider {
         boolean useAuthority = false;
 
         switch (URI_MATCHER.match(uri)) {
-            case IMAGE_LIST:
+            case IMAGES_LIST:
                 builder.setTables(Image.TABLE_NAME);
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
                 }
                 break;
-            case IMAGE_ID:
+            case IMAGE_BY_ID:
                 builder.setTables(Image.TABLE_NAME);
                 builder.appendWhere("_id" + " = " + uri.getLastPathSegment());
+                break;
+            case IMAGE_BY_MEDIASTORE_ID:
+                builder.setTables(Image.TABLE_NAME);
+                builder.appendWhere(Image.COLUMN_MEDIASTORE_ID + " = " + uri.getLastPathSegment());
+                break;
+            case LABELS_LIST:
+                builder.setTables(Label.TABLE_NAME);
+                break;
+            case LABEL_BY_ID:
+                builder.setTables(Label.TABLE_NAME);
+                builder.appendWhere("_id = " + uri.getLastPathSegment());
+                break;
+            case LABEL_BY_NAME:
+                builder.setTables(Label.TABLE_NAME);
+                builder.appendWhere(Label.COLUMN_NAME + " = '" + uri.getLastPathSegment() + "'");
+                break;
+            case LABELS_BY_IMAGE_ID:
+                if (projection == null) {
+                    projection = new String[]{Label.TABLE_NAME + ".*"};
+                }
+                builder.setTables(Label.TABLE_NAME + "INNER JOIN " + Label2Image.TABLE_NAME + " ON " + Label.TABLE_NAME + "._id" + " = " + Label2Image.COLUMN_LABEL_ID);
+                builder.appendWhere(Label2Image.COLUMN_IMAGE_ID + "=" + uri.getLastPathSegment());
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
@@ -77,10 +118,19 @@ public final class SPOCContentProvider extends ContentProvider {
     public String getType(Uri uri) {
         final int match = URI_MATCHER.match(uri);
         switch (match) {
-            case IMAGE_LIST:
+            case IMAGES_LIST:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.images";
-            case IMAGE_ID:
+            case IMAGE_BY_ID:
+            case IMAGE_BY_MEDIASTORE_ID:
                 return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.images";
+            case LABELS_LIST:
+            case LABELS_BY_IMAGE_ID:
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.labels";
+            case LABEL_BY_ID:
+            case LABEL_BY_NAME:
+                return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.labels";
+            case LABELS_2_IMAGES:
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.labels2images";
             default:
                 return null;
         }
@@ -89,16 +139,22 @@ public final class SPOCContentProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues contentValues) {
         final int match = URI_MATCHER.match(uri);
-        if (match != IMAGE_LIST) { //etc
-            throw new IllegalArgumentException("Unsupported Uri for insertion: " + uri);
-        }
-
         final SQLiteDatabase db = dbHelper.getWritableDatabase();
-        if (match == IMAGE_LIST) {
-            long id = db.insert(Image.TABLE_NAME, null, contentValues);
-            return getUriForId(id, uri);
+        long id;
+
+        switch (match) {
+            case IMAGES_LIST:
+                id = db.insert(Image.TABLE_NAME, null, contentValues);
+                return getUriForId(id, uri);
+            case LABELS_LIST:
+                id = db.insert(Label.TABLE_NAME, null, contentValues);
+                return getUriForId(id, uri);
+            case LABELS_2_IMAGES:
+                id = db.insertWithOnConflict(Label2Image.TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
+                return getUriForId(id, uri);
+            default:
+                throw new IllegalArgumentException("Unsupported Uri for insertion: " + uri);
         }
-        return null;
     }
 
     @Override
@@ -106,15 +162,27 @@ public final class SPOCContentProvider extends ContentProvider {
         final SQLiteDatabase db = dbHelper.getWritableDatabase();
         int delCount = 0;
 
+        String idStr;
+        String where;
+
         switch (URI_MATCHER.match(uri)) {
-            case IMAGE_LIST:
+            case IMAGES_LIST:
                 delCount = db.delete(Image.TABLE_NAME, selection, selectionArgs);
                 break;
-            case IMAGE_ID:
-                String idStr = uri.getLastPathSegment();
-                String where = "_id" + " = " + idStr;
+            case IMAGE_BY_ID:
+                idStr = uri.getLastPathSegment();
+                where = "_id" + " = " + idStr;
                 if (!TextUtils.isEmpty(selection)) where += " AND " + selection;
                 delCount = db.delete(Image.TABLE_NAME, where, selectionArgs);
+                break;
+            case LABELS_LIST:
+                delCount = db.delete(Label.TABLE_NAME, selection, selectionArgs);
+                break;
+            case LABEL_BY_ID:
+                idStr = uri.getLastPathSegment();
+                where = "_id" + " = " + idStr;
+                if (!TextUtils.isEmpty(selection)) where += " AND " + selection;
+                delCount = db.delete(Label.TABLE_NAME, where, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
@@ -130,17 +198,31 @@ public final class SPOCContentProvider extends ContentProvider {
         final SQLiteDatabase db = dbHelper.getWritableDatabase();
         int updateCount = 0;
 
+        String idStr;
+        String where;
+
         switch (URI_MATCHER.match(uri)) {
-            case IMAGE_LIST:
+            case IMAGES_LIST:
                 updateCount = db.update(Image.TABLE_NAME, contentValues, selection, selectionArgs);
                 break;
-            case IMAGE_ID:
-                String idStr = uri.getLastPathSegment();
-                String where = "_id" + " = " + idStr;
+            case IMAGE_BY_ID:
+                idStr = uri.getLastPathSegment();
+                where = "_id" + " = " + idStr;
                 if (!TextUtils.isEmpty(selection)) {
                     where += " AND " + selection;
                 }
                 updateCount = db.update(Image.TABLE_NAME, contentValues, where, selectionArgs);
+                break;
+            case LABELS_LIST:
+                updateCount = db.update(Label.TABLE_NAME, contentValues, selection, selectionArgs);
+                break;
+            case LABEL_BY_ID:
+                idStr = uri.getLastPathSegment();
+                where = "_id" + " = " + idStr;
+                if (!TextUtils.isEmpty(selection)) {
+                    where += " AND " + selection;
+                }
+                updateCount = db.update(Label.TABLE_NAME, contentValues, where, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
@@ -160,7 +242,7 @@ public final class SPOCContentProvider extends ContentProvider {
             return itemUri;
         }
         // s.th. went wrong:
-        throw new SQLException("Problem while inserting into uri: " + uri);
+        return null;
     }
 
     public boolean isInBatchMode() {

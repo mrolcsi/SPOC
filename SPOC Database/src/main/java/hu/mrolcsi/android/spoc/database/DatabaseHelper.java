@@ -94,26 +94,31 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         labels2ImagesDao = null;
     }
 
+    @Deprecated
     public RuntimeExceptionDao<Image, Integer> getImagesDao() {
         if (imagesDao == null) imagesDao = getRuntimeExceptionDao(Image.class);
         return imagesDao;
     }
 
+    @Deprecated
     public RuntimeExceptionDao<Contact, Integer> getContactsDao() {
         if (contactsDao == null) contactsDao = getRuntimeExceptionDao(Contact.class);
         return contactsDao;
     }
 
+    @Deprecated
     public RuntimeExceptionDao<Label, Integer> getLabelsDao() {
         if (labelsDao == null) labelsDao = getRuntimeExceptionDao(Label.class);
         return labelsDao;
     }
 
+    @Deprecated
     public RuntimeExceptionDao<Contact2Image, Integer> getContacts2ImagesDao() {
         if (contacts2ImagesDao == null) contacts2ImagesDao = getRuntimeExceptionDao(Contact2Image.class);
         return contacts2ImagesDao;
     }
 
+    @Deprecated
     public RuntimeExceptionDao<Label2Image, Integer> getLabels2ImagesDao() {
         if (labels2ImagesDao == null) labels2ImagesDao = getRuntimeExceptionDao(Label2Image.class);
         return labels2ImagesDao;

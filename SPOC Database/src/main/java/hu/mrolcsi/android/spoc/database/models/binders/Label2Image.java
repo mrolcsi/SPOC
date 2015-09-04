@@ -24,9 +24,9 @@ public class Label2Image {
 
     @DatabaseField(generatedId = true)
     private int _id;
-    @DatabaseField(columnName = COLUMN_LABEL_ID, foreign = true, canBeNull = false)
+    @DatabaseField(columnName = COLUMN_LABEL_ID, foreign = true, canBeNull = false, uniqueCombo = true)
     private Label label;
-    @DatabaseField(columnName = COLUMN_IMAGE_ID, foreign = true, canBeNull = false)
+    @DatabaseField(columnName = COLUMN_IMAGE_ID, foreign = true, canBeNull = false, uniqueCombo = true)
     private Image image;
     @DatabaseField(columnName = COLUMN_DATE, dataType = DataType.DATE_LONG)
     private Date date;
