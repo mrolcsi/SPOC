@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
 import hu.mrolcsi.android.spoc.database.models.Image;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.CursorRecyclerViewAdapter;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 
 /**
@@ -20,21 +21,20 @@ import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
  * Time: 21:48
  */
 
-public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.ImageViewHolder> {
+public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapter.ImageViewHolder> {
 
     private final int columnSpan;
     private final Context context;
     private final int mThumbnailSize;
 
     private int iData;
-
-    private Cursor cursor;
     private int mCount = 0;
-
     private boolean mUseColumnSpan = true;
 
-    public ThumbnailsAdapter(Context context) {
+    public ThumbnailsAdapter(Context context, Cursor cursor) {
+        super(context, cursor);
         this.context = context;
+
         int preferredColumns = context.getResources().getInteger(R.integer.preferredColumns);
         if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             columnSpan = (int) Math.round((preferredColumns + 0.5) / 2);
@@ -43,13 +43,9 @@ public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.Im
         } else columnSpan = 1;
 
         mThumbnailSize = context.getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-    }
-
-    public ThumbnailsAdapter(Context context, Cursor cursor) {
-        this(context);
-        this.cursor = cursor;
-
         iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
+
+        setHasStableIds(true);
     }
 
     @Override
@@ -64,15 +60,15 @@ public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.Im
     }
 
     @Override
-    public void onBindViewHolder(ImageViewHolder holder, int i) {
-        if (cursor == null || cursor.isClosed()) return;
-
-        cursor.moveToPosition(i);
+    public void onBindViewHolder(ImageViewHolder holder, Cursor cursor) {
+        if (cursor == null || !isDataValid()) {
+            return;
+        }
 
         String filename = cursor.getString(iData);
         SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
 
-        if (mUseColumnSpan && i % 11 == 0) { //TODO: expand frequently used items (or just leave it static like this?)
+        if (mUseColumnSpan && cursor.getPosition() % 11 == 0) { //TODO: expand frequently used items (or just leave it static like this?)
             lp.colSpan = columnSpan;
             lp.rowSpan = columnSpan;
             //holder.itemView.setBackgroundColor(Color.BLUE);
@@ -89,8 +85,8 @@ public class ThumbnailsAdapter extends RecyclerView.Adapter<ThumbnailsAdapter.Im
 
     @Override
     public int getItemCount() {
-        if (cursor != null && !cursor.isClosed())
-            mCount = cursor.getCount();
+        if (getCursor() != null && !getCursor().isClosed())
+            mCount = getCursor().getCount();
         return mCount;
     }
 

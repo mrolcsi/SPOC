@@ -127,39 +127,6 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
             }
         });
 
-//        fabCamera = (FloatingActionButton) view.findViewById(R.id.fabCamera);
-//        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-//        final boolean showCameraButton = sharedPrefs.getBoolean(getString(R.string.settings_key_showCameraButton), true);
-//        if (showCameraButton) {
-//            fabCamera.setVisibility(View.VISIBLE);
-//
-//            final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
-//                @Override
-//                public void hide() {
-//                    int fabMargin = ((ViewGroup.MarginLayoutParams) fabCamera.getLayoutParams()).bottomMargin;
-//                    ViewCompat.animate(fabCamera).translationY(fabCamera.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
-//                }
-//
-//                @Override
-//                public void show() {
-//                    ViewCompat.animate(fabCamera).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
-//                }
-//            };
-//            twList.setOnScrollListener(hideOnScrollListener);
-//
-//            fabCamera.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//                    final ResolveInfo resolveInfo = getActivity().getPackageManager().resolveActivity(cameraIntent, PackageManager.MATCH_DEFAULT_ONLY);
-//                    final Intent appIntent = getActivity().getPackageManager().getLaunchIntentForPackage(resolveInfo.activityInfo.packageName);
-//                    startActivity(appIntent);
-//                }
-//            });
-//        } else {
-//            fabCamera.setVisibility(View.GONE);
-//        }
-
         fabSearch = (FloatingActionButton) view.findViewById(R.id.fabSearch);
         fabSearch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -239,8 +206,12 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
         mQueryArgs.putStringArray(LoaderBase.ARG_SELECTION_ARGS, ((CursorLoader) loader).getSelectionArgs());
         mQueryArgs.putString(LoaderBase.ARG_SORT_ORDER, ((CursorLoader) loader).getSortOrder());
 
-        mAdapter = new ThumbnailsAdapter(getActivity(), data);
-        twList.setAdapter(mAdapter);
+        if (mAdapter == null) {
+            mAdapter = new ThumbnailsAdapter(getActivity(), data);
+            twList.setAdapter(mAdapter);
+        } else {
+            mAdapter.changeCursor(data);
+        }
 
         if (mListInstanceState != null && mSavedOrientation == getResources().getConfiguration().orientation) { //different orientation -> different layout params
             twList.getLayoutManager().onRestoreInstanceState(mListInstanceState);

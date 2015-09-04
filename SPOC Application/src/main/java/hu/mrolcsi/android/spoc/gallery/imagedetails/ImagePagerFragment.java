@@ -1,10 +1,11 @@
 package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.location.Address;
 import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,8 +26,8 @@ import android.widget.TextView;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.loader.database.ImageTableLoader;
-import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.models.Image;
+import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
@@ -74,13 +75,6 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
             params.rotationAnimation = WindowManager.LayoutParams.ROTATION_ANIMATION_ROTATE;
             getActivity().getWindow().setAttributes(params);
         }
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-        mAdapter = new ImagePagerAdapter(getChildFragmentManager(), null);
     }
 
     @Nullable
@@ -211,48 +205,50 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
                 tvDateTaken.setText(s);
             }
 
-            final Image image = DatabaseHelper.getInstance().getImagesDao().queryForId((int) item.getImageId());
-
-            if (image.getLocation() != null) {
-                tvLocation.setText(image.getLocation());
-            } else {
-                float latLong[] = new float[2];
-                if (exif.getLatLong(latLong)) {
-                    mLocationFinderTask = new LocationFinderTask(getActivity().getApplicationContext()) {
-                        @Override
-                        protected void onPreExecute() {
-                            super.onPreExecute();
-                            tvLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
-                        }
-
-                        @Override
-                        protected void onPostExecute(List<Address> addresses) {
-                            super.onPostExecute(addresses);
-
-                            if (!isAdded() || isCancelled()) return;
-
-                            if (addresses == null) {
-                                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
-                            } else {
-                                final String locality = addresses.get(0).getLocality();
-                                final String countryName = addresses.get(0).getCountryName();
-                                final String locationText = locality + ", " + countryName;
-
-                                //update db
-                                image.setLocation(locationText);
-                                DatabaseHelper.getInstance().getImagesDao().update(image);
-
-                                tvLocation.setText(locationText);
-                            }
-                        }
-                    };
-                    mLocationFinderTask.execute(latLong[0], latLong[1]);
+            final Cursor cursorWithImage = getActivity().getContentResolver().query(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getImageId())), new String[]{Image.COLUMN_LOCATION}, null, null, null);
+            if (cursorWithImage.moveToFirst()) {
+                if (cursorWithImage.getString(0) != null) {
+                    tvLocation.setText(cursorWithImage.getString(0));
                 } else {
-                    tvLocation.setText(getString(R.string.not_available));
+                    float latLong[] = new float[2];
+                    if (exif.getLatLong(latLong)) {
+                        mLocationFinderTask = new LocationFinderTask(getActivity().getApplicationContext()) {
+                            @Override
+                            protected void onPreExecute() {
+                                super.onPreExecute();
+                                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
+                            }
+
+                            @Override
+                            protected void onPostExecute(List<Address> addresses) {
+                                super.onPostExecute(addresses);
+
+                                if (!isAdded() || isCancelled()) return;
+
+                                if (addresses == null) {
+                                    tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
+                                } else {
+                                    final String locality = addresses.get(0).getLocality();
+                                    final String countryName = addresses.get(0).getCountryName();
+                                    final String locationText = locality + ", " + countryName;
+
+                                    //update db
+                                    ContentValues values = new ContentValues();
+                                    values.put(Image.COLUMN_LOCATION, locationText);
+
+                                    getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getImageId())), values, null, null);
+
+                                    tvLocation.setText(locationText);
+                                }
+                            }
+                        };
+                        mLocationFinderTask.execute(latLong[0], latLong[1]);
+                    } else {
+                        tvLocation.setText(getString(R.string.not_available));
+                    }
                 }
             }
-
-
+            cursorWithImage.close();
         } catch (IOException | ParseException e) {
             Log.w(getClass().getName(), e);
         }
@@ -260,17 +256,20 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
-        mAdapter = new ImagePagerAdapter(getChildFragmentManager(), data);
-        try {
-            vpDetailsPager.setAdapter(mAdapter);
-        } catch (NullPointerException e) {
-            Log.w(getClass().getName(), "Caught NullPointerException. Premature loading?");
+        if (mAdapter == null) {
+            try {
+                mAdapter = new ImagePagerAdapter(getChildFragmentManager(), data);
+                vpDetailsPager.setAdapter(mAdapter);
+            } catch (NullPointerException e) {
+                Log.w(getClass().getSimpleName(), e.toString() + ": Premature loading?");
+            }
+        } else {
+            mAdapter.changeCursor(data);
         }
 
         if (mCurrentPageIndex < 0 && data != null && getArguments() != null && getArguments().containsKey(ARG_SELECTED_POSITION)) {
             mCurrentPageIndex = getArguments().getInt(ARG_SELECTED_POSITION);
         }
-
         vpDetailsPager.setCurrentItem(mCurrentPageIndex);
     }
 }

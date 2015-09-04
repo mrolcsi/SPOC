@@ -1,6 +1,7 @@
 package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.database.Cursor;
+import android.database.DataSetObserver;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -16,30 +17,34 @@ import hu.mrolcsi.android.spoc.database.models.Image;
 
 public class ImagePagerAdapter extends FragmentStatePagerAdapter {
 
-    private int iID = -1;
-    private int iData = -1;
-    private Cursor cursor;
+    private int iData;
+    private int iID;
     private int mCount;
+    private Cursor mCursor;
+    private boolean mDataValid;
+    private DataSetObserver mDataSetObserver;
 
     private SparseArray<Fragment> mFragmentCache = new SparseArray<>();
 
     public ImagePagerAdapter(FragmentManager fm, Cursor cursor) {
         super(fm);
-        if (cursor != null) {
-            this.cursor = cursor;
-            iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
-            iID = cursor.getColumnIndex("_id");
+        mCursor = cursor;
+        mDataValid = cursor != null;
+        mDataSetObserver = new NotifyingDataSetObserver();
+        if (mCursor != null) {
+            mCursor.registerDataSetObserver(mDataSetObserver);
+            iData = mCursor.getColumnIndex(Image.COLUMN_FILENAME);
+            iID = mCursor.getColumnIndex("_id");
         }
     }
 
     @Override
     public Fragment getItem(int position) {
-
         if (mFragmentCache.get(position) != null) return mFragmentCache.get(position);
-        else if (cursor != null && !cursor.isClosed()) {
-            cursor.moveToPosition(position);
-            final String imagePath = cursor.getString(iData);
-            final long imageId = cursor.getLong(iID);
+        else if (mCursor != null && mDataValid) {
+            mCursor.moveToPosition(position);
+            final String imagePath = mCursor.getString(iData);
+            final long imageId = mCursor.getLong(iID);
 
             final SingleImageFragment fragment = SingleImageFragment.newInstance(imageId, imagePath);
             mFragmentCache.put(position, fragment);
@@ -50,9 +55,65 @@ public class ImagePagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public int getCount() {
-        if (cursor != null && !cursor.isClosed()) {
-            mCount = cursor.getCount();
+        if (mCursor != null && !mCursor.isClosed()) {
+            mCount = mCursor.getCount();
         }
         return mCount;
+    }
+
+    /**
+     * Change the underlying cursor to a new cursor. If there is an existing cursor it will be
+     * closed.
+     */
+    public void changeCursor(Cursor cursor) {
+        Cursor old = swapCursor(cursor);
+        if (old != null) {
+            old.close();
+        }
+    }
+
+    /**
+     * Swap in a new Cursor, returning the old Cursor.  Unlike
+     * {@link #changeCursor(Cursor)}, the returned old Cursor is <em>not</em>
+     * closed.
+     */
+    public Cursor swapCursor(Cursor newCursor) {
+        if (newCursor == mCursor) {
+            return null;
+        }
+        final Cursor oldCursor = mCursor;
+        if (oldCursor != null && mDataSetObserver != null) {
+            oldCursor.unregisterDataSetObserver(mDataSetObserver);
+        }
+        mCursor = newCursor;
+        if (mCursor != null) {
+            if (mDataSetObserver != null) {
+                mCursor.registerDataSetObserver(mDataSetObserver);
+            }
+            mDataValid = true;
+            notifyDataSetChanged();
+        } else {
+            mDataValid = false;
+            notifyDataSetChanged();
+            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
+        }
+        return oldCursor;
+    }
+
+    private class NotifyingDataSetObserver extends DataSetObserver {
+        @Override
+        public void onChanged() {
+            super.onChanged();
+            mDataValid = true;
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public void onInvalidated() {
+            super.onInvalidated();
+            mDataValid = false;
+            notifyDataSetChanged();
+            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
+        }
     }
 }
