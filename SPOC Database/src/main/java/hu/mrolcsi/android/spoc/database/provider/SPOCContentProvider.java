@@ -20,7 +20,7 @@ import hu.mrolcsi.android.spoc.database.models.binders.Label2Image;
 
 public final class SPOCContentProvider extends ContentProvider {
 
-    private static final String AUTHORITY = "hu.mrolcsi.android.spoc.database.provider";
+    public static final String AUTHORITY = "hu.mrolcsi.android.spoc.database.provider";
     private static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
     public static final Uri IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Image.TABLE_NAME);
     public static final Uri LABELS_URI = Uri.withAppendedPath(CONTENT_URI, Label.TABLE_NAME);
