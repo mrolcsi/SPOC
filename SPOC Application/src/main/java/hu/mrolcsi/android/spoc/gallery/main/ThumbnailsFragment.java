@@ -17,6 +17,7 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.*;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
@@ -43,7 +44,6 @@ import org.lucasr.twowayview.widget.TwoWayView;
 public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks {
 
     public static final String ARG_QUERY_BUNDLE = "SPOC.Gallery.Thumbnails.ARGUMENT_BUNDLE";
-    private static final int PRELOAD_AHEAD_ITEMS = 5;
     private static final String ARG_LOADER_ID = "SPOC.Gallery.Thumbnails.LOADER_ID";
     protected ThumbnailsAdapter mAdapter;
     protected CursorLoader mLoader;
@@ -56,7 +56,6 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     private ItemSelectionSupport mItemSelectionSupport;
     private MenuItem mSearchMenuItem;
     private Bundle mQueryArgs = new Bundle();
-    //protected FloatingActionButton fabCamera;
 
     @Override
     public int getNavigationItemId() {
@@ -72,83 +71,81 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (mRootView == null)
+        if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_thumbnails, container, false);
 
-        return mRootView;
-    }
+            twList = (TwoWayView) mRootView.findViewById(R.id.list);
+            twList.setHasFixedSize(true);
+            twList.setAdapter(null);
 
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        twList = (TwoWayView) view.findViewById(R.id.list);
-        twList.setHasFixedSize(true);
-        twList.setAdapter(null);
+            ((SpannableGridLayoutManager) twList.getLayoutManager()).setNumColumns(getResources().getInteger(R.integer.preferredColumns));
 
-        ((SpannableGridLayoutManager) twList.getLayoutManager()).setNumColumns(getResources().getInteger(R.integer.preferredColumns));
+            mItemSelectionSupport = ItemSelectionSupport.addTo(twList);
+            mItemSelectionSupport.setChoiceMode(ItemSelectionSupport.ChoiceMode.MULTIPLE);
 
-        mItemSelectionSupport = ItemSelectionSupport.addTo(twList);
-        mItemSelectionSupport.setChoiceMode(ItemSelectionSupport.ChoiceMode.MULTIPLE);
+            final ItemClickSupport itemClick = ItemClickSupport.addTo(twList);
+            itemClick.setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
+                @Override
+                public void onItemClick(RecyclerView recyclerView, View view, int i, long l) {
+                    if (mActionMode != null) {
+                        mActionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
+                        return;
+                    }
 
-        final ItemClickSupport itemClick = ItemClickSupport.addTo(twList);
-        itemClick.setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
-            @Override
-            public void onItemClick(RecyclerView recyclerView, View view, int i, long l) {
-                if (mActionMode != null) {
+                    ImagePagerFragment fragment = new ImagePagerFragment();
+
+                    Bundle args = new Bundle();
+                    args.putInt(ImagePagerFragment.ARG_LOADER_ID, mLoader.getId());
+                    args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
+                    args.putBundle(ARG_QUERY_BUNDLE, mQueryArgs);
+
+                    mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
+                    mSavedOrientation = getResources().getConfiguration().orientation;
+                    mSavedPosition = i;
+
+                    fragment.setArguments(args);
+
+                    ((GalleryActivity) getActivity()).swapFragment(fragment);
+                }
+            });
+            itemClick.setOnItemLongClickListener(new ItemClickSupport.OnItemLongClickListener() {
+                @Override
+                public boolean onItemLongClick(RecyclerView parent, View view, int position, long id) {
+                    if (mActionMode != null) {
+                        return false;
+                    }
+                    mActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(new ActionModeCallback());
+                    mItemSelectionSupport.setItemChecked(position, true);
                     mActionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
-                    return;
+                    return true;
+                }
+            });
+
+            fabSearch = (FloatingActionButton) mRootView.findViewById(R.id.fabSearch);
+            fabSearch.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (mSearchMenuItem != null) {
+                        MenuItemCompat.expandActionView(mSearchMenuItem);
+                    }
+                }
+            });
+            final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
+                @Override
+                public void hide() {
+                    int fabMargin = ((ViewGroup.MarginLayoutParams) fabSearch.getLayoutParams()).bottomMargin;
+                    ViewCompat.animate(fabSearch).translationY(fabSearch.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
                 }
 
-                ImagePagerFragment fragment = new ImagePagerFragment();
-
-                Bundle args = new Bundle();
-                args.putInt(ImagePagerFragment.ARG_LOADER_ID, mLoader.getId());
-                args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
-                args.putBundle(ARG_QUERY_BUNDLE, mQueryArgs);
-
-                mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
-                mSavedOrientation = getResources().getConfiguration().orientation;
-                mSavedPosition = i;
-
-                fragment.setArguments(args);
-
-                ((GalleryActivity) getActivity()).swapFragment(fragment);
-            }
-        });
-        itemClick.setOnItemLongClickListener(new ItemClickSupport.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(RecyclerView parent, View view, int position, long id) {
-                if (mActionMode != null) {
-                    return false;
+                @Override
+                public void show() {
+                    ViewCompat.animate(fabSearch).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
                 }
-                mActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(new ActionModeCallback());
-                mItemSelectionSupport.setItemChecked(position, true);
-                mActionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
-                return true;
-            }
-        });
+            };
+            twList.setOnScrollListener(hideOnScrollListener);
+        }
 
-        fabSearch = (FloatingActionButton) view.findViewById(R.id.fabSearch);
-        fabSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mSearchMenuItem != null) {
-                    MenuItemCompat.expandActionView(mSearchMenuItem);
-                }
-            }
-        });
-        final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
-            @Override
-            public void hide() {
-                int fabMargin = ((ViewGroup.MarginLayoutParams) fabSearch.getLayoutParams()).bottomMargin;
-                ViewCompat.animate(fabSearch).translationY(fabSearch.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
-            }
-
-            @Override
-            public void show() {
-                ViewCompat.animate(fabSearch).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
-            }
-        };
-        twList.setOnScrollListener(hideOnScrollListener);
+        return mRootView;
     }
 
     @Override
@@ -188,6 +185,14 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+
+        mAdapter = null;
+        twList.setAdapter(null);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
 
@@ -196,6 +201,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, final Cursor data) {
+        Log.d(getClass().getSimpleName(), "onLoadComplete");
         if (data == null) {
             DialogUtils.buildErrorDialog(getActivity()).setMessage(getString(R.string.error_noPictures)).show();
             return;
@@ -208,11 +214,10 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
 
         if (mAdapter == null) {
             mAdapter = new ThumbnailsAdapter(getActivity(), data);
+            twList.setAdapter(mAdapter);
         } else {
-            mAdapter.swapCursor(data);
+            mAdapter.changeCursor(data);
         }
-        twList.setAdapter(mAdapter);
-
 
         if (mListInstanceState != null && mSavedOrientation == getResources().getConfiguration().orientation) { //different orientation -> different layout params
             twList.getLayoutManager().onRestoreInstanceState(mListInstanceState);
@@ -228,8 +233,9 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+        Log.d(getClass().getSimpleName(), "onLoaderReset");
         if (mAdapter != null) {
-            mAdapter.swapCursor(null);
+            mAdapter.changeCursor(null);
         }
     }
 

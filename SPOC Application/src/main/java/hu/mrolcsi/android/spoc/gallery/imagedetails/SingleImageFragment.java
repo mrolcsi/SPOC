@@ -37,6 +37,7 @@ public class SingleImageFragment extends SPOCFragment {
 
     public static final String ARG_IMAGE_ID = "SPOC.Gallery.Details.ImageId";
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
+    public static final String ARG_IMAGE_LOCATION = "SPOC.Gallery.Details.Location";
 
     private PhotoView photoView;
 
@@ -46,12 +47,13 @@ public class SingleImageFragment extends SPOCFragment {
     private long mImageId;
     private String mImagePath;
 
-    public static SingleImageFragment newInstance(long imageId, String imagePath) {
+    public static SingleImageFragment newInstance(long imageId, String imagePath, String location) {
         final SingleImageFragment f = new SingleImageFragment();
 
         final Bundle args = new Bundle();
         args.putLong(ARG_IMAGE_ID, imageId);
         args.putString(ARG_IMAGE_PATH, imagePath);
+        args.putString(ARG_IMAGE_LOCATION, location);
         f.setArguments(args);
 
         return f;
@@ -81,32 +83,28 @@ public class SingleImageFragment extends SPOCFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mRootView = inflater.inflate(R.layout.fragment_singleimage, container, false);
+        if (mRootView == null) {
+            mRootView = inflater.inflate(R.layout.fragment_singleimage, container, false);
+
+            /*
+            problem:
+                java.lang.ArrayIndexOutOfBoundsException: length=1; index=1
+                at android.support.v4.widget.ViewDragHelper.shouldInterceptTouchEvent(ViewDragHelper.java:1014)
+                at android.support.v4.widget.DrawerLayout.onInterceptTouchEvent(DrawerLayout.java:1140)...
+                when pinch-zooming
+
+            solution:
+                http://www.arthurwang.net/android/arrayindexoutofboundsexception-with-photoview-library-and-drawerlayout
+             */
+            photoView = (PhotoView) mRootView.findViewById(R.id.image);
+            photoView.setOnViewTapListener(new PhotoViewAttacher.OnViewTapListener() {
+                @Override
+                public void onViewTap(View view, float v, float v1) {
+                    toggleFullScreen();
+                }
+            });
+        }
         return mRootView;
-    }
-
-    @Override
-    @TargetApi(16)
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        /*
-        problem:
-            java.lang.ArrayIndexOutOfBoundsException: length=1; index=1
-            at android.support.v4.widget.ViewDragHelper.shouldInterceptTouchEvent(ViewDragHelper.java:1014)
-            at android.support.v4.widget.DrawerLayout.onInterceptTouchEvent(DrawerLayout.java:1140)...
-            when pinch-zooming
-
-        solution:
-            http://www.arthurwang.net/android/arrayindexoutofboundsexception-with-photoview-library-and-drawerlayout
-         */
-        photoView = (PhotoView) view.findViewById(R.id.image);
-        photoView.setOnViewTapListener(new PhotoViewAttacher.OnViewTapListener() {
-            @Override
-            public void onViewTap(View view, float v, float v1) {
-                toggleFullScreen();
-            }
-        });
     }
 
     @Override
@@ -180,14 +178,6 @@ public class SingleImageFragment extends SPOCFragment {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    public String getImagePath() {
-        return mImagePath;
-    }
-
-    public long getImageId() {
-        return mImageId;
     }
 
     @Override

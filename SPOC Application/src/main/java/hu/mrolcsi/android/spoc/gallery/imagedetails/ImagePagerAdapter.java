@@ -17,8 +17,9 @@ import hu.mrolcsi.android.spoc.database.models.Image;
 
 public class ImagePagerAdapter extends FragmentStatePagerAdapter {
 
-    private int iData;
     private int iID;
+    private int iFilename;
+    private int iLocation;
     private int mCount;
     private Cursor mCursor;
     private boolean mDataValid;
@@ -33,8 +34,9 @@ public class ImagePagerAdapter extends FragmentStatePagerAdapter {
         mDataSetObserver = new NotifyingDataSetObserver();
         if (mCursor != null) {
             mCursor.registerDataSetObserver(mDataSetObserver);
-            iData = mCursor.getColumnIndex(Image.COLUMN_FILENAME);
             iID = mCursor.getColumnIndex("_id");
+            iFilename = mCursor.getColumnIndex(Image.COLUMN_FILENAME);
+            iLocation = mCursor.getColumnIndex(Image.COLUMN_LOCATION);
         }
     }
 
@@ -43,10 +45,11 @@ public class ImagePagerAdapter extends FragmentStatePagerAdapter {
         if (mFragmentCache.get(position) != null) return mFragmentCache.get(position);
         else if (mCursor != null && mDataValid) {
             mCursor.moveToPosition(position);
-            final String imagePath = mCursor.getString(iData);
+            final String imagePath = mCursor.getString(iFilename);
             final long imageId = mCursor.getLong(iID);
+            final String location = mCursor.getString(iLocation);
 
-            final SingleImageFragment fragment = SingleImageFragment.newInstance(imageId, imagePath);
+            final SingleImageFragment fragment = SingleImageFragment.newInstance(imageId, imagePath, location);
             mFragmentCache.put(position, fragment);
             return fragment;
         }

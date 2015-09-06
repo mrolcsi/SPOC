@@ -4,7 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
-import android.util.Log;
 
 /**
  * Created with IntelliJ IDEA.
@@ -37,7 +36,6 @@ abstract class LoaderBase implements LoaderManager.LoaderCallbacks<Cursor> {
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        Log.v(getClass().getSimpleName(), "onLoaderReset");
         if (loaderCallbacks != null) {
             loaderCallbacks.onLoaderReset(loader);
         }

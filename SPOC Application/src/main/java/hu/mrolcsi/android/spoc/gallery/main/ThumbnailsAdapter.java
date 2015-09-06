@@ -60,6 +60,14 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
     }
 
     @Override
+    public void onBindViewHolder(ImageViewHolder viewHolder, int position) {
+        if (getCursor() == null || getCursor().isClosed()) {
+            return;
+        }
+        super.onBindViewHolder(viewHolder, position);
+    }
+
+    @Override
     public void onBindViewHolder(ImageViewHolder holder, Cursor cursor) {
         if (cursor == null || !isDataValid()) {
             return;

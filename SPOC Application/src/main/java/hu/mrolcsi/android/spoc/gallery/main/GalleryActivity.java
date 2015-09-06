@@ -27,6 +27,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
@@ -270,7 +271,6 @@ public final class GalleryActivity extends AppCompatActivity {
 
         mRefreshMenuItem = menu.findItem(R.id.menuRefresh);
         final View refreshActionView = MenuItemCompat.getActionView(mRefreshMenuItem);
-
         final Animation refreshAnimation = AnimationUtils.loadAnimation(this, R.anim.refresh);
         refreshAnimation.setRepeatCount(Animation.INFINITE);
         refreshActionView.startAnimation(refreshAnimation);
@@ -333,9 +333,10 @@ public final class GalleryActivity extends AppCompatActivity {
             if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY)) {
                 mIsRefreshing = false;
 
-                if (mRefreshMenuItem != null) {
-                    mRefreshMenuItem.setVisible(false);
-                }
+                final ImageView imageView = (ImageView) MenuItemCompat.getActionView(mRefreshMenuItem);
+                imageView.setImageDrawable(null);
+
+                invalidateOptionsMenu();
             }
         }
     }

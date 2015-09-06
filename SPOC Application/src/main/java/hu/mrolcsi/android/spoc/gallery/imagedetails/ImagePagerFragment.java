@@ -11,10 +11,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
 import android.text.Html;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.*;
 import android.view.animation.AccelerateInterpolator;
@@ -59,7 +61,6 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
     private TextView tvDateTaken;
 
     private ImagePagerAdapter mAdapter;
-    private Loader<Cursor> mLoader;
     private int mCurrentPageIndex = -1;
     private LocationFinderTask mLocationFinderTask;
 
@@ -79,69 +80,67 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mRootView = inflater.inflate(R.layout.fragment_imagepager, container, false);
+        if (mRootView == null) {
+            mRootView = inflater.inflate(R.layout.fragment_imagepager, container, false);
+
+            vpDetailsPager = (ViewPager) mRootView.findViewById(R.id.vpDetailsPager);
+            rlInfo = (RelativeLayout) mRootView.findViewById(R.id.rlInfo);
+
+            addOnFullscreenChangeListener(new OnFullscreenChangeListener() {
+                @Override
+                public void onFullScreenChanged(boolean isFullscreen) {
+                    if (isFullscreen) {
+                        //hide
+                        ViewCompat.animate(rlInfo).translationY(rlInfo.getHeight()).setInterpolator(new AccelerateInterpolator(2)).start();
+                    } else {
+                        //show
+                        ViewCompat.animate(rlInfo).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
+                        updateInfo();
+                    }
+                }
+            });
+
+            //add delay to make sure views are inflated and on screen
+            //and for visual clarity
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    toggleFullScreen();
+                }
+            }, 50);
+
+            tvLocation = (TextView) mRootView.findViewById(R.id.tvLocation);
+            tvDateTaken = (TextView) mRootView.findViewById(R.id.tvDateTaken);
+
+            if (BuildConfig.DEBUG) {
+                ImageButton btnRefresh = (ImageButton) mRootView.findViewById(R.id.btnRefresh);
+                btnRefresh.setVisibility(View.VISIBLE);
+                btnRefresh.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        updateInfo();
+                    }
+                });
+            }
+
+            vpDetailsPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+                @Override
+                public void onPageSelected(int position) {
+                    if (mLocationFinderTask != null && !mLocationFinderTask.isCancelled())
+                        mLocationFinderTask.cancel(true);
+                    updateInfo();
+                }
+            });
+
+            if (savedInstanceState != null) mCurrentPageIndex = savedInstanceState.getInt(ARG_SELECTED_POSITION);
+        }
         return mRootView;
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        vpDetailsPager = (ViewPager) view.findViewById(R.id.vpDetailsPager);
-        rlInfo = (RelativeLayout) view.findViewById(R.id.rlInfo);
-
-        addOnFullscreenChangeListener(new OnFullscreenChangeListener() {
-            @Override
-            public void onFullScreenChanged(boolean isFullscreen) {
-                if (isFullscreen) {
-                    //hide
-                    ViewCompat.animate(rlInfo).translationY(rlInfo.getHeight()).setInterpolator(new AccelerateInterpolator(2)).start();
-                } else {
-                    //show
-                    ViewCompat.animate(rlInfo).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
-                    updateInfo();
-                }
-            }
-        });
-
-        //add delay to make sure views are inflated and on screen
-        //and for visual clarity
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                toggleFullScreen();
-            }
-        }, 100);
-
-        tvLocation = (TextView) view.findViewById(R.id.tvLocation);
-        tvDateTaken = (TextView) view.findViewById(R.id.tvDateTaken);
-
-        if (BuildConfig.DEBUG) {
-            ImageButton btnRefresh = (ImageButton) view.findViewById(R.id.btnRefresh);
-            btnRefresh.setVisibility(View.VISIBLE);
-            btnRefresh.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    updateInfo();
-                }
-            });
-        }
-
-        vpDetailsPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                if (mLocationFinderTask != null && !mLocationFinderTask.isCancelled())
-                    mLocationFinderTask.cancel(true);
-                updateInfo();
-            }
-        });
-
-        if (savedInstanceState != null) mCurrentPageIndex = savedInstanceState.getInt(ARG_SELECTED_POSITION);
-    }
-
-    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-
+        //super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.details, menu);
     }
 
@@ -156,10 +155,10 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
                 loaderId = getArguments().getInt(ARG_LOADER_ID);
             }
             loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
-            final String[] projection = new String[]{"_id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN};
+            final String[] projection = new String[]{"_id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION};
             loaderArgs.putStringArray(ImageTableLoader.ARG_PROJECTION, projection);
         }
-        mLoader = getLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(getActivity(), this));
+        getLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(getActivity(), this));
     }
 
     @Override
@@ -184,19 +183,19 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
     private void updateInfo() {
         if (mAdapter == null || !isAdded()) return;
 
-        final SingleImageFragment item = (SingleImageFragment) mAdapter.getItem(vpDetailsPager.getCurrentItem());
-        String imagePath = item.getImagePath();
+        final Fragment item = mAdapter.getItem(vpDetailsPager.getCurrentItem());
+        String imagePath = item.getArguments().getString(SingleImageFragment.ARG_IMAGE_PATH);
 
         if (imagePath == null) return;
 
         try {
             final ExifInterface exif = new ExifInterface(imagePath);
 
-            final SimpleDateFormat sdf = new SimpleDateFormat(getString(hu.mrolcsi.android.spoc.common.R.string.spoc_exifParser), Locale.US);
+            final SimpleDateFormat dateParser = new SimpleDateFormat(getString(hu.mrolcsi.android.spoc.common.R.string.spoc_exifParser), Locale.US);
 
             final String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
             if (dateString != null) {
-                final Date date = sdf.parse(dateString);
+                final Date date = dateParser.parse(dateString);
                 tvDateTaken.setText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date));
             } else {
                 final long l = new File(imagePath).lastModified();
@@ -204,50 +203,55 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
                 tvDateTaken.setText(s);
             }
 
-            final Cursor cursorWithImage = getActivity().getContentResolver().query(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getImageId())), new String[]{Image.COLUMN_LOCATION}, null, null, null);
-            if (cursorWithImage.moveToFirst()) {
-                if (cursorWithImage.getString(0) != null) {
-                    tvLocation.setText(cursorWithImage.getString(0));
-                } else {
-                    float latLong[] = new float[2];
-                    if (exif.getLatLong(latLong)) {
-                        mLocationFinderTask = new LocationFinderTask(getActivity().getApplicationContext()) {
-                            @Override
-                            protected void onPreExecute() {
-                                super.onPreExecute();
-                                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
-                            }
-
-                            @Override
-                            protected void onPostExecute(List<Address> addresses) {
-                                super.onPostExecute(addresses);
-
-                                if (!isAdded() || isCancelled()) return;
-
-                                if (addresses == null) {
-                                    tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
-                                } else {
-                                    final String locality = addresses.get(0).getLocality();
-                                    final String countryName = addresses.get(0).getCountryName();
-                                    final String locationText = locality + ", " + countryName;
-
-                                    //update db
-                                    ContentValues values = new ContentValues();
-                                    values.put(Image.COLUMN_LOCATION, locationText);
-
-                                    getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getImageId())), values, null, null);
-
-                                    tvLocation.setText(locationText);
-                                }
-                            }
-                        };
-                        mLocationFinderTask.execute(latLong[0], latLong[1]);
+            String imageLocation = item.getArguments().getString(SingleImageFragment.ARG_IMAGE_LOCATION);
+            if (!TextUtils.isEmpty(imageLocation)) {
+                tvLocation.setText(imageLocation);
+            } else {
+                final Cursor cursorWithImage = getActivity().getContentResolver().query(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getLong(SingleImageFragment.ARG_IMAGE_ID))), new String[]{Image.COLUMN_LOCATION}, null, null, null);
+                if (cursorWithImage.moveToFirst()) {
+                    if (cursorWithImage.getString(0) != null) {
+                        tvLocation.setText(cursorWithImage.getString(0));
                     } else {
-                        tvLocation.setText(getString(R.string.not_available));
+                        float latLong[] = new float[2];
+                        if (exif.getLatLong(latLong)) {
+                            mLocationFinderTask = new LocationFinderTask(getActivity().getApplicationContext()) {
+                                @Override
+                                protected void onPreExecute() {
+                                    super.onPreExecute();
+                                    tvLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
+                                }
+
+                                @Override
+                                protected void onPostExecute(List<Address> addresses) {
+                                    super.onPostExecute(addresses);
+
+                                    if (!isAdded() || isCancelled()) return;
+
+                                    if (addresses == null) {
+                                        tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
+                                    } else {
+                                        final String locality = addresses.get(0).getLocality();
+                                        final String countryName = addresses.get(0).getCountryName();
+                                        final String locationText = locality + ", " + countryName;
+
+                                        //update db
+                                        ContentValues values = new ContentValues();
+                                        values.put(Image.COLUMN_LOCATION, locationText);
+
+                                        getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getLong(SingleImageFragment.ARG_IMAGE_ID))), values, null, null);
+
+                                        tvLocation.setText(locationText);
+                                    }
+                                }
+                            };
+                            mLocationFinderTask.execute(latLong[0], latLong[1]);
+                        } else {
+                            tvLocation.setText(getString(R.string.not_available));
+                        }
                     }
                 }
+                cursorWithImage.close();
             }
-            cursorWithImage.close();
         } catch (IOException | ParseException e) {
             Log.w(getClass().getName(), e);
         }

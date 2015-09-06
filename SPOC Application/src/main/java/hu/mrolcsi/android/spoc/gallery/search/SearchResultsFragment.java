@@ -36,23 +36,19 @@ public class SearchResultsFragment extends ThumbnailsFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (mRootView == null)
+        if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_search_result, container, false);
 
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) mRootView.getLayoutParams();
+            lp.topMargin = getResources().getDimensionPixelOffset(R.dimen.abc_action_bar_default_height_material);
+            mRootView.setLayoutParams(lp);
+
+            fabSearch.setVisibility(View.GONE);
+
+            tvMessage = (TextView) mRootView.findViewById(R.id.tvMessage);
+        }
+
         return mRootView;
-    }
-
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) view.getLayoutParams();
-        lp.topMargin = getResources().getDimensionPixelOffset(R.dimen.abc_action_bar_default_height_material);
-        view.setLayoutParams(lp);
-
-        fabSearch.setVisibility(View.GONE);
-
-        tvMessage = (TextView) view.findViewById(R.id.tvMessage);
     }
 
     @Override
