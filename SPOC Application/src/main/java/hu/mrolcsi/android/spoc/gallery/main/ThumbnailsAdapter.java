@@ -66,18 +66,15 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
         }
 
         String filename = cursor.getString(iData);
-        SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
 
-        if (mUseColumnSpan && cursor.getPosition() % 11 == 0) { //TODO: expand frequently used items (or just leave it static like this?)
+        SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
+        if (mUseColumnSpan && cursor.getPosition() % 11 == 0) { //expand frequently used items (or just leave it static like this?)
             lp.colSpan = columnSpan;
             lp.rowSpan = columnSpan;
-            //holder.itemView.setBackgroundColor(Color.BLUE);
         } else {
             lp.colSpan = 1;
             lp.rowSpan = 1;
-            //holder.itemView.setBackgroundColor(Color.TRANSPARENT);
         }
-
         holder.itemView.setLayoutParams(lp);
 
         GlideHelper.loadThumbnail(context.getApplicationContext(), filename, mThumbnailSize, holder.img);

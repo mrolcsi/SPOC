@@ -1,5 +1,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menuRefresh"
+        android:icon="@drawable/synchronize"
+        android:title="@string/refresh_title"
+        app:actionLayout="@layout/ab_refresh"
+        app:showAsAction="ifRoom" />
+
     <item
         android:id="@+id/menuSearch"
         android:icon="@drawable/search"
