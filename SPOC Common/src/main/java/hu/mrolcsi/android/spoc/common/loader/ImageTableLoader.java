@@ -1,11 +1,10 @@
-package hu.mrolcsi.android.spoc.common.loader.database;
+package hu.mrolcsi.android.spoc.common.loader;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import hu.mrolcsi.android.spoc.common.loader.LoaderBase;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 /**
@@ -19,8 +18,8 @@ public class ImageTableLoader extends LoaderBase {
 
     public static final int ID = 324;
 
-    public ImageTableLoader(Context context, Loader.OnLoadCompleteListener<Cursor> onLoadCompleteListener) {
-        super(context, onLoadCompleteListener);
+    public ImageTableLoader(Context context, LoaderCallbacks loaderCallbacks) {
+        super(context, loaderCallbacks);
     }
 
     @Override

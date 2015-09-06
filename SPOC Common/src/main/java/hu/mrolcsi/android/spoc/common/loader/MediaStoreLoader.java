@@ -18,7 +18,7 @@ import android.support.v4.content.Loader;
 public class MediaStoreLoader extends LoaderBase {
     public static final int ID = 12;
 
-    public MediaStoreLoader(Context context, Loader.OnLoadCompleteListener<Cursor> onLoadCompleteListener) {
+    public MediaStoreLoader(Context context, LoaderCallbacks onLoadCompleteListener) {
         super(context, onLoadCompleteListener);
     }
 

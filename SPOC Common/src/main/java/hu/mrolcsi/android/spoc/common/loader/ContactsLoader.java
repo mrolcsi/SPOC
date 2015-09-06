@@ -20,8 +20,8 @@ public class ContactsLoader extends LoaderBase {
 
     public static final int ID = 23;
 
-    public ContactsLoader(Context context, Loader.OnLoadCompleteListener<Cursor> onLoadCompleteListener) {
-        super(context, onLoadCompleteListener);
+    public ContactsLoader(Context context, LoaderCallbacks loaderCallbacks) {
+        super(context, loaderCallbacks);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)

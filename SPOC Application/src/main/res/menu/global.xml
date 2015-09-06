@@ -5,6 +5,7 @@
         android:id="@+id/menuRefresh"
         android:icon="@drawable/synchronize"
         android:title="@string/refresh_title"
+        android:visible="false"
         app:actionLayout="@layout/ab_refresh"
         app:showAsAction="ifRoom" />
 

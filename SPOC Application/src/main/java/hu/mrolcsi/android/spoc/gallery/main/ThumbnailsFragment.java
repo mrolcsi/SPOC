@@ -22,8 +22,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Toast;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
-import hu.mrolcsi.android.spoc.common.loader.LoaderBase;
-import hu.mrolcsi.android.spoc.common.loader.database.ImageTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.HideOnScrollListener;
@@ -41,7 +40,7 @@ import org.lucasr.twowayview.widget.TwoWayView;
  * Time: 21:12
  */
 
-public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
+public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks {
 
     public static final String ARG_QUERY_BUNDLE = "SPOC.Gallery.Thumbnails.ARGUMENT_BUNDLE";
     private static final int PRELOAD_AHEAD_ITEMS = 5;
@@ -83,6 +82,7 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         twList = (TwoWayView) view.findViewById(R.id.list);
         twList.setHasFixedSize(true);
+        twList.setAdapter(null);
 
         ((SpannableGridLayoutManager) twList.getLayoutManager()).setNumColumns(getResources().getInteger(R.integer.preferredColumns));
 
@@ -203,15 +203,16 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
 
         mQueryArgs.putStringArray(ImageTableLoader.ARG_PROJECTION, ((CursorLoader) loader).getProjection());
         mQueryArgs.putString(ImageTableLoader.ARG_SELECTION, ((CursorLoader) loader).getSelection());
-        mQueryArgs.putStringArray(LoaderBase.ARG_SELECTION_ARGS, ((CursorLoader) loader).getSelectionArgs());
-        mQueryArgs.putString(LoaderBase.ARG_SORT_ORDER, ((CursorLoader) loader).getSortOrder());
+        mQueryArgs.putStringArray(ImageTableLoader.ARG_SELECTION_ARGS, ((CursorLoader) loader).getSelectionArgs());
+        mQueryArgs.putString(ImageTableLoader.ARG_SORT_ORDER, ((CursorLoader) loader).getSortOrder());
 
         if (mAdapter == null) {
             mAdapter = new ThumbnailsAdapter(getActivity(), data);
-            twList.setAdapter(mAdapter);
         } else {
-            mAdapter.changeCursor(data);
+            mAdapter.swapCursor(data);
         }
+        twList.setAdapter(mAdapter);
+
 
         if (mListInstanceState != null && mSavedOrientation == getResources().getConfiguration().orientation) { //different orientation -> different layout params
             twList.getLayoutManager().onRestoreInstanceState(mListInstanceState);
@@ -223,6 +224,13 @@ public class ThumbnailsFragment extends SPOCFragment implements CursorLoader.OnL
             mSavedPosition = null;
             mListInstanceState = null;
         } //else handle orientation change internally
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        if (mAdapter != null) {
+            mAdapter.swapCursor(null);
+        }
     }
 
     private void doBatchDelete() {

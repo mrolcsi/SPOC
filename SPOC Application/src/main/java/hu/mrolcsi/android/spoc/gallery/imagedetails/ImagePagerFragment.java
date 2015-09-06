@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
-import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
@@ -25,7 +24,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
-import hu.mrolcsi.android.spoc.common.loader.database.ImageTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
 import hu.mrolcsi.android.spoc.database.models.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
@@ -49,7 +48,7 @@ import java.util.Locale;
  * Time: 19:52
  */
 
-public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnLoadCompleteListener<Cursor> {
+public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks {
 
     public static final String ARG_SELECTED_POSITION = "SPOC.Gallery.Pager.SelectedPosition";
     public static final String ARG_LOADER_ID = "SPOC.Gallery.Pager.LoaderId";
@@ -271,5 +270,12 @@ public class ImagePagerFragment extends SPOCFragment implements CursorLoader.OnL
             mCurrentPageIndex = getArguments().getInt(ARG_SELECTED_POSITION);
         }
         vpDetailsPager.setCurrentItem(mCurrentPageIndex);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        if (mAdapter != null) {
+            mAdapter.changeCursor(null);
+        }
     }
 }
