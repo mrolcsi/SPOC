@@ -5,11 +5,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.models.Image;
 import hu.mrolcsi.android.spoc.database.models.Label;
 import hu.mrolcsi.android.spoc.database.models.binders.Label2Image;
+
+import java.util.ArrayList;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,7 +23,7 @@ import hu.mrolcsi.android.spoc.database.models.binders.Label2Image;
 
 public final class SPOCContentProvider extends ContentProvider {
 
-    private static final String AUTHORITY = "hu.mrolcsi.android.spoc.database.provider";
+    public static final String AUTHORITY = "hu.mrolcsi.android.spoc.database.provider";
     private static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
     public static final Uri IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Image.TABLE_NAME);
     public static final Uri LABELS_URI = Uri.withAppendedPath(CONTENT_URI, Label.TABLE_NAME);
@@ -52,7 +55,7 @@ public final class SPOCContentProvider extends ContentProvider {
     }
 
     private DatabaseHelper dbHelper;
-    private boolean inBatchMode;
+    private boolean inBatchMode = false;
 
     @Override
     public boolean onCreate() {
@@ -235,7 +238,7 @@ public final class SPOCContentProvider extends ContentProvider {
     private Uri getUriForId(long id, Uri uri) {
         if (id > 0) {
             Uri itemUri = ContentUris.withAppendedId(uri, id);
-            if (!isInBatchMode()) {
+            if (!inBatchMode) {
                 // notify all listeners of changes:
                 getContext().getContentResolver().notifyChange(itemUri, null);
             }
@@ -245,11 +248,27 @@ public final class SPOCContentProvider extends ContentProvider {
         return null;
     }
 
-    public boolean isInBatchMode() {
-        return inBatchMode;
-    }
-
-    public void setInBatchMode(boolean inBatchMode) {
-        this.inBatchMode = inBatchMode;
+    /**
+     * Apply the given set of {@link ContentProviderOperation}, executing inside
+     * a {@link SQLiteDatabase} transaction. All changes will be rolled back if
+     * any single one fails.
+     */
+    @Override
+    public ContentProviderResult[] applyBatch(@NonNull ArrayList<ContentProviderOperation> operations) throws OperationApplicationException {
+        final SQLiteDatabase db = dbHelper.getWritableDatabase();
+        inBatchMode = true;
+        db.beginTransaction();
+        try {
+            final int numOperations = operations.size();
+            final ContentProviderResult[] results = new ContentProviderResult[numOperations];
+            for (int i = 0; i < numOperations; i++) {
+                results[i] = operations.get(i).apply(this, results, i);
+            }
+            db.setTransactionSuccessful();
+            return results;
+        } finally {
+            db.endTransaction();
+            inBatchMode = false;
+        }
     }
 }
