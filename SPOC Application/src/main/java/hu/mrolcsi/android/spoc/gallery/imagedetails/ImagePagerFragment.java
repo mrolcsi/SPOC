@@ -27,7 +27,7 @@ import android.widget.TextView;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
-import hu.mrolcsi.android.spoc.database.models.Image;
+import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;

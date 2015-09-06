@@ -7,11 +7,12 @@ import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import hu.mrolcsi.android.spoc.database.models.Contact;
-import hu.mrolcsi.android.spoc.database.models.Image;
-import hu.mrolcsi.android.spoc.database.models.Label;
-import hu.mrolcsi.android.spoc.database.models.binders.Contact2Image;
-import hu.mrolcsi.android.spoc.database.models.binders.Label2Image;
+import hu.mrolcsi.android.spoc.database.model.Contact;
+import hu.mrolcsi.android.spoc.database.model.Image;
+import hu.mrolcsi.android.spoc.database.model.Label;
+import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
+import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
+import hu.mrolcsi.android.spoc.database.model.view.LabelSearchView;
 
 import java.sql.SQLException;
 
@@ -25,7 +26,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -61,6 +62,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.createTable(connectionSource, Label2Image.class);
             //TableUtils.createTable(connectionSource, Contact.class);
             //TableUtils.createTable(connectionSource, Contact2Image.class);
+            database.execSQL(LabelSearchView.CREATE_SQL);
         } catch (SQLException e) {
             Log.w(getClass().getName(), e);
         }
@@ -81,6 +83,11 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             } catch (SQLException e) {
                 Log.w(getClass().getSimpleName(), e);
             }
+        }
+        if (oldVersion < 4) {
+            //add LabelSearch view
+            database.execSQL("DROP VIEW IF EXISTS " + LabelSearchView.VIEW_NAME);
+            database.execSQL(LabelSearchView.CREATE_SQL);
         }
     }
 

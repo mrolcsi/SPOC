@@ -10,7 +10,7 @@ import android.text.TextUtils;
 import android.view.*;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import hu.mrolcsi.android.spoc.database.models.Image;
+import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.main.ThumbnailsFragment;

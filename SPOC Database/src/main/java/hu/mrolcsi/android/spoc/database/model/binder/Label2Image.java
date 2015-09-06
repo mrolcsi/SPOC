@@ -1,10 +1,10 @@
-package hu.mrolcsi.android.spoc.database.models.binders;
+package hu.mrolcsi.android.spoc.database.model.binder;
 
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
-import hu.mrolcsi.android.spoc.database.models.Image;
-import hu.mrolcsi.android.spoc.database.models.Label;
+import hu.mrolcsi.android.spoc.database.model.Image;
+import hu.mrolcsi.android.spoc.database.model.Label;
 
 import java.util.Date;
 

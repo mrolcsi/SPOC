@@ -8,7 +8,7 @@ import android.os.AsyncTask;
 import android.support.v4.content.CursorLoader;
 import android.util.Log;
 import android.util.SparseBooleanArray;
-import hu.mrolcsi.android.spoc.database.models.Image;
+import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 import java.io.*;

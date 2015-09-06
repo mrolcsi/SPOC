@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
-import hu.mrolcsi.android.spoc.database.models.Image;
+import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.CursorRecyclerViewAdapter;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;

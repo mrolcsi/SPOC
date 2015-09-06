@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.database.models;
+package hu.mrolcsi.android.spoc.database.model;
 
 /**
  * Created with IntelliJ IDEA.

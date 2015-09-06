@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.database.models;
+package hu.mrolcsi.android.spoc.database.model;
 
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;

@@ -23,11 +23,11 @@ import hu.mrolcsi.android.spoc.common.R;
 import hu.mrolcsi.android.spoc.common.helper.ListHelper;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
-import hu.mrolcsi.android.spoc.database.models.Contact;
-import hu.mrolcsi.android.spoc.database.models.Image;
-import hu.mrolcsi.android.spoc.database.models.Label;
-import hu.mrolcsi.android.spoc.database.models.LabelType;
-import hu.mrolcsi.android.spoc.database.models.binders.Label2Image;
+import hu.mrolcsi.android.spoc.database.model.Contact;
+import hu.mrolcsi.android.spoc.database.model.Image;
+import hu.mrolcsi.android.spoc.database.model.Label;
+import hu.mrolcsi.android.spoc.database.model.LabelType;
+import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 import java.io.File;

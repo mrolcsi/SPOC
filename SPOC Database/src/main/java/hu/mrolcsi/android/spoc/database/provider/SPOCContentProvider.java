@@ -8,9 +8,9 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
-import hu.mrolcsi.android.spoc.database.models.Image;
-import hu.mrolcsi.android.spoc.database.models.Label;
-import hu.mrolcsi.android.spoc.database.models.binders.Label2Image;
+import hu.mrolcsi.android.spoc.database.model.Image;
+import hu.mrolcsi.android.spoc.database.model.Label;
+import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
 
 import java.util.ArrayList;
 
