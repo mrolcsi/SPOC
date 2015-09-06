@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -204,6 +205,11 @@ public final class GalleryActivity extends AppCompatActivity {
     @TargetApi(11)
     private void setUpDrawerToggle() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            toolbar.setElevation(0);
+        }
+
         setSupportActionBar(toolbar);
 
         this.mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {

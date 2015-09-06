@@ -262,12 +262,15 @@ public class DatabaseBuilderService extends IntentService {
                     Date date;
                     if (file.getAbsolutePath().contains("jpg") || file.getAbsolutePath().contains("jpeg")) { //TODO: additional extensions
                         ExifInterface exif = new ExifInterface(file.getAbsolutePath());
+
                         String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
-                        date = sdf.parse(dateString);
-                    } else {
-                        date = new Date(file.lastModified());
+                        if (!TextUtils.isEmpty(dateString)) {
+                            date = sdf.parse(dateString);
+                        } else {
+                            date = new Date(file.lastModified());
+                        }
+                        values.put(Image.COLUMN_DATE_TAKEN, date.getTime());
                     }
-                    values.put(Image.COLUMN_DATE_TAKEN, date.getTime());
 
                     final Cursor imageCursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI,
                             new String[]{"_id"},

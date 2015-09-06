@@ -16,5 +16,6 @@
              colorControlHighlight, and colorSwitchThumbNormal. -->
 
         <item name="windowActionBar">false</item>
+
     </style>
 </resources>
