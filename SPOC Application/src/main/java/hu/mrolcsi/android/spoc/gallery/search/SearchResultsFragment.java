@@ -39,6 +39,8 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_search_result, container, false);
 
+            findViews();
+
             FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) mRootView.getLayoutParams();
             lp.topMargin = getResources().getDimensionPixelOffset(R.dimen.abc_action_bar_default_height_material);
             mRootView.setLayoutParams(lp);
@@ -117,7 +119,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
 
         mQuery = searchText;
 
-        String[] projection = new String[]{Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN};
+        String[] projection = new String[]{"_id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN};
         String selection = "lower(" + Image.COLUMN_FILENAME + ") LIKE lower(?)";
         String[] selectionArgs = new String[]{"%" + searchText + "%"};
 

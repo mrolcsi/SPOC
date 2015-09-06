@@ -73,79 +73,82 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_thumbnails, container, false);
-
-            twList = (TwoWayView) mRootView.findViewById(R.id.list);
-            twList.setHasFixedSize(true);
-            twList.setAdapter(null);
-
-            ((SpannableGridLayoutManager) twList.getLayoutManager()).setNumColumns(getResources().getInteger(R.integer.preferredColumns));
-
-            mItemSelectionSupport = ItemSelectionSupport.addTo(twList);
-            mItemSelectionSupport.setChoiceMode(ItemSelectionSupport.ChoiceMode.MULTIPLE);
-
-            final ItemClickSupport itemClick = ItemClickSupport.addTo(twList);
-            itemClick.setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
-                @Override
-                public void onItemClick(RecyclerView recyclerView, View view, int i, long l) {
-                    if (mActionMode != null) {
-                        mActionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
-                        return;
-                    }
-
-                    ImagePagerFragment fragment = new ImagePagerFragment();
-
-                    Bundle args = new Bundle();
-                    args.putInt(ImagePagerFragment.ARG_LOADER_ID, mLoader.getId());
-                    args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
-                    args.putBundle(ARG_QUERY_BUNDLE, mQueryArgs);
-
-                    mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
-                    mSavedOrientation = getResources().getConfiguration().orientation;
-                    mSavedPosition = i;
-
-                    fragment.setArguments(args);
-
-                    ((GalleryActivity) getActivity()).swapFragment(fragment);
-                }
-            });
-            itemClick.setOnItemLongClickListener(new ItemClickSupport.OnItemLongClickListener() {
-                @Override
-                public boolean onItemLongClick(RecyclerView parent, View view, int position, long id) {
-                    if (mActionMode != null) {
-                        return false;
-                    }
-                    mActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(new ActionModeCallback());
-                    mItemSelectionSupport.setItemChecked(position, true);
-                    mActionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
-                    return true;
-                }
-            });
-
-            fabSearch = (FloatingActionButton) mRootView.findViewById(R.id.fabSearch);
-            fabSearch.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (mSearchMenuItem != null) {
-                        MenuItemCompat.expandActionView(mSearchMenuItem);
-                    }
-                }
-            });
-            final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
-                @Override
-                public void hide() {
-                    int fabMargin = ((ViewGroup.MarginLayoutParams) fabSearch.getLayoutParams()).bottomMargin;
-                    ViewCompat.animate(fabSearch).translationY(fabSearch.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
-                }
-
-                @Override
-                public void show() {
-                    ViewCompat.animate(fabSearch).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
-                }
-            };
-            twList.setOnScrollListener(hideOnScrollListener);
+            findViews();
         }
 
         return mRootView;
+    }
+
+    protected void findViews() {
+        twList = (TwoWayView) mRootView.findViewById(R.id.list);
+        twList.setHasFixedSize(true);
+        twList.setAdapter(null);
+
+        ((SpannableGridLayoutManager) twList.getLayoutManager()).setNumColumns(getResources().getInteger(R.integer.preferredColumns));
+
+        mItemSelectionSupport = ItemSelectionSupport.addTo(twList);
+        mItemSelectionSupport.setChoiceMode(ItemSelectionSupport.ChoiceMode.MULTIPLE);
+
+        final ItemClickSupport itemClick = ItemClickSupport.addTo(twList);
+        itemClick.setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
+            @Override
+            public void onItemClick(RecyclerView recyclerView, View view, int i, long l) {
+                if (mActionMode != null) {
+                    mActionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
+                    return;
+                }
+
+                ImagePagerFragment fragment = new ImagePagerFragment();
+
+                Bundle args = new Bundle();
+                args.putInt(ImagePagerFragment.ARG_LOADER_ID, mLoader.getId());
+                args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
+                args.putBundle(ARG_QUERY_BUNDLE, mQueryArgs);
+
+                mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
+                mSavedOrientation = getResources().getConfiguration().orientation;
+                mSavedPosition = i;
+
+                fragment.setArguments(args);
+
+                ((GalleryActivity) getActivity()).swapFragment(fragment);
+            }
+        });
+        itemClick.setOnItemLongClickListener(new ItemClickSupport.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(RecyclerView parent, View view, int position, long id) {
+                if (mActionMode != null) {
+                    return false;
+                }
+                mActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(new ActionModeCallback());
+                mItemSelectionSupport.setItemChecked(position, true);
+                mActionMode.setTitle(String.format(getString(R.string.cab_itemsSelectedFormat), mItemSelectionSupport.getCheckedItemCount()));
+                return true;
+            }
+        });
+
+        fabSearch = (FloatingActionButton) mRootView.findViewById(R.id.fabSearch);
+        fabSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mSearchMenuItem != null) {
+                    MenuItemCompat.expandActionView(mSearchMenuItem);
+                }
+            }
+        });
+        final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
+            @Override
+            public void hide() {
+                int fabMargin = ((ViewGroup.MarginLayoutParams) fabSearch.getLayoutParams()).bottomMargin;
+                ViewCompat.animate(fabSearch).translationY(fabSearch.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
+            }
+
+            @Override
+            public void show() {
+                ViewCompat.animate(fabSearch).translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
+            }
+        };
+        twList.setOnScrollListener(hideOnScrollListener);
     }
 
     @Override
