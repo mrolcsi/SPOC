@@ -478,19 +478,19 @@ public class DatabaseBuilderService extends IntentService {
         final long imageId = cursorWithImage.getLong(0);
 
         final String year = String.valueOf(calendar.get(Calendar.YEAR));
-        createLabel(imageId, year, LabelType.DATE_NUMERIC);
+        createLabel(imageId, year, LabelType.DATE_YEAR_NUMERIC);
 
         final String month = String.valueOf(calendar.get(Calendar.MONTH) + 1);
-        createLabel(imageId, month, LabelType.DATE_NUMERIC);
+        createLabel(imageId, month, LabelType.DATE_MONTH_NUMERIC);
 
         final String dayOfMonth = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
-        createLabel(imageId, dayOfMonth, LabelType.DATE_NUMERIC);
+        createLabel(imageId, dayOfMonth, LabelType.DATE_DAY_NUMERIC);
 
         final String monthText = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
-        createLabel(imageId, monthText, LabelType.DATE_TEXT);
+        createLabel(imageId, monthText, LabelType.DATE_MONTH_TEXT);
 
         final String dayOfWeek = calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault());
-        createLabel(imageId, dayOfWeek, LabelType.DATE_TEXT);
+        createLabel(imageId, dayOfWeek, LabelType.DATE_DAY_TEXT);
     }
 
     private void generateLabelsFromLocation(Cursor cursorWithImage) {
