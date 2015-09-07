@@ -500,8 +500,8 @@ public class DatabaseBuilderService extends IntentService {
 
         final long imageId = cursorWithImage.getLong(0);
 
-        createLabel(imageId, locationStrings[0], LabelType.LOCATION_LOCALITY);
-        createLabel(imageId, locationStrings[1], LabelType.LOCATION_COUNTRY);
+        createLabel(imageId, locationStrings[0], LabelType.LOCATION_LOCALITY_TEXT);
+        createLabel(imageId, locationStrings[1], LabelType.LOCATION_COUNTRY_TEXT);
     }
 
     private void generateLabelsFromPeople(Cursor cursorWithImage) {

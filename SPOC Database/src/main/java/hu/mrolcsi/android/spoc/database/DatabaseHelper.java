@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.database;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -10,6 +11,7 @@ import com.j256.ormlite.table.TableUtils;
 import hu.mrolcsi.android.spoc.database.model.Contact;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.model.Label;
+import hu.mrolcsi.android.spoc.database.model.LabelType;
 import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
 import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
 import hu.mrolcsi.android.spoc.database.model.view.LabelSearchView;
@@ -26,7 +28,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 5;
+    public static final int DATABASE_VERSION = 7;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -93,10 +95,31 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
                 Log.w(getClass().getSimpleName(), e);
             }
         }
-        if (oldVersion < 5) {
-            //add LabelSearch view
+        if (oldVersion < 6) {
+            //5: add LabelSearch view
+            //6: add type column to search-view
             database.execSQL("DROP VIEW IF EXISTS " + LabelSearchView.VIEW_NAME);
             database.execSQL(LabelSearchView.CREATE_SQL);
+        }
+        if (oldVersion < 7) {
+            //rename some label types
+
+            ContentValues values = new ContentValues();
+            values.put(Label.COLUMN_TYPE, LabelType.LOCATION_LOCALITY_TEXT.name());
+            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"LOCATION_LOCALITY"});
+
+            values.clear();
+            values.put(Label.COLUMN_TYPE, LabelType.LOCATION_COUNTRY_TEXT.name());
+            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"LOCATION_COUNTRY"});
+
+            values.clear();
+            values.put(Label.COLUMN_TYPE, LabelType.PEOPLE_FIRSTNAME_TEXT.name());
+            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"PEOPLE_FIRST_NAME"});
+
+            values.clear();
+            values.put(Label.COLUMN_TYPE, LabelType.PEOPLE_LASTNAME_TEXT.name());
+            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"PEOPLE_LAST_NAME"});
+
         }
     }
 

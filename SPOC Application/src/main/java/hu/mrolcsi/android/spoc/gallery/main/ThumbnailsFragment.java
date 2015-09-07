@@ -46,7 +46,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     public static final String ARG_QUERY_BUNDLE = "SPOC.Gallery.Thumbnails.ARGUMENT_BUNDLE";
     private static final String ARG_LOADER_ID = "SPOC.Gallery.Thumbnails.LOADER_ID";
     protected ThumbnailsAdapter mAdapter;
-    protected CursorLoader mLoader;
+    protected CursorLoader mImagesLoader;
     protected FloatingActionButton fabSearch;
     protected TwoWayView twList;
     private Parcelable mListInstanceState;
@@ -101,7 +101,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
                 ImagePagerFragment fragment = new ImagePagerFragment();
 
                 Bundle args = new Bundle();
-                args.putInt(ImagePagerFragment.ARG_LOADER_ID, mLoader.getId());
+                args.putInt(ImagePagerFragment.ARG_LOADER_ID, mImagesLoader.getId());
                 args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
                 args.putBundle(ARG_QUERY_BUNDLE, mQueryArgs);
 
@@ -179,7 +179,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
             }
             loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
         }
-        mLoader = (CursorLoader) getLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(getActivity(), this));
+        mImagesLoader = (CursorLoader) getLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(getActivity(), this));
     }
 
     @Override
@@ -204,6 +204,8 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, final Cursor data) {
+        if (loader.getId() != ImageTableLoader.ID) return;
+
         Log.d(getClass().getSimpleName(), "onLoadComplete");
         if (data == null) {
             DialogUtils.buildErrorDialog(getActivity()).setMessage(getString(R.string.error_noPictures)).show();
@@ -236,6 +238,8 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+        if (loader.getId() != ImageTableLoader.ID) return;
+
         Log.d(getClass().getSimpleName(), "onLoaderReset");
         if (mAdapter != null) {
             mAdapter.changeCursor(null);
@@ -277,12 +281,12 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
                         pd.dismiss();
                         mActionMode.finish();
 
-                        mLoader.startLoading();
+                        mImagesLoader.startLoading();
 
                         final CharSequence text = getResources().getQuantityString(R.plurals.dialog_message_numPicturesDeleted, pd.getProgress(), pd.getProgress());
                         Toast.makeText(getActivity(), text, Toast.LENGTH_SHORT).show();
                     }
-                }.execute(mLoader);
+                }.execute(mImagesLoader);
             }
         }).show();
     }
@@ -317,7 +321,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
                 pd.dismiss();
                 startActivity(Intent.createChooser(intent, getString(R.string.details_action_share)));
             }
-        }.execute(mLoader);
+        }.execute(mImagesLoader);
 
     }
 
