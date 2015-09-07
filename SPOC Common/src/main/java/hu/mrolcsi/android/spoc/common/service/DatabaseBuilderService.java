@@ -56,6 +56,7 @@ public class DatabaseBuilderService extends IntentService {
     private boolean mInternet;
 
     private Map<String, Integer> mLabelCache = new TreeMap<>();
+    private ArrayList<ContentProviderOperation> mOps = new ArrayList<>();
 
     public DatabaseBuilderService() {
         super(TAG);
@@ -121,16 +122,16 @@ public class DatabaseBuilderService extends IntentService {
         try {
             String filename;
 
-            final ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+            mOps.clear();
 
             while (cursor.moveToNext()) {
                 filename = cursor.getString(1);
                 if (!new File(filename).exists() || listHelper.isInBlacklist(filename)) {
-                    ops.add(ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0)))).build());
+                    mOps.add(ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0)))).build());
                     //numRowsDeleted += getContentResolver().delete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0))), null, null);
                 }
             }
-            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, ops);
+            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
         } catch (RemoteException | OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
@@ -167,7 +168,7 @@ public class DatabaseBuilderService extends IntentService {
             ContentValues values;
             Uri imagesByMediaStoreIdUri = Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, Image.COLUMN_MEDIASTORE_ID);
 
-            final ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+            mOps.clear();
 
             while (mediaStoreCursor.moveToNext()) {
                 mediaStoreId = mediaStoreCursor.getInt(indexID);
@@ -193,7 +194,7 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        ops.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
+                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
                         //getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
                     } else {
                         //add new db entry with mediastore values
@@ -203,14 +204,14 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        ops.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
+                        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
                         //getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
                     }
                     imageCursor.close();
                 }
             }
 
-            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, ops);
+            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
         } catch (RemoteException | OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
@@ -251,7 +252,7 @@ public class DatabaseBuilderService extends IntentService {
             String location;
             ContentValues values;
 
-            final ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+            mOps.clear();
 
             for (String s : whitelist) {
                 dir = new File(s);
@@ -285,7 +286,7 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        ops.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
+                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
                         //getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
                     } else {
                         if (mInternet) {
@@ -294,7 +295,7 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        ops.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
+                        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
                         //getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
                     }
 
@@ -302,10 +303,8 @@ public class DatabaseBuilderService extends IntentService {
                 }
             }
 
-            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, ops);
-        } catch (IOException | ParseException e) {
-            Log.w(getClass().getName(), e);
-        } catch (RemoteException | OperationApplicationException e) {
+            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
+        } catch (IOException | ParseException | RemoteException | OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         }
         Log.v(getClass().getSimpleName(), "Update from Whitelist done.");
@@ -417,9 +416,19 @@ public class DatabaseBuilderService extends IntentService {
                 null, null, null);
 
         while (cursor.moveToNext()) {
-            generateLabelsFromDate(cursor);
-            generateLabelsFromLocation(cursor);
-            //generateLabelsFromPeople(cursor);
+            mOps.clear();
+
+            try {
+                generateLabelsFromDate(cursor);
+                generateLabelsFromLocation(cursor);
+                //generateLabelsFromPeople(cursor);
+
+                getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
+            } catch (RemoteException e) {
+                Log.w(getClass().getSimpleName(), e);
+            } catch (OperationApplicationException ignored) {
+                //ignore duplicates.
+            }
         }
 
         cursor.close();
@@ -458,7 +467,7 @@ public class DatabaseBuilderService extends IntentService {
         values.put(Label2Image.COLUMN_IMAGE_ID, imageId);
         values.put(Label2Image.COLUMN_LABEL_ID, labelId);
 
-        getContentResolver().insert(SPOCContentProvider.LABELS_2_IMAGES_URI, values);
+        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.LABELS_2_IMAGES_URI).withValues(values).build());
     }
 
     private void generateLabelsFromDate(Cursor cursorWithImage) {
