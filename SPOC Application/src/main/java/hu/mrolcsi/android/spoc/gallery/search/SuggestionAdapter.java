@@ -32,6 +32,8 @@ public class SuggestionAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
+        if (cursor == null || cursor.isClosed()) return;
+
         final String name = cursor.getString(1);
         final LabelType type = LabelType.valueOf(cursor.getString(2));
 
@@ -50,7 +52,10 @@ public class SuggestionAdapter extends CursorAdapter {
             case PEOPLE_LASTNAME_TEXT:
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.group, 0, 0, 0);
                 break;
-            case CUSTOM:
+            case DIRECTORY_TEXT:
+                ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.folder, 0, 0, 0);
+                break;
+            case CUSTOM_TEXT:
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.tag, 0, 0, 0);
                 break;
             default:

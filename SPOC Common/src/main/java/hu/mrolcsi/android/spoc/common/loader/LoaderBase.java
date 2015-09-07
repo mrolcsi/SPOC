@@ -14,6 +14,7 @@ import android.support.v4.content.Loader;
 
 abstract class LoaderBase implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    public static final String ARG_URI_STRING = "uri";
     public static final String ARG_PROJECTION = "projection";
     public static final String ARG_SELECTION = "selection";
     public static final String ARG_SELECTION_ARGS = "selectionArgs";

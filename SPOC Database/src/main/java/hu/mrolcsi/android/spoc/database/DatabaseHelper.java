@@ -28,7 +28,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 7;
+    public static final int DATABASE_VERSION = 8;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -120,6 +120,11 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             values.put(Label.COLUMN_TYPE, LabelType.PEOPLE_LASTNAME_TEXT.name());
             database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"PEOPLE_LAST_NAME"});
 
+        }
+        if (oldVersion < 8) {
+            //add Date Taken to view
+            database.execSQL("DROP VIEW IF EXISTS " + LabelSearchView.VIEW_NAME);
+            database.execSQL(LabelSearchView.CREATE_SQL);
         }
     }
 

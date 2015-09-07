@@ -212,6 +212,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
             return;
         }
 
+        mQueryArgs.putString(ImageTableLoader.ARG_URI_STRING, ((CursorLoader) loader).getUri().toString());
         mQueryArgs.putStringArray(ImageTableLoader.ARG_PROJECTION, ((CursorLoader) loader).getProjection());
         mQueryArgs.putString(ImageTableLoader.ARG_SELECTION, ((CursorLoader) loader).getSelection());
         mQueryArgs.putStringArray(ImageTableLoader.ARG_SELECTION_ARGS, ((CursorLoader) loader).getSelectionArgs());

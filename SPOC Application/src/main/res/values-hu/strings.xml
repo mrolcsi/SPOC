@@ -87,4 +87,5 @@
     <string name="refresh_title">Frissítés</string>
     <string name="cancel">Mégse</string>
     <string name="splash_button_continueInBackground">Folytatás a háttérben</string>
+    <string name="search_message_helpText"><![CDATA[Keresés fájlnévben,<br>mappákban, pl. <i>Képek</i> vagy <i>Letöltések</i>,<br>dátumok közt, pl. <i>2015</i> vagy <i>augusztus</i>,<br>helyszínek közt, pl. <i>Budapest</i> vagy <i>Magyarország</i>.]]></string>
 </resources>

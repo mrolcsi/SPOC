@@ -2,6 +2,7 @@ package hu.mrolcsi.android.spoc.common.loader;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -29,6 +30,11 @@ public class ImageTableLoader extends LoaderBase {
         loader.setUri(SPOCContentProvider.IMAGES_URI);
 
         if (args != null) {
+            Uri uri = SPOCContentProvider.IMAGES_URI;
+            if (args.containsKey(ARG_URI_STRING)) {
+                uri = Uri.parse(args.getString(ARG_URI_STRING));
+            }
+
             String[] projection = null;
             if (args.containsKey(ARG_PROJECTION)) {
                 projection = args.getStringArray(ARG_PROJECTION);
@@ -49,6 +55,7 @@ public class ImageTableLoader extends LoaderBase {
                 sortOrder = args.getString(ARG_SORT_ORDER);
             }
 
+            loader.setUri(uri);
             loader.setProjection(projection);
             loader.setSelection(selection);
             loader.setSelectionArgs(selectionArgs);

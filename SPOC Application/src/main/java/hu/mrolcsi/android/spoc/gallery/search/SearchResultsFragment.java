@@ -8,6 +8,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.SearchView;
+import android.text.Html;
 import android.text.TextUtils;
 import android.view.*;
 import android.widget.FrameLayout;
@@ -63,6 +64,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
             fabSearch.setVisibility(View.GONE);
 
             tvMessage = (TextView) mRootView.findViewById(R.id.tvMessage);
+            tvMessage.setText(Html.fromHtml(getString(R.string.search_message_helpText)));
         }
 
         return mRootView;
@@ -152,6 +154,10 @@ public class SearchResultsFragment extends ThumbnailsFragment {
     private void performSearch(String searchText) {
         if (TextUtils.isEmpty(searchText)) {
             tvMessage.setText(R.string.error_noResults);
+            if (mAdapter != null) {
+                mAdapter.swapCursor(null);
+            }
+            twList.setAdapter(null);
             return;
         }
 
@@ -175,6 +181,9 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         }
 
         if (loader.getId() == ImageTableLoader.ID) {
+            if (twList.getAdapter() == null) {
+                twList.setAdapter(mAdapter);
+            }
             mAdapter.setUseColumnSpan(false);
             final String quantityString = getResources().getQuantityString(R.plurals.message_numberOfResults, data.getCount(), data.getCount());
             tvMessage.setText(quantityString);

@@ -150,11 +150,13 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
 
         int loaderId = ImageTableLoader.ID;
         Bundle loaderArgs = null;
+
         if (getArguments() != null) {
             if (getArguments().containsKey(ARG_LOADER_ID)) {
                 loaderId = getArguments().getInt(ARG_LOADER_ID);
             }
             loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
+
             final String[] projection = new String[]{"_id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION};
             loaderArgs.putStringArray(ImageTableLoader.ARG_PROJECTION, projection);
         }

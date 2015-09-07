@@ -90,4 +90,5 @@
     <string name="refresh_title">Refresh</string>
     <string name="cancel">Cancel</string>
     <string name="splash_button_continueInBackground">Continue in background</string>
+    <string name="search_message_helpText"><![CDATA[Search in filenames,<br>directories, like <i>Pictures</i> or <i>Download</i>,<br>dates, like <i>2015</i> or <i>august</i>,<br>locations, like <i>Paris</i> or <i>France</i>.]]></string>
 </resources>
