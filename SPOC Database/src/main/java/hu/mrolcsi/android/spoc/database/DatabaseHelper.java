@@ -26,7 +26,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    private static final int DATABASE_VERSION = 4;
+    public static final int DATABASE_VERSION = 4;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -80,6 +80,15 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             try {
                 TableUtils.createTableIfNotExists(connectionSource, Label.class);
                 TableUtils.createTableIfNotExists(connectionSource, Label2Image.class);
+            } catch (SQLException e) {
+                Log.w(getClass().getSimpleName(), e);
+            }
+        }
+        if (oldVersion < 4) {
+            //update labels with new types
+            try {
+                TableUtils.clearTable(connectionSource, Label2Image.class);
+                TableUtils.clearTable(connectionSource, Label.class);
             } catch (SQLException e) {
                 Log.w(getClass().getSimpleName(), e);
             }

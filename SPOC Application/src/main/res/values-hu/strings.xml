@@ -84,4 +84,7 @@
     <string name="error_noResults">Nincs találat.</string>
     <string name="message_multiplePicturesFound">%d találat.</string>
     <string name="message_onePictureFound">%d találat.</string>
+    <string name="refresh_title">Frissítés</string>
+    <string name="cancel">Mégse</string>
+    <string name="splash_button_continueInBackground">Folytatás a háttérben</string>
 </resources>

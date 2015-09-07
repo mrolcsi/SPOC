@@ -269,6 +269,8 @@ public final class SPOCContentProvider extends ContentProvider {
         } finally {
             db.endTransaction();
             inBatchMode = false;
+            getContext().getContentResolver().notifyChange(SPOCContentProvider.CONTENT_URI, null);
         }
+
     }
 }

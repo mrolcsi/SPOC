@@ -88,4 +88,6 @@
     <string name="message_onePictureFound">%d picture found.</string>
     <string name="message_multiplePicturesFound">%d pictures found.</string>
     <string name="refresh_title">Refresh</string>
+    <string name="cancel">Cancel</string>
+    <string name="splash_button_continueInBackground">Continue in background</string>
 </resources>

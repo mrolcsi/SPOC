@@ -8,11 +8,14 @@ package hu.mrolcsi.android.spoc.database.model;
  */
 
 public enum LabelType {
-    DATE_TEXT,
-    DATE_NUMERIC,
+    DATE_YEAR_NUMERIC,
+    DATE_MONTH_TEXT,
+    DATE_MONTH_NUMERIC,
+    DATE_DAY_TEXT,
+    DATE_DAY_NUMERIC,
     LOCATION_COUNTRY,
     LOCATION_LOCALITY,
-    PEOPLE_FIRSTNAME,
-    PEOPLE_LASTNAME,
+    PEOPLE_FIRST_NAME,
+    PEOPLE_LAST_NAME,
     CUSTOM
 }

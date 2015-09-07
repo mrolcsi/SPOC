@@ -119,7 +119,6 @@ public final class GalleryActivity extends AppCompatActivity {
 
         IntentFilter mCacheBuilderIntentFilter = new IntentFilter();
         mCacheBuilderIntentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_CACHING);
-        mCacheBuilderIntentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL);
         LocalBroadcastManager.getInstance(this).registerReceiver(mCacheBuilderReceiver, mCacheBuilderIntentFilter);
 
         IntentFilter mDatabaseBuilderIntentFilter = new IntentFilter();
@@ -336,7 +335,7 @@ public final class GalleryActivity extends AppCompatActivity {
     private class DatabaseBuilderWatcher extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY)) {
+            if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_FINISHED)) {
                 mIsRefreshing = false;
 
                 final ImageView imageView = (ImageView) MenuItemCompat.getActionView(mRefreshMenuItem);

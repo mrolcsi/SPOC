@@ -64,5 +64,16 @@
             android:textStyle="bold"
             android:visibility="gone" />
 
+        <Button
+            android:id="@+id/btnBackground"
+            style="@style/Base.Widget.AppCompat.Button.Small"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvMessage"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/margin_small"
+            android:text="@string/splash_button_continueInBackground"
+            android:visibility="gone" />
+
     </RelativeLayout>
 </FrameLayout>
