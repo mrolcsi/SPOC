@@ -1,6 +1,7 @@
 package hu.mrolcsi.android.spoc.gallery.main;
 
 import android.annotation.TargetApi;
+import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -281,6 +282,13 @@ public final class GalleryActivity extends AppCompatActivity {
         refreshActionView.startAnimation(refreshAnimation);
         mRefreshMenuItem.setVisible(mIsRefreshing);
 
+        if (!isServiceRunning(DatabaseBuilderService.class)) {
+            mIsRefreshing = false;
+            final ImageView imageView = (ImageView) MenuItemCompat.getActionView(mRefreshMenuItem);
+            imageView.setImageDrawable(null);
+            menu.removeItem(R.id.menuRefresh);
+        }
+
         restoreActionBar();
         return true;
     }
@@ -330,6 +338,16 @@ public final class GalleryActivity extends AppCompatActivity {
         transaction.commit();
 
         Log.v(getClass().getSimpleName(), "Fragment restored from stack: " + mCurrentFragment.toString());
+    }
+
+    public boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private class DatabaseBuilderWatcher extends BroadcastReceiver {

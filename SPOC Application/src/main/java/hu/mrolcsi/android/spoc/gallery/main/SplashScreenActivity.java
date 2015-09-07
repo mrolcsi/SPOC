@@ -1,6 +1,5 @@
 package hu.mrolcsi.android.spoc.gallery.main;
 
-import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -73,6 +72,12 @@ public final class SplashScreenActivity extends AppCompatActivity {
         IntentFilter serviceIntentFilter = new IntentFilter(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY);
         serviceIntentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_CACHING);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, serviceIntentFilter);
+
+        if (!isFirstStart) {
+            Intent galleryIntent = new Intent(this, GalleryActivity.class);
+            startActivity(galleryIntent);
+            finish();
+        }
     }
 
     @Override
@@ -89,16 +94,6 @@ public final class SplashScreenActivity extends AppCompatActivity {
         if (mReceiver != null) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         }
-    }
-
-    public boolean isServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     class FirstTimeSetupReceiver extends BroadcastReceiver {
