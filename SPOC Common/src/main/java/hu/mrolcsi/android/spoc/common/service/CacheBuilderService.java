@@ -17,8 +17,8 @@ import android.view.Display;
 import android.view.WindowManager;
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
-import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.models.Image;
+import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -33,8 +33,7 @@ import java.util.concurrent.TimeUnit;
 public class CacheBuilderService extends IntentService implements Thread.UncaughtExceptionHandler {
 
     public static final String TAG = "SPOC.Gallery.CacheBuilderService";
-    public static final String BROADCAST_ACTION_CACHING = "SPOC.Gallery.CacheBuilderService.BROADCAST_CACHING";
-    public static final String BROADCAST_ACTION_INCREMENTAL = "SPOC.Gallery.CacheBuilderService.BROADCAST_INCREMENTAL";
+    public static final String BROADCAST_ACTION_CACHING = "hu.mrolcsi.android.spoc.BROADCAST_CACHING";
     public static final String EXTENDED_DATA_COUNT = "SPOC.Gallery.CacheBuilderService.COUNT";
     public static final String EXTENDED_DATA_POSITION = "SPOC.Gallery.CacheBuilderService.POSITION";
 
@@ -74,18 +73,13 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
             screenHeight = display.getHeight();
         }
 
-        //prepare query
-        String[] projection = new String[]{"_id", Image.COLUMN_FILENAME};
-        String sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
-
         Intent progressIntent = new Intent(BROADCAST_ACTION_CACHING);
 
         Cursor cursor = null;
         try {
-            cursor = DatabaseHelper.getInstance().getReadableDatabase().query(Image.TABLE_NAME, projection, null, null, null, null, sortOrder);
+            cursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI, new String[]{"_id", Image.COLUMN_FILENAME}, null, null, null);
             if (cursor == null) return;
 
-            int filenameIndex = cursor.getColumnIndex(Image.COLUMN_FILENAME);
             String filename;
 
             Handler handler = new Handler(getApplication().getMainLooper());
@@ -96,11 +90,8 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
                 }
             };
 
-            //TODO: only cache newly received images
-            //  > compare with DB, if it's in DB, it's cached.
-
             while (cursor.moveToNext()) {
-                filename = cursor.getString(filenameIndex);
+                filename = cursor.getString(1);
 
                 //cache thumbnails
                 try {
@@ -135,6 +126,11 @@ public class CacheBuilderService extends IntentService implements Thread.Uncaugh
                         .putExtra(EXTENDED_DATA_POSITION, cursor.getPosition() + 1);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
             }
+
+            progressIntent
+                    .putExtra(EXTENDED_DATA_COUNT, cursor.getCount())
+                    .putExtra(EXTENDED_DATA_POSITION, cursor.getCount());
+            LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
 
             handler.post(clearMemoryRunnable);
             

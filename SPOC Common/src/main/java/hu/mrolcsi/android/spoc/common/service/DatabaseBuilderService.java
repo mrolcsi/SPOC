@@ -49,8 +49,8 @@ import java.util.concurrent.TimeUnit;
 public class DatabaseBuilderService extends IntentService {
 
     public static final String TAG = "SPOC.Common.DatabaseBuilder";
-    public static final String BROADCAST_ACTION_IMAGES_READY = "SPOC.Common.DatabaseBuilder.BROADCAST_READY";
-    public static final String BROADCAST_ACTION_FINISHED = "SPOC.Common.DatabaseBuilder.BROADCAST_FINISHED";
+    public static final String BROADCAST_ACTION_IMAGES_READY = "hu.mrolcsi.android.spoc.BROADCAST_IMAGES_READY";
+    public static final String BROADCAST_ACTION_FINISHED = "hu.mrolcsi.android.spoc.BROADCAST_DATABASE_READY";
     public static final String ARG_FIRST_START = "SPOC.Common.FIRST_START";
 
     private boolean mInternet;

@@ -33,7 +33,7 @@ public class CacheBuilderReceiver extends BroadcastReceiver {
         int progress = intent.getIntExtra(CacheBuilderService.EXTENDED_DATA_POSITION, -1);
         if (progress < 0) return;
 
-        if (intent.getAction().equals(CacheBuilderService.BROADCAST_ACTION_INCREMENTAL)) {
+        if (intent.getAction().equals(CacheBuilderService.BROADCAST_ACTION_CACHING)) {
             //show notification
             if (mNotificationManager == null)
                 mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
