@@ -178,7 +178,7 @@ public final class SPOCContentProvider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         final SQLiteDatabase db = dbHelper.getWritableDatabase();
-        int delCount = 0;
+        int delCount;
 
         String idStr;
         String where;
@@ -214,7 +214,7 @@ public final class SPOCContentProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues contentValues, String selection, String[] selectionArgs) {
         final SQLiteDatabase db = dbHelper.getWritableDatabase();
-        int updateCount = 0;
+        int updateCount;
 
         String idStr;
         String where;
@@ -260,7 +260,7 @@ public final class SPOCContentProvider extends ContentProvider {
             return itemUri;
         }
         // s.th. went wrong:
-        return null;
+        return uri;
     }
 
     /**

@@ -12,6 +12,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
@@ -412,13 +413,14 @@ public class DatabaseBuilderService extends IntentService {
         Log.v(getClass().getSimpleName(), "Generating labels...");
 
         final Cursor cursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI,
-                new String[]{"_id", Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION},
+                new String[]{"_id", Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION, Image.COLUMN_FILENAME},
                 null, null, null);
 
         while (cursor.moveToNext()) {
             mOps.clear();
 
             try {
+                generateLabelsFromFilename(cursor);
                 generateLabelsFromDate(cursor);
                 generateLabelsFromLocation(cursor);
                 //generateLabelsFromPeople(cursor);
@@ -428,46 +430,21 @@ public class DatabaseBuilderService extends IntentService {
                 Log.w(getClass().getSimpleName(), e);
             } catch (OperationApplicationException ignored) {
                 //ignore duplicates.
+                Log.w(getClass().getSimpleName(), ignored);
             }
         }
 
         cursor.close();
 
+        ContentValues values = new ContentValues();
+        values.put(Label2Image.COLUMN_IMAGE_ID, 555);
+        values.put(Label2Image.COLUMN_LABEL_ID, 555);
+        values.put(Label2Image.COLUMN_DATE, Calendar.getInstance().getTimeInMillis());
+
+        final Uri insert = getContentResolver().insert(SPOCContentProvider.LABELS_2_IMAGES_URI, values);
+
         long endTime = System.currentTimeMillis();
         Log.v(getClass().getSimpleName(), String.format("Labels generated in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
-    }
-
-    private void createLabel(long imageId, String labelName, LabelType type) {
-
-        int labelId;
-        if (mLabelCache.containsKey(labelName)) {
-            labelId = mLabelCache.get(labelName);
-        } else {
-            final Uri labelNameUri = SPOCContentProvider.LABELS_URI.buildUpon().appendPath(Label.COLUMN_NAME).appendPath(labelName).build();
-            final Cursor labelCursor = getContentResolver().query(labelNameUri, new String[]{"_id"}, null, null, null);
-
-            if (labelCursor.moveToFirst()) {
-                labelId = labelCursor.getInt(0);
-            } else {
-                ContentValues values = new ContentValues();
-                values.put(Label.COLUMN_NAME, labelName);
-                values.put(Label.COLUMN_CREATION_DATE, Calendar.getInstance().getTimeInMillis());
-                values.put(Label.COLUMN_TYPE, type.toString());
-
-                final Uri insert = getContentResolver().insert(SPOCContentProvider.LABELS_URI, values);
-                labelId = Integer.parseInt(insert.getLastPathSegment());
-            }
-            labelCursor.close();
-        }
-
-        mLabelCache.put(labelName, labelId);
-
-        ContentValues values = new ContentValues();
-        values.put(Label2Image.COLUMN_DATE, Calendar.getInstance().getTimeInMillis());
-        values.put(Label2Image.COLUMN_IMAGE_ID, imageId);
-        values.put(Label2Image.COLUMN_LABEL_ID, labelId);
-
-        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.LABELS_2_IMAGES_URI).withValues(values).build());
     }
 
     private void generateLabelsFromDate(Cursor cursorWithImage) {
@@ -504,7 +481,53 @@ public class DatabaseBuilderService extends IntentService {
         createLabel(imageId, locationStrings[1], LabelType.LOCATION_COUNTRY_TEXT);
     }
 
+    private void generateLabelsFromFilename(Cursor cursorWithImage) {
+        final String filename = cursorWithImage.getString(3);
+        final String externalStorage = Environment.getExternalStorageDirectory().getAbsolutePath();
+
+        final String[] filenameSplit = filename.replace(externalStorage, "").split(File.separator);
+        final long imageId = cursorWithImage.getLong(0);
+
+        //skip first (empty) and last (filename)
+        for (int i = 1; i < filenameSplit.length - 1; i++) {
+            createLabel(imageId, filenameSplit[i], LabelType.DIRECTORY_TEXT);
+        }
+    }
+
     private void generateLabelsFromPeople(Cursor cursorWithImage) {
         //TODO
+    }
+
+    private void createLabel(long imageId, String labelName, LabelType type) {
+
+        int labelId;
+        if (mLabelCache.containsKey(labelName)) {
+            labelId = mLabelCache.get(labelName);
+        } else {
+            final Uri labelNameUri = SPOCContentProvider.LABELS_URI.buildUpon().appendPath(Label.COLUMN_NAME).appendPath(labelName).build();
+            final Cursor labelCursor = getContentResolver().query(labelNameUri, new String[]{"_id"}, null, null, null);
+
+            if (labelCursor.moveToFirst()) {
+                labelId = labelCursor.getInt(0);
+            } else {
+                ContentValues values = new ContentValues();
+                values.put(Label.COLUMN_NAME, labelName);
+                values.put(Label.COLUMN_CREATION_DATE, Calendar.getInstance().getTimeInMillis());
+                values.put(Label.COLUMN_TYPE, type.name());
+
+                final Uri insert = getContentResolver().insert(SPOCContentProvider.LABELS_URI, values);
+                labelId = Integer.parseInt(insert.getLastPathSegment());
+            }
+            labelCursor.close();
+        }
+
+        mLabelCache.put(labelName, labelId);
+
+        ContentValues values = new ContentValues();
+        values.put(Label2Image.COLUMN_DATE, Calendar.getInstance().getTimeInMillis());
+        values.put(Label2Image.COLUMN_IMAGE_ID, imageId);
+        values.put(Label2Image.COLUMN_LABEL_ID, labelId);
+
+        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.LABELS_2_IMAGES_URI).withValues(values).withYieldAllowed(true).build());
     }
 }
