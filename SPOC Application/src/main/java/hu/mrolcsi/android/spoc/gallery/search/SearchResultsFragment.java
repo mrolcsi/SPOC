@@ -1,6 +1,7 @@
 package hu.mrolcsi.android.spoc.gallery.search;
 
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.Loader;
@@ -10,7 +11,7 @@ import android.text.TextUtils;
 import android.view.*;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import hu.mrolcsi.android.spoc.database.model.Image;
+import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.main.ThumbnailsFragment;
@@ -119,13 +120,10 @@ public class SearchResultsFragment extends ThumbnailsFragment {
 
         mQuery = searchText;
 
-        String[] projection = new String[]{"_id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN};
-        String selection = "lower(" + Image.COLUMN_FILENAME + ") LIKE lower(?)";
-        String[] selectionArgs = new String[]{"%" + searchText + "%"};
-
-        mLoader.setProjection(projection);
-        mLoader.setSelection(selection);
-        mLoader.setSelectionArgs(selectionArgs);
+        mLoader.setUri(Uri.withAppendedPath(SPOCContentProvider.SEARCH_URI, searchText));
+        mLoader.setProjection(null);
+        mLoader.setSelection(null);
+        mLoader.setSelectionArgs(null);
 
         mLoader.startLoading();
     }

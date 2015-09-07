@@ -17,7 +17,7 @@ import android.view.Display;
 import android.view.WindowManager;
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
-import hu.mrolcsi.android.spoc.database.models.Image;
+import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 import java.util.concurrent.ExecutionException;

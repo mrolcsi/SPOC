@@ -26,7 +26,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 4;
+    public static final int DATABASE_VERSION = 5;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -93,7 +93,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
                 Log.w(getClass().getSimpleName(), e);
             }
         }
-        if (oldVersion < 4) {
+        if (oldVersion < 5) {
             //add LabelSearch view
             database.execSQL("DROP VIEW IF EXISTS " + LabelSearchView.VIEW_NAME);
             database.execSQL(LabelSearchView.CREATE_SQL);

@@ -11,8 +11,10 @@ import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
+import hu.mrolcsi.android.spoc.database.model.view.LabelSearchView;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,6 +30,7 @@ public final class SPOCContentProvider extends ContentProvider {
     public static final Uri IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Image.TABLE_NAME);
     public static final Uri LABELS_URI = Uri.withAppendedPath(CONTENT_URI, Label.TABLE_NAME);
     public static final Uri LABELS_2_IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Label2Image.TABLE_NAME);
+    public static final Uri SEARCH_URI = Uri.withAppendedPath(CONTENT_URI, "search");
 
     private static final int IMAGES_LIST = 10;
     private static final int IMAGE_BY_ID = 11;
@@ -37,6 +40,7 @@ public final class SPOCContentProvider extends ContentProvider {
     private static final int LABEL_BY_NAME = 22;
     private static final int LABELS_BY_IMAGE_ID = 30;
     private static final int LABELS_2_IMAGES = 40;
+    private static final int SEARCH = 50;
     //and so on
     private static final UriMatcher URI_MATCHER;
 
@@ -52,6 +56,8 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label2Image.COLUMN_IMAGE_ID + "/#", LABELS_BY_IMAGE_ID);
 
         URI_MATCHER.addURI(AUTHORITY, Label2Image.TABLE_NAME, LABELS_2_IMAGES);
+
+        URI_MATCHER.addURI(AUTHORITY, "search/*", SEARCH);
     }
 
     private DatabaseHelper dbHelper;
@@ -104,6 +110,13 @@ public final class SPOCContentProvider extends ContentProvider {
                 builder.setTables(Label.TABLE_NAME + "INNER JOIN " + Label2Image.TABLE_NAME + " ON " + Label.TABLE_NAME + "._id" + " = " + Label2Image.COLUMN_LABEL_ID);
                 builder.appendWhere(Label2Image.COLUMN_IMAGE_ID + "=" + uri.getLastPathSegment());
                 break;
+            case SEARCH:
+                if (projection == null) {
+                    projection = new String[]{"DISTINCT _id", Image.COLUMN_FILENAME};
+                }
+                builder.setTables(LabelSearchView.VIEW_NAME);
+                builder.appendWhere(Image.COLUMN_FILENAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase(Locale.getDefault()) + "%' OR " + Label.COLUMN_NAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase() + "%'");
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
         }
@@ -122,18 +135,20 @@ public final class SPOCContentProvider extends ContentProvider {
         final int match = URI_MATCHER.match(uri);
         switch (match) {
             case IMAGES_LIST:
-                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.images";
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Image.TABLE_NAME;
             case IMAGE_BY_ID:
             case IMAGE_BY_MEDIASTORE_ID:
-                return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.images";
+                return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Image.TABLE_NAME;
             case LABELS_LIST:
             case LABELS_BY_IMAGE_ID:
-                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.labels";
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Label.TABLE_NAME;
             case LABEL_BY_ID:
             case LABEL_BY_NAME:
-                return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.labels";
+                return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Label.TABLE_NAME;
             case LABELS_2_IMAGES:
-                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database.labels2images";
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Label2Image.TABLE_NAME;
+            case SEARCH:
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + LabelSearchView.VIEW_NAME;
             default:
                 return null;
         }
