@@ -8,7 +8,6 @@ import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -25,6 +24,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ExpandableListView;
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
@@ -45,7 +45,7 @@ public final class GalleryActivity extends AppCompatActivity {
     private static final String DATA_CACHE_BUILDER_SERVICE = "SPOC.Gallery.CacheBuilder";
 
     private DrawerLayout mDrawerLayout;
-    private NavigationView mNavigationView;
+    private ExpandableListView mNavigation;
     private ActionBarDrawerToggle mDrawerToggle;
 
     private ISPOCFragment mCurrentFragment;
@@ -54,8 +54,6 @@ public final class GalleryActivity extends AppCompatActivity {
     private boolean mIsFirstStart = true;
     private CacheBuilderReceiver mCacheBuilderReceiver;
     private Intent mServiceIntent;
-    private boolean mIsRefreshing = true;
-    private MenuItem mRefreshMenuItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +63,7 @@ public final class GalleryActivity extends AppCompatActivity {
         loadRetainedData();
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mNavigationView = (NavigationView) findViewById(R.id.navigation);
+        mNavigation = (ExpandableListView) findViewById(R.id.navigation);
 
         mCacheBuilderReceiver = new CacheBuilderReceiver();
 
@@ -162,26 +160,48 @@ public final class GalleryActivity extends AppCompatActivity {
     }
 
     private void setUpNavigationView() {
-        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+
+        final NavigationAdapter navigationAdapter = new NavigationAdapter(this);
+        mNavigation.setAdapter(navigationAdapter);
+        mNavigation.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
             @Override
-            public boolean onNavigationItemSelected(MenuItem menuItem) {
-                //switch (menuItem.getId()) case
-                //replace fragment
-
-                int id = menuItem.getItemId();
-                switch (id) {
-                    case R.id.navigation_settings:
-                        swapFragment(new SettingsFragment());
-                        break;
-                    case R.id.navigation_home:
-                    default:
-                        swapFragment(new ThumbnailsFragment());
-                        break;
+            public void onGroupExpand(int i) {
+                final NavigationAdapter.NavigationItem groupItem = (NavigationAdapter.NavigationItem) navigationAdapter.getGroup(i);
+                if (groupItem.isExpandable) {
+                    groupItem.isExpanded = true;
                 }
+            }
+        });
+        mNavigation.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+            @Override
+            public void onGroupCollapse(int i) {
+                final NavigationAdapter.NavigationItem groupItem = (NavigationAdapter.NavigationItem) navigationAdapter.getGroup(i);
+                if (groupItem.isExpandable) {
+                    groupItem.isExpanded = false;
+                }
+            }
+        });
+        mNavigation.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+            @Override
+            public boolean onGroupClick(ExpandableListView expandableListView, View view, int i, long l) {
 
-                menuItem.setChecked(true);
-                mDrawerLayout.closeDrawers();
-                return false;
+                // http://stackoverflow.com/questions/10318642/highlight-for-selected-item-in-expandable-list
+                final long packedPosition = ExpandableListView.getPackedPositionForGroup(i);
+                expandableListView.setItemChecked(expandableListView.getFlatListPosition(packedPosition), true);
+
+                //replace fragment
+                switch (i) {
+                    case 0:
+                        swapFragment(new ThumbnailsFragment());
+                        mDrawerLayout.closeDrawers();
+                        return false;
+                    case 6:
+                        swapFragment(new SettingsFragment());
+                        mDrawerLayout.closeDrawers();
+                        return false;
+                    default:
+                        return false;
+                }
             }
         });
     }
@@ -236,9 +256,9 @@ public final class GalleryActivity extends AppCompatActivity {
             actionBar.setDisplayShowTitleEnabled(true);
             actionBar.setTitle(mCurrentFragment.getTitle());
         }
-        final MenuItem item = mNavigationView.getMenu().findItem(mCurrentFragment.getNavigationItemId());
-        if (item != null)
-            item.setChecked(true);
+//        final MenuItem item = mNavigation.getMenu().findItem(mCurrentFragment.getNavigationItemId());
+//        if (item != null)
+//            item.setChecked(true);
     }
 
     @Override

@@ -6,7 +6,7 @@
             android:id="@+id/navigation_home"
             android:checked="true"
             android:icon="@drawable/ic_dashboard"
-            android:title="@string/title_home" />
+            android:title="@string/navigation_home" />
 
         <item
             android:id="@+id/navigation_date"

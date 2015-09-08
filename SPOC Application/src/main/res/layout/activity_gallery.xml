@@ -36,13 +36,16 @@
 
     </android.support.design.widget.CoordinatorLayout>
 
-    <android.support.design.widget.NavigationView
+    <ExpandableListView
         android:id="@+id/navigation"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:background="?android:attr/windowBackground"
+        android:childIndicator="@null"
+        android:choiceMode="singleChoice"
         android:fitsSystemWindows="true"
+        android:groupIndicator="@null"
         app:menu="@menu/navigation" />
 
 </hu.mrolcsi.android.spoc.gallery.common.widgets.DrawerLayout>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/navigation_itemHeight"
+                android:foreground="@drawable/activated_background_material">
+
+    <ImageView
+        android:id="@android:id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="@dimen/navigation_iconMargin"
+        android:layout_marginStart="@dimen/navigation_iconMargin"
+        android:src="@drawable/ic_dashboard"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@android:id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="48dp"
+        android:layout_marginStart="@dimen/navigation_textMargin"
+        android:layout_toLeftOf="@+id/groupIndicator"
+        android:layout_toStartOf="@+id/groupIndicator"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:text="Navigation Item"
+        android:textSize="14sp" />
+
+    <ImageView
+        android:id="@+id/groupIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="@dimen/navigation_iconMargin"
+        android:layout_marginStart="@dimen/navigation_iconMargin"
+        android:paddingEnd="@dimen/navigation_iconMargin"
+        android:paddingRight="@dimen/navigation_iconMargin"
+        android:src="@drawable/triangular_arrow_down"
+        android:visibility="invisible" />
+</RelativeLayout>

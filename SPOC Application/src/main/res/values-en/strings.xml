@@ -86,7 +86,7 @@
     <string name="settings_whitelist_title">Whitelist</string>
     <string name="splash_button_continueInBackground">Continue in background</string>
     <string name="title_activity_gallery">Gallery</string>
-    <string name="title_home">Home</string>
+    <string name="navigation_home">Home</string>
     <string name="yes">Yes</string>
     <string name="splash_contentDescription_logo">SPOC Logo</string>
     <string name="contentDescription_thumbnail">Thumbnail</string>

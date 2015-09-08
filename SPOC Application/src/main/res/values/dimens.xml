@@ -19,4 +19,10 @@
     <dimen name="fab_compat_margin">0dp</dimen>
     <dimen name="logo_size">96dp</dimen>
     <dimen name="logo_offset">-36dp</dimen>
+
+    <!-- Material navigation -->
+    <dimen name="navigation_textSize">14sp</dimen>
+    <dimen name="navigation_iconMargin">16dp</dimen>
+    <dimen name="navigation_textMargin">72dp</dimen>
+    <dimen name="navigation_itemHeight">48dp</dimen>
 </resources>

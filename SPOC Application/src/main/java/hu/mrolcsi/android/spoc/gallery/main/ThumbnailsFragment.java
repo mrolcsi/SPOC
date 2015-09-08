@@ -166,8 +166,10 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-                ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
-                swipeRefreshLayout.setRefreshing(GeneralUtils.isServiceRunning(manager, DatabaseBuilderService.class));
+                if (getActivity() != null) {
+                    ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
+                    swipeRefreshLayout.setRefreshing(GeneralUtils.isServiceRunning(manager, DatabaseBuilderService.class));
+                }
             }
         }, 1000);
     }
