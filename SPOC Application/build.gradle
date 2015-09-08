@@ -59,10 +59,11 @@ def makeVersionNameRelease = { ->
 
         logger.info("*** Version Name: " + versionName.toString().trim())
 
-        if (lastCommits.toString().equals(''))
+        if (Integer.parseInt(lastCommits.toString().trim()) == 0) {
             return 'v' + versionName.toString().trim()
-        else
+        } else {
             return 'v' + versionName.toString().trim() + '.' + lastCommits.toString().trim()
+        }
     }
     catch (ignored) {
         logger.error(ignored.printStackTrace())
