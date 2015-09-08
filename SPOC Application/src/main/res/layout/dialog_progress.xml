@@ -16,9 +16,11 @@
         android:layout_alignBottom="@+id/pbSpinner"
         android:layout_alignTop="@+id/pbSpinner"
         android:layout_marginLeft="@dimen/margin_small"
+        android:layout_marginStart="@dimen/margin_small"
+        android:layout_toEndOf="@+id/pbSpinner"
         android:layout_toRightOf="@+id/pbSpinner"
         android:gravity="center_vertical"
-        android:text="Doing something..." />
+        android:text="" />
 
     <ProgressBar
         android:id="@+id/pbHorizontal"
@@ -33,14 +35,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/pbHorizontal"
+        android:layout_alignStart="@+id/pbHorizontal"
         android:layout_below="@+id/pbHorizontal"
-        android:text="16/152" />
+        android:text="" />
 
     <TextView
         android:id="@+id/tvPercent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/pbHorizontal"
         android:layout_alignRight="@+id/pbHorizontal"
         android:layout_below="@+id/pbHorizontal"
-        android:text="11%" />
+        android:text="" />
+
 </RelativeLayout>

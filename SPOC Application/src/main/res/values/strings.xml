@@ -1,13 +1,9 @@
 <resources>
     <string name="app_name" translatable="false">SPOC</string>
-    <string name="title_activity_gallery">Gallery</string>
-
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-
     <string name="cab_deselectAll">Deselect All</string>
     <string name="cab_itemsSelectedFormat">%1$d selected</string>
     <string name="cab_selectAll">Select All</string>
+    <string name="cancel">Cancel</string>
     <string name="close">Close</string>
     <string name="details_action_delete">Delete</string>
     <string name="details_action_rotate">Rotate</string>
@@ -41,11 +37,19 @@
     <string name="dialog_message_deletePicture">Are you sure you want do delete this picture?</string>
     <string name="dialog_title_areYouSure">Are you sure?</string>
     <string name="dialog_title_somethingWentWrong">Something went wrong :/</string>
+    <string name="error_noPictures">No pictures found.</string>
+    <string name="error_noResults">No pictures found.</string>
+    <string name="message_deletingPictures">Deleting…</string>
     <string name="message_multiplePicturesDeleted">%d pictures deleted.</string>
+    <string name="message_multiplePicturesFound">%d pictures found.</string>
+    <string name="message_onePictureFound">%d picture found.</string>
     <string name="message_pictureDeleted">Picture deleted.</string>
     <string name="message_pictureNotDeleted">Picture could not be deleted.</string>
     <string name="message_pictureNotDeleted_fileNotExist">Picture could not be deleted. File does not exist anymore.</string>
+    <string name="message_preparingToShare">Preparing to share…</string>
     <string name="navigation_date">Date</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_folders">Folders</string>
     <string name="navigation_people">People</string>
     <string name="navigation_places">Places</string>
@@ -57,38 +61,34 @@
     <string name="preferences_about_title">About</string>
     <string name="preferences_webPage_summary" translatable="false">http://github.com/mrolcsi/SPOC</string>
     <string name="preferences_webPage_title">Visit webpage</string>
+    <string name="refresh_title">Refresh</string>
+    <string name="search_hint">Search in filenames… (more later)</string>
+    <string name="search_message_helpText"><![CDATA[Search in filenames,<br>directories, like <i>Pictures</i> or <i>Download</i>,<br>dates, like <i>2015</i> or <i>august</i>,<br>locations, like <i>Paris</i> or <i>France</i>.]]></string>
+    <string name="search_title">Search</string>
+    <string name="service_cache_message_done">Done! You can now freely use the app!</string>
+    <string name="service_cache_message_firstTime">This might take a few minutes depending how many pictures you have.\n\nDon\'t worry, this only needs to be done once.</string>
     <string name="service_cache_title">Preparing your photos…</string>
     <string name="settings_about_label_buildNumber">Build Number:</string>
     <string name="settings_about_label_version">Version:</string>
     <string name="settings_about_title">About</string>
+    <string name="settings_blacklist_help"><![CDATA[Images inside directories included in the <b>Blacklist</b> will not appear in your Gallery.]]></string>
+    <string name="settings_blacklist_summary">Select directories to exclude from Gallery</string>
+    <string name="settings_blacklist_title">Blacklist</string>
+    <string name="settings_directoryList_add">Add directory…</string>
+    <string name="settings_gallery_showCameraButton_summary">Show Camera quick launch button</string>
+    <string name="settings_gallery_showCameraButton_title">Camera Quick Launch</string>
+    <string name="settings_message_alreadyInTheList">Already in the list.</string>
+    <string name="settings_message_directoryAdded">\'%s\' added.</string>
+    <string name="settings_message_listIsEmpty">The list is empty.</string>
+    <string name="settings_message_removeThisDirectory">Do you want to remove this directory from the list?</string>
+    <string name="settings_message_restartNote"><![CDATA[<i>Note: Use Swipe-to-Refresh gesture when seeing thumbnails to make changes appear.</i>]]></string>
+    <string name="settings_whitelist_help"><![CDATA[If by any chance you don\'t see some of your images in the Gallery, add the directories containing those images to the <b>Whitelist</b>.]]></string>
+    <string name="settings_whitelist_summary">Select directories to include in Gallery</string>
+    <string name="settings_whitelist_title">Whitelist</string>
+    <string name="splash_button_continueInBackground">Continue in background</string>
+    <string name="title_activity_gallery">Gallery</string>
     <string name="title_home">Home</string>
     <string name="yes">Yes</string>
-    <string name="message_deletingPictures">Deleting…</string>
-    <string name="message_preparingToShare">Preparing to share…</string>
-    <string name="service_cache_message_firstTime">This might take a few minutes depending how many pictures you have.\n\nDon\'t worry, this only needs to be done once.</string>
-    <string name="service_cache_message_done">Done! You can now freely use the app!</string>
-    <string name="settings_gallery_showCameraButton_title">Camera Quick Launch</string>
-    <string name="settings_gallery_showCameraButton_summary">Show Camera quick launch button</string>
-    <string name="error_noPictures">No pictures found.</string>
-    <string name="settings_whitelist_title">Whitelist</string>
-    <string name="settings_blacklist_title">Blacklist</string>
-    <string name="settings_whitelist_summary">Select directories to include in Gallery</string>
-    <string name="settings_blacklist_summary">Select directories to exclude from Gallery</string>
-    <string name="settings_directoryList_add">Add directory…</string>
-    <string name="settings_message_removeThisDirectory">Do you want to remove this directory from the list?</string>
-    <string name="settings_message_directoryAdded">\'%s\' added.</string>
-    <string name="settings_message_alreadyInTheList">Already in the list.</string>
-    <string name="settings_message_listIsEmpty">The list is empty.</string>
-    <string name="settings_whitelist_help"><![CDATA[If by any chance you don\'t see some of your images in the Gallery, add the directories containing those images to the <b>Whitelist</b>.]]></string>
-    <string name="settings_blacklist_help"><![CDATA[Images inside directories included in the <b>Blacklist</b> will not appear in your Gallery.]]></string>
-    <string name="settings_message_restartNote"><![CDATA[<i>Note: You must restart the application for changes to take effect!</i>)]]></string>
-    <string name="search_title">Search</string>
-    <string name="search_hint">Search in filenames… (more later)</string>
-    <string name="error_noResults">No pictures found.</string>
-    <string name="message_onePictureFound">%d picture found.</string>
-    <string name="message_multiplePicturesFound">%d pictures found.</string>
-    <string name="refresh_title">Refresh</string>
-    <string name="cancel">Cancel</string>
-    <string name="splash_button_continueInBackground">Continue in background</string>
-    <string name="search_message_helpText"><![CDATA[Search in filenames,<br>directories, like <i>Pictures</i> or <i>Download</i>,<br>dates, like <i>2015</i> or <i>august</i>,<br>locations, like <i>Paris</i> or <i>France</i>.]]></string>
+    <string name="splash_contentDescription_logo">SPOC Logo</string>
+    <string name="contentDescription_thumbnail">Thumbnail</string>
 </resources>

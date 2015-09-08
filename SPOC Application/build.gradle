@@ -94,8 +94,8 @@ def makeVersionNameDebug = { ->
 }
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
 
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
@@ -109,7 +109,7 @@ android {
     defaultConfig {
         applicationId "hu.mrolcsi.android.spoc"
         minSdkVersion 10
-        targetSdkVersion 22
+        targetSdkVersion 23
         versionCode makeVersionCode()
         versionName makeVersionNameDebug()
     }
@@ -130,6 +130,10 @@ android {
             signingConfig signingConfigs.release
         }
     }
+
+    lintOptions {
+        disable 'IconDensities'
+    }
 }
 
 dependencies {
@@ -138,7 +142,7 @@ dependencies {
     compile project(':layouts')
     compile project(':FileBrowser')
     compile 'com.android.support:design:22.2.0'
-    compile 'com.android.support:support-v4:22.2.1'
+    compile 'com.android.support:support-v4:23.0.1'
     compile 'com.android.support:recyclerview-v7:21.0.3'
     compile 'com.github.chrisbanes.photoview:library:1.2.3'
     compile 'com.github.machinarius:preferencefragment:0.1.2'

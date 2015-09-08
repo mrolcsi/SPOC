@@ -44,7 +44,7 @@ public class CacheBuilderReceiver extends BroadcastReceiver {
                 mNotificationBuilder.setPriority(NotificationCompat.PRIORITY_LOW);
                 mNotificationBuilder.setOngoing(true);
                 mNotificationBuilder.setCategory(NotificationCompat.CATEGORY_PROGRESS);
-                mNotificationBuilder.setSmallIcon(R.drawable.ic_notification_small);
+                mNotificationBuilder.setSmallIcon(R.drawable.stack_of_photos_bw);
                 mNotificationBuilder.setContentTitle(context.getString(R.string.service_cache_title));
             }
 

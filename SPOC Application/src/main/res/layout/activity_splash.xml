@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -15,6 +15,7 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="@dimen/margin_medium"
+            android:contentDescription="@string/splash_contentDescription_logo"
             android:src="@drawable/stack_of_photos_bw" />
 
         <ProgressBar
@@ -41,7 +42,8 @@
             android:layout_height="wrap_content"
             android:layout_above="@+id/progressBar"
             android:layout_alignLeft="@+id/progressBar"
-            android:text="16/152"
+            android:layout_alignStart="@+id/progressBar"
+            android:text=""
             android:visibility="gone" />
 
         <TextView
@@ -49,8 +51,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_above="@+id/progressBar"
+            android:layout_alignEnd="@+id/progressBar"
             android:layout_alignRight="@+id/progressBar"
-            android:text="16%"
+            android:text=""
             android:visibility="gone" />
 
         <TextView
@@ -76,4 +79,4 @@
             android:visibility="gone" />
 
     </RelativeLayout>
-</FrameLayout>
+</merge>

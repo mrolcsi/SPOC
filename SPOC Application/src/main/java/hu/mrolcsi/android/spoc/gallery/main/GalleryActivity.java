@@ -186,7 +186,7 @@ public final class GalleryActivity extends AppCompatActivity {
         });
     }
 
-    @TargetApi(11)
+    @TargetApi(21)
     private void setUpDrawerToggle() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 

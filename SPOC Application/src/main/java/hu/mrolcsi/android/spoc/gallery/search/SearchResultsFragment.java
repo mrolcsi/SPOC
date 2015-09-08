@@ -109,6 +109,10 @@ public class SearchResultsFragment extends ThumbnailsFragment {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 mSearchView.clearFocus();
+
+                mImagesLoader.reset();
+                performSearch(query);
+
                 return true;
             }
 
@@ -120,8 +124,8 @@ public class SearchResultsFragment extends ThumbnailsFragment {
                 mSuggestionsLoader.setSelectionArgs(new String[]{newText.toLowerCase(Locale.getDefault()) + "%"});
                 mSuggestionsLoader.startLoading();
 
-                mImagesLoader.reset();
-                performSearch(newText);
+                //mImagesLoader.reset();
+                //performSearch(newText);
 
                 return true;
             }

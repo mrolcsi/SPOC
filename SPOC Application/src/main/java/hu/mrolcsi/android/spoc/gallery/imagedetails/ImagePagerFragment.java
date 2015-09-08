@@ -21,7 +21,6 @@ import android.util.Log;
 import android.view.*;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
@@ -29,7 +28,6 @@ import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
-import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
 import hu.mrolcsi.android.spoc.gallery.main.ThumbnailsFragment;
@@ -112,17 +110,6 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
 
             tvLocation = (TextView) mRootView.findViewById(R.id.tvLocation);
             tvDateTaken = (TextView) mRootView.findViewById(R.id.tvDateTaken);
-
-            if (BuildConfig.DEBUG) {
-                ImageButton btnRefresh = (ImageButton) mRootView.findViewById(R.id.btnRefresh);
-                btnRefresh.setVisibility(View.VISIBLE);
-                btnRefresh.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        updateInfo();
-                    }
-                });
-            }
 
             vpDetailsPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
                 @Override

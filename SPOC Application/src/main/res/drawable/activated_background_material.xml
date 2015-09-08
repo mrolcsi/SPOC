@@ -13,8 +13,11 @@
      limitations under the License.
 -->
 
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_activated="true">
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+
+    <item android:state_activated="true"
+          tools:ignore="UnusedAttribute">
         <shape android:shape="rectangle">
             <stroke android:width="@dimen/margin_xsmall" android:color="@color/ltGray_semiTransparent" />
             <solid android:color="@color/ltGray_semiTransparent" />
@@ -29,4 +32,5 @@
     <item>
         <color android:color="@android:color/transparent" />
     </item>
+
 </selector>
