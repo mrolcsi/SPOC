@@ -1,9 +1,7 @@
 package hu.mrolcsi.android.spoc.gallery.main;
 
 import android.annotation.TargetApi;
-import android.app.ActivityManager;
 import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -27,15 +25,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
-import hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.search.SearchResultsFragment;
 import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderReceiver;
@@ -59,7 +53,6 @@ public final class GalleryActivity extends AppCompatActivity {
     private RetainedFragment mRetainedFragment;
     private boolean mIsFirstStart = true;
     private CacheBuilderReceiver mCacheBuilderReceiver;
-    private DatabaseBuilderWatcher mDatabaseBuilderReceiver;
     private Intent mServiceIntent;
     private boolean mIsRefreshing = true;
     private MenuItem mRefreshMenuItem;
@@ -75,7 +68,6 @@ public final class GalleryActivity extends AppCompatActivity {
         mNavigationView = (NavigationView) findViewById(R.id.navigation);
 
         mCacheBuilderReceiver = new CacheBuilderReceiver();
-        mDatabaseBuilderReceiver = new DatabaseBuilderWatcher();
 
         setUpDrawerToggle();
         setUpNavigationView();
@@ -121,11 +113,6 @@ public final class GalleryActivity extends AppCompatActivity {
         IntentFilter mCacheBuilderIntentFilter = new IntentFilter();
         mCacheBuilderIntentFilter.addAction(CacheBuilderService.BROADCAST_ACTION_CACHING);
         LocalBroadcastManager.getInstance(this).registerReceiver(mCacheBuilderReceiver, mCacheBuilderIntentFilter);
-
-        IntentFilter mDatabaseBuilderIntentFilter = new IntentFilter();
-        mDatabaseBuilderIntentFilter.addAction(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY);
-        mDatabaseBuilderIntentFilter.addAction(DatabaseBuilderService.BROADCAST_ACTION_FINISHED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(mDatabaseBuilderReceiver, mDatabaseBuilderIntentFilter);
     }
 
     @Override
@@ -142,9 +129,6 @@ public final class GalleryActivity extends AppCompatActivity {
 
         if (mCacheBuilderReceiver != null) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mCacheBuilderReceiver);
-        }
-        if (mDatabaseBuilderReceiver != null) {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(mDatabaseBuilderReceiver);
         }
 
         final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -275,20 +259,6 @@ public final class GalleryActivity extends AppCompatActivity {
             }
         });
 
-        mRefreshMenuItem = menu.findItem(R.id.menuRefresh);
-        final View refreshActionView = MenuItemCompat.getActionView(mRefreshMenuItem);
-        final Animation refreshAnimation = AnimationUtils.loadAnimation(this, R.anim.refresh);
-        refreshAnimation.setRepeatCount(Animation.INFINITE);
-        refreshActionView.startAnimation(refreshAnimation);
-        mRefreshMenuItem.setVisible(mIsRefreshing);
-
-        if (!isServiceRunning(DatabaseBuilderService.class)) {
-            mIsRefreshing = false;
-            final ImageView imageView = (ImageView) MenuItemCompat.getActionView(mRefreshMenuItem);
-            imageView.setImageDrawable(null);
-            menu.removeItem(R.id.menuRefresh);
-        }
-
         restoreActionBar();
         return true;
     }
@@ -338,29 +308,5 @@ public final class GalleryActivity extends AppCompatActivity {
         transaction.commit();
 
         Log.v(getClass().getSimpleName(), "Fragment restored from stack: " + mCurrentFragment.toString());
-    }
-
-    public boolean isServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private class DatabaseBuilderWatcher extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_FINISHED)) {
-                mIsRefreshing = false;
-
-                final ImageView imageView = (ImageView) MenuItemCompat.getActionView(mRefreshMenuItem);
-                imageView.setImageDrawable(null);
-
-                invalidateOptionsMenu();
-            }
-        }
     }
 }

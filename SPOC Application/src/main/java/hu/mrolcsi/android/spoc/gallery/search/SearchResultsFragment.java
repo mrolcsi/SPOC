@@ -37,6 +37,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
     private SuggestionAdapter mSuggestionsAdapter;
     private Bundle mSuggestionArgs = new Bundle();
     private CursorLoader mSuggestionsLoader;
+    private SearchView mSearchView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -83,9 +84,9 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         super.onCreateOptionsMenu(menu, inflater);
 
         final MenuItem searchItem = menu.findItem(R.id.menuSearch);
-        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        mSearchView = (SearchView) MenuItemCompat.getActionView(searchItem);
 
-        searchView.setQueryHint(getString(R.string.search_hint));
+        mSearchView.setQueryHint(getString(R.string.search_hint));
         MenuItemCompat.expandActionView(searchItem);
 
         MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
@@ -102,12 +103,12 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         });
 
         mSuggestionsAdapter = new SuggestionAdapter(getActivity());
-        searchView.setSuggestionsAdapter(mSuggestionsAdapter);
+        mSearchView.setSuggestionsAdapter(mSuggestionsAdapter);
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                searchView.clearFocus();
+                mSearchView.clearFocus();
                 return true;
             }
 
@@ -126,7 +127,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
             }
         });
 
-        searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
+        mSearchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
             @Override
             public boolean onSuggestionSelect(int position) {
                 return false;
@@ -136,12 +137,12 @@ public class SearchResultsFragment extends ThumbnailsFragment {
             public boolean onSuggestionClick(int position) {
                 final Cursor cursorWithSuggestion = (Cursor) mSuggestionsAdapter.getItem(position);
                 final String name = cursorWithSuggestion.getString(1);
-                searchView.setQuery(name, true);
+                mSearchView.setQuery(name, true);
                 return true;
             }
         });
 
-        searchView.setQuery(mQuery, true);
+        mSearchView.setQuery(mQuery, true);
 
     }
 
@@ -158,6 +159,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
                 mAdapter.swapCursor(null);
             }
             twList.setAdapter(null);
+            swipeRefreshLayout.setRefreshing(false);
             return;
         }
 
@@ -167,6 +169,8 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         mImagesLoader.setProjection(null);
         mImagesLoader.setSelection(null);
         mImagesLoader.setSelectionArgs(null);
+
+        swipeRefreshLayout.setRefreshing(true);
 
         mImagesLoader.startLoading();
     }
@@ -187,6 +191,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
             mAdapter.setUseColumnSpan(false);
             final String quantityString = getResources().getQuantityString(R.plurals.message_numberOfResults, data.getCount(), data.getCount());
             tvMessage.setText(quantityString);
+            swipeRefreshLayout.setRefreshing(false);
         }
     }
 
@@ -197,6 +202,10 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         if (loader.getId() == LabelTableLoader.ID) {
             mSuggestionsAdapter.changeCursor(null);
         }
+    }
 
+    @Override
+    public void onRefresh() {
+        //do nothing
     }
 }

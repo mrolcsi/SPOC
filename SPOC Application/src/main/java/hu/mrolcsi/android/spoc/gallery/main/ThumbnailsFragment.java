@@ -1,19 +1,23 @@
 package hu.mrolcsi.android.spoc.gallery.main;
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
+import android.content.*;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
@@ -24,7 +28,9 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.Toast;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
+import hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.common.utils.GeneralUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.HideOnScrollListener;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
@@ -41,7 +47,7 @@ import org.lucasr.twowayview.widget.TwoWayView;
  * Time: 21:12
  */
 
-public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks {
+public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks, SwipeRefreshLayout.OnRefreshListener {
 
     public static final String ARG_QUERY_BUNDLE = "SPOC.Gallery.Thumbnails.ARGUMENT_BUNDLE";
     private static final String ARG_LOADER_ID = "SPOC.Gallery.Thumbnails.LOADER_ID";
@@ -49,6 +55,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     protected CursorLoader mImagesLoader;
     protected FloatingActionButton fabSearch;
     protected TwoWayView twList;
+    protected SwipeRefreshLayout swipeRefreshLayout;
     private Parcelable mListInstanceState;
     private int mSavedOrientation = Configuration.ORIENTATION_UNDEFINED;
     private Integer mSavedPosition;
@@ -56,6 +63,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     private ItemSelectionSupport mItemSelectionSupport;
     private MenuItem mSearchMenuItem;
     private Bundle mQueryArgs = new Bundle();
+    private BroadcastReceiver mDatabaseWatcher = new DatabaseBuilderWatcher();
 
     @Override
     public int getNavigationItemId() {
@@ -149,6 +157,19 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
             }
         };
         twList.setOnScrollListener(hideOnScrollListener);
+
+        swipeRefreshLayout = (SwipeRefreshLayout) mRootView.findViewById(R.id.swipeRefresh);
+        swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.background_floating_material_dark);
+        swipeRefreshLayout.setColorSchemeResources(R.color.background_floating_material_light);
+        swipeRefreshLayout.setOnRefreshListener(this);
+
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
+                swipeRefreshLayout.setRefreshing(GeneralUtils.isServiceRunning(manager, DatabaseBuilderService.class));
+            }
+        }, 1000);
     }
 
     @Override
@@ -180,6 +201,11 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
             loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
         }
         mImagesLoader = (CursorLoader) getLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(getActivity(), this));
+
+        IntentFilter mDatabaseBuilderIntentFilter = new IntentFilter();
+        mDatabaseBuilderIntentFilter.addAction(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY);
+        mDatabaseBuilderIntentFilter.addAction(DatabaseBuilderService.BROADCAST_ACTION_FINISHED);
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mDatabaseWatcher, mDatabaseBuilderIntentFilter);
     }
 
     @Override
@@ -200,6 +226,8 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
         super.onDestroy();
 
         if (mActionMode != null) mActionMode.finish();
+
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mDatabaseWatcher);
     }
 
     @Override
@@ -326,7 +354,15 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
 
     }
 
-    class ActionModeCallback implements android.support.v7.view.ActionMode.Callback {
+    @Override
+    public void onRefresh() {
+        // restart database builder
+        Intent serviceIntent = new Intent(getActivity(), DatabaseBuilderService.class);
+        serviceIntent.putExtra(DatabaseBuilderService.ARG_FIRST_START, false);
+        getActivity().startService(serviceIntent);
+    }
+
+    protected class ActionModeCallback implements android.support.v7.view.ActionMode.Callback {
 
         @Override
         public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
@@ -375,6 +411,15 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
         public void onDestroyActionMode(ActionMode actionMode) {
             mActionMode = null;
             mItemSelectionSupport.clearChoices();
+        }
+    }
+
+    protected class DatabaseBuilderWatcher extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_FINISHED)) {
+                swipeRefreshLayout.setRefreshing(false);
+            }
         }
     }
 }
