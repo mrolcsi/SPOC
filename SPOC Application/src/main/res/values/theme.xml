@@ -3,14 +3,14 @@
 
     <style name="Theme.SPOC" parent="Theme.AppCompat.NoActionBar">
         <!-- colorPrimary is used for the default action bar background -->
-        <item name="colorPrimary">@color/holo_blue_dark</item>
+        <item name="colorPrimary">@android:color/transparent</item>
 
         <!-- colorPrimaryDark is used for the status bar -->
-        <item name="colorPrimaryDark">@android:color/background_dark</item>
+        <item name="colorPrimaryDark">@color/background_material_dark</item>
 
         <!-- colorAccent is used as the default value for colorControlActivated,
              which is used to tint widgets -->
-        <item name="colorAccent">@android:color/white</item>
+        <item name="colorAccent">@color/background_material_light</item>
 
         <!-- You can also set colorControlNormal, colorControlActivated
              colorControlHighlight, and colorSwitchThumbNormal. -->

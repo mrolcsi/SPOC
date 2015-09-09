@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="holo_blue_dark">#0099cc</color>
-    <color name="holo_blue_light">#33b5e5</color>
-    <color name="holo_blue_bright">#00ddff</color>
-    <color name="light_gray">#cccccc</color>
-    <color name="ltGray_semiTransparent">#88cccccc</color>
+    <color name="ltGray_semiTransparent">#88CCCCCC</color>
 </resources>

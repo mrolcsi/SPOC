@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.gallery.main;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -35,6 +36,8 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
         }
     }
 
+    @SuppressWarnings("deprecation")
+    @TargetApi(22)
     private NavigationItem createGroupItems(int i) {
         NavigationItem item = new NavigationItem();
 
