@@ -1,9 +1,9 @@
 <!-- A DrawerLayout is intended to be used as the top-level content view using match_parent for both width and height to consume the full space available. -->
 <hu.mrolcsi.android.spoc.gallery.common.widgets.DrawerLayout
+    android:id="@+id/drawer_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
@@ -36,16 +36,19 @@
 
     </android.support.design.widget.CoordinatorLayout>
 
-    <ExpandableListView
+    <hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView
         android:id="@+id/navigation"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:background="?android:attr/windowBackground"
+        android:childDivider="@null"
         android:childIndicator="@null"
         android:choiceMode="singleChoice"
+        android:divider="@null"
         android:fitsSystemWindows="true"
         android:groupIndicator="@null"
+        android:listSelector="@android:color/transparent"
         app:menu="@menu/navigation" />
 
 </hu.mrolcsi.android.spoc.gallery.common.widgets.DrawerLayout>

@@ -6,10 +6,10 @@ import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,7 +18,7 @@ import hu.mrolcsi.android.spoc.gallery.R;
  * Time: 15:39
  */
 
-public class NavigationAdapter extends BaseExpandableListAdapter {
+public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpandableListAdapter {
 
     private final Context mContext;
     private final LayoutInflater mInflater;
@@ -114,12 +114,6 @@ public class NavigationAdapter extends BaseExpandableListAdapter {
         return 7;
     }
 
-    @Override
-    public int getChildrenCount(int i) {
-        if (i == 0 || i == getGroupCount() - 1) return 0;
-        return 3;
-    }
-
     @SuppressWarnings("deprecation")
     @Override
     public Object getGroup(int i) {
@@ -201,9 +195,18 @@ public class NavigationAdapter extends BaseExpandableListAdapter {
     }
 
     @Override
-    public View getChildView(int i, int i1, boolean b, View view, ViewGroup viewGroup) {
+    public View getRealChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         // TODO
-        return mInflater.inflate(R.layout.design_navigation_item, viewGroup, false);
+        if (convertView == null) {
+            convertView = mInflater.inflate(R.layout.navigation_child_item, parent, false);
+        }
+        return convertView;
+    }
+
+    @Override
+    public int getRealChildrenCount(int groupPosition) {
+        if (groupPosition == 0 || groupPosition == getGroupCount() - 1) return 0;
+        return 3;
     }
 
     @Override
@@ -222,12 +225,5 @@ public class NavigationAdapter extends BaseExpandableListAdapter {
         Drawable icon;
         boolean isExpandable;
         boolean isExpanded = false;
-
-        View.OnClickListener onClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                isExpanded = !isExpanded;
-            }
-        };
     }
 }

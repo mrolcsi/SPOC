@@ -217,7 +217,7 @@ public class DirectoryListFragment extends PreferenceFragment implements ISPOCFr
     }
 
     @Override
-    public int getNavigationItemId() {
+    public int getNavigationItemPosition() {
         return R.id.navigation_settings;
     }
 

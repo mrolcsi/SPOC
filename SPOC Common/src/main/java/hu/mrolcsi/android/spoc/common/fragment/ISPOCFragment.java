@@ -9,7 +9,7 @@ package hu.mrolcsi.android.spoc.common.fragment;
 
 public interface ISPOCFragment {
 
-    int getNavigationItemId();
+    int getNavigationItemPosition();
 
     String getTitle();
 

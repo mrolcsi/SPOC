@@ -66,11 +66,6 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     private BroadcastReceiver mDatabaseWatcher = new DatabaseBuilderWatcher();
 
     @Override
-    public int getNavigationItemId() {
-        return R.id.navigation_home;
-    }
-
-    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);

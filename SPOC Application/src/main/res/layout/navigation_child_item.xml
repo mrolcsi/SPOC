@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/navigation_itemHeight"
-                android:foreground="@drawable/activated_background_material">
+                android:background="@drawable/navigation_child_background">
 
     <ImageView
         android:id="@android:id/icon"

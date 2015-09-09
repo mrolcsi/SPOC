@@ -26,12 +26,13 @@ import java.util.List;
 
 public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
 
+    public static final String ARG_NAVIGATION_POSITION = "SPOC.NavigationPosition";
     private static List<OnFullscreenChangeListener> onFullscreenChangeListeners = new ArrayList<>();
     protected View mRootView;
 
     @Override
-    public int getNavigationItemId() {
-        return -1;
+    public int getNavigationItemPosition() {
+        return getArguments().getInt(ARG_NAVIGATION_POSITION, -1);
     }
 
     @Override

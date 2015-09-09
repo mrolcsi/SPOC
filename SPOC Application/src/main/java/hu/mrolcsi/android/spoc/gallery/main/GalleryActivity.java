@@ -28,9 +28,11 @@ import android.widget.ExpandableListView;
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
+import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
 import hu.mrolcsi.android.spoc.gallery.search.SearchResultsFragment;
 import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderReceiver;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
@@ -43,6 +45,7 @@ public final class GalleryActivity extends AppCompatActivity {
     public static final String DATA_CURRENT_FRAGMENT = "SPOC.Gallery.Navigation.CurrentFragment";
     private static final String DATA_IS_FIRST_START = "SPOC.Gallery.IsFirstStart";
     private static final String DATA_CACHE_BUILDER_SERVICE = "SPOC.Gallery.CacheBuilder";
+    private static final String DATA_LAST_NAVIGATION_POSITION = "SPOC:Gallery.Navigation.LastView";
 
     private DrawerLayout mDrawerLayout;
     private ExpandableListView mNavigation;
@@ -60,12 +63,13 @@ public final class GalleryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
 
-        loadRetainedData();
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mNavigation = (ExpandableListView) findViewById(R.id.navigation);
+        mNavigation = (AnimatedExpandableListView) findViewById(R.id.navigation);
 
         mCacheBuilderReceiver = new CacheBuilderReceiver();
+
+        loadRetainedData();
 
         setUpDrawerToggle();
         setUpNavigationView();
@@ -99,9 +103,17 @@ public final class GalleryActivity extends AppCompatActivity {
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
 
-        if (mCurrentFragment == null)
-            mCurrentFragment = new ThumbnailsFragment();
-        swapFragment(mCurrentFragment);
+        if (mCurrentFragment == null) {
+            Bundle args = new Bundle();
+            args.putInt(SPOCFragment.ARG_NAVIGATION_POSITION, 0);
+
+            final ThumbnailsFragment newFragment = new ThumbnailsFragment();
+            newFragment.setArguments(args);
+
+            swapFragment(newFragment);
+        } else {
+            swapFragment(mCurrentFragment);
+        }
     }
 
     @Override
@@ -183,25 +195,50 @@ public final class GalleryActivity extends AppCompatActivity {
         });
         mNavigation.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
-            public boolean onGroupClick(ExpandableListView expandableListView, View view, int i, long l) {
+            public boolean onGroupClick(ExpandableListView listView, View groupView, int groupPosition, long groupId) {
 
-                // http://stackoverflow.com/questions/10318642/highlight-for-selected-item-in-expandable-list
-                final long packedPosition = ExpandableListView.getPackedPositionForGroup(i);
-                expandableListView.setItemChecked(expandableListView.getFlatListPosition(packedPosition), true);
+                int index = listView.getFlatListPosition(ExpandableListView.getPackedPositionForGroup(groupPosition));
+
+                Bundle args = new Bundle();
+                args.putInt(SPOCFragment.ARG_NAVIGATION_POSITION, index);
 
                 //replace fragment
-                switch (i) {
+                switch (groupPosition) {
                     case 0:
-                        swapFragment(new ThumbnailsFragment());
+                        if (listView.getCheckedItemPosition() != index) {
+                            final ThumbnailsFragment newFragment = new ThumbnailsFragment();
+                            newFragment.setArguments(args);
+                            swapFragment(newFragment);
+                        }
                         mDrawerLayout.closeDrawers();
-                        return false;
+                        return true;
                     case 6:
-                        swapFragment(new SettingsFragment());
+                        if (listView.getCheckedItemPosition() != index) {
+                            final SettingsFragment newFragment = new SettingsFragment();
+                            newFragment.setArguments(args);
+                            swapFragment(newFragment);
+                        }
                         mDrawerLayout.closeDrawers();
-                        return false;
+                        return true;
                     default:
-                        return false;
+                        if (listView.isGroupExpanded(groupPosition)) {
+                            ((AnimatedExpandableListView) mNavigation).collapseGroupWithAnimation(groupPosition);
+                        } else {
+                            ((AnimatedExpandableListView) mNavigation).expandGroupWithAnimation(groupPosition);
+                        }
+                        return true;
                 }
+            }
+        });
+        mNavigation.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView listView, View childView, int groupPosition, int childPosition, long childId) {
+                // http://stackoverflow.com/questions/10318642/highlight-for-selected-item-in-expandable-list
+
+                int index = listView.getFlatListPosition(ExpandableListView.getPackedPositionForChild(groupPosition, childPosition));
+                listView.setItemChecked(index, true);
+
+                return true;
             }
         });
     }
@@ -256,9 +293,6 @@ public final class GalleryActivity extends AppCompatActivity {
             actionBar.setDisplayShowTitleEnabled(true);
             actionBar.setTitle(mCurrentFragment.getTitle());
         }
-//        final MenuItem item = mNavigation.getMenu().findItem(mCurrentFragment.getNavigationItemId());
-//        if (item != null)
-//            item.setChecked(true);
     }
 
     @Override
@@ -314,6 +348,8 @@ public final class GalleryActivity extends AppCompatActivity {
         transaction.replace(R.id.container, (Fragment) newFragment, newFragment.getTagString());
         transaction.commit();
 
+        mNavigation.setItemChecked(mCurrentFragment.getNavigationItemPosition(), true);
+
         Log.v(getClass().getSimpleName(), "Swapped to fragment: " + newFragment.toString());
     }
 
@@ -326,6 +362,8 @@ public final class GalleryActivity extends AppCompatActivity {
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE);
         transaction.replace(R.id.container, (Fragment) mCurrentFragment, mCurrentFragment.getTagString());
         transaction.commit();
+
+        mNavigation.setItemChecked(mCurrentFragment.getNavigationItemPosition(), true);
 
         Log.v(getClass().getSimpleName(), "Fragment restored from stack: " + mCurrentFragment.toString());
     }

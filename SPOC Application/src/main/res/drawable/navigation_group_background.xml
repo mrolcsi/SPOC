@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+
+    <item android:state_pressed="true">
+        <color android:color="@color/ltGray_semiTransparent"/>
+    </item>
+
+    <item android:exitFadeDuration="@android:integer/config_shortAnimTime"
+          android:state_selected="true">
+        <color android:color="@color/ltGray_semiTransparent"/>
+    </item>
+
+    <item android:exitFadeDuration="@android:integer/config_shortAnimTime"
+          android:state_activated="true">
+        <color android:color="@color/ltGray_semiTransparent"/>
+    </item>
+
+    <item>
+        <color android:color="@android:color/transparent"/>
+    </item>
+
+</selector>

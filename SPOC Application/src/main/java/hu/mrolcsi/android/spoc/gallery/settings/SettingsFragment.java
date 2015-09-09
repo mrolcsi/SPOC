@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import com.github.machinarius.preferencefragment.PreferenceFragment;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
+import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
 
@@ -52,8 +53,8 @@ public final class SettingsFragment extends PreferenceFragment implements ISPOCF
     }
 
     @Override
-    public int getNavigationItemId() {
-        return R.id.navigation_settings;
+    public int getNavigationItemPosition() {
+        return getArguments().getInt(SPOCFragment.ARG_NAVIGATION_POSITION, -1);
     }
 
     @Override
