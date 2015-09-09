@@ -62,7 +62,7 @@
     <string name="preferences_webPage_summary" translatable="false">http://github.com/mrolcsi/SPOC</string>
     <string name="preferences_webPage_title">Visit webpage</string>
     <string name="refresh_title">Refresh</string>
-    <string name="search_hint">Search in filenames… (more later)</string>
+    <string name="search_hint">Search…</string>
     <string name="search_message_helpText"><![CDATA[Search in filenames,<br>directories, like <i>Pictures</i> or <i>Download</i>,<br>dates, like <i>2015</i> or <i>august</i>,<br>locations, like <i>Paris</i> or <i>France</i>.]]></string>
     <string name="search_title">Search</string>
     <string name="service_cache_message_done">Done! You can now freely use the app!</string>

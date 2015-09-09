@@ -32,6 +32,7 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
 
     @Override
     public int getNavigationItemPosition() {
+        if (getArguments() == null) return -1;
         return getArguments().getInt(ARG_NAVIGATION_POSITION, -1);
     }
 
