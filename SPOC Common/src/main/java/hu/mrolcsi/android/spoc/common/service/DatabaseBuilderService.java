@@ -149,14 +149,14 @@ public class DatabaseBuilderService extends IntentService {
         //prepare query
         Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         String[] projection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA, MediaStore.Images.ImageColumns.DATE_TAKEN};
-        String sortOrder = MediaStore.Images.Media.DATE_TAKEN + " DESC";
+        //String sortOrder = MediaStore.Images.Media.DATE_TAKEN + " DESC";
 
         Cursor mediaStoreCursor = null;
 
         final ListHelper listHelper = new ListHelper(getApplicationContext());
 
         try {
-            mediaStoreCursor = getContentResolver().query(uri, projection, null, null, sortOrder);
+            mediaStoreCursor = getContentResolver().query(uri, projection, null, null, null);
 
             int indexID = mediaStoreCursor.getColumnIndex(projection[0]);
             int indexData = mediaStoreCursor.getColumnIndex(projection[1]);
