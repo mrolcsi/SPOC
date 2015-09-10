@@ -14,7 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import hu.mrolcsi.android.spoc.database.model.Image;
+import hu.mrolcsi.android.spoc.database.model.Label;
+import hu.mrolcsi.android.spoc.database.model.LabelType;
 import hu.mrolcsi.android.spoc.database.model.Views;
+import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
@@ -42,11 +46,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     private final DateFormat dateFormat = new SimpleDateFormat("MMMM d.", Locale.getDefault());
 
     private NavigationItem[] mGroups;
-
     private NavigationItem[][] mChildren;
-    private CursorLoader mDateLoader;
-    private CursorLoader mPlacesLoader;
-
 
     public NavigationAdapter(Context context, LoaderManager loaderManager) {
         this.mContext = context;
@@ -57,9 +57,10 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
             mGroups[i] = createGroupItems(i);
         }
 
-        mChildren = new NavigationItem[getGroupCount()][4];
+        mChildren = new NavigationItem[getGroupCount()][];
 
         loaderManager.initLoader(DATE_LOADER_ID, null, this);
+        loaderManager.initLoader(PLACES_LOADER_ID, null, this);
     }
 
     @SuppressWarnings("deprecation")
@@ -258,7 +259,8 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     @Override
     public int getRealChildrenCount(int groupPosition) {
         if (groupPosition == 0 || groupPosition == getGroupCount() - 1) return 0;
-        return 4;
+        if (mChildren[groupPosition] == null) return 0;
+        return mChildren[groupPosition].length;
     }
 
     @Override
@@ -268,31 +270,59 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        CursorLoader loader = new CursorLoader(mContext);
         if (id == DATE_LOADER_ID) {
-            CursorLoader loader = new CursorLoader(mContext);
-
             loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Views.IMAGES_BY_DAY_DAY_TAKEN).appendPath("count").build());
+            return loader;
+        } else if (id == PLACES_LOADER_ID) {
+            /*
+            SELECT count(image_id), label_id, name
+            FROM images_with_labels
+            WHERE type = 'LOCATION_LOCALITY_TEXT'
+            GROUP BY name
+            ORDER BY date_taken DESC
+             */
+            // content://authority/images/location/count
+            loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Image.COLUMN_LOCATION).appendPath("count").build());
+            loader.setProjection(new String[]{"count(_id)", Label.COLUMN_NAME, Label2Image.COLUMN_LABEL_ID});
+            loader.setSelection(Label.COLUMN_TYPE + " = ?");
+            loader.setSelectionArgs(new String[]{LabelType.LOCATION_LOCALITY_TEXT.name()});
 
             return loader;
         }
+
         return null;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == DATE_LOADER_ID) {
-            for (int i = 0; i < getRealChildrenCount(1) - 1; i++) {
+
+            int size = Math.min(3, data.getCount() - 1);
+            mChildren[1] = new NavigationItem[size + 1];
+
+            for (int i = 0; i < size; i++) {
                 data.moveToPosition(i);
                 mChildren[1][i] = new NavigationItem();
                 mChildren[1][i].count = data.getInt(0);
                 final long dayLong = data.getLong(1);
                 mChildren[1][i].title = dateFormat.format(new Date(dayLong));
             }
-            mChildren[1][getRealChildrenCount(1) - 1] = new NavigationItem("Older...");
+            mChildren[1][size] = new NavigationItem(mContext.getString(R.string.navigation_date_older));
         }
 
         if (loader.getId() == PLACES_LOADER_ID) {
 
+            int size = Math.min(3, data.getCount() - 1);
+            mChildren[2] = new NavigationItem[size + 1];
+
+            for (int i = 0; i < size; i++) {
+                data.moveToPosition(i);
+                mChildren[2][i] = new NavigationItem();
+                mChildren[2][i].count = data.getInt(0);
+                mChildren[2][i].title = data.getString(1);
+            }
+            mChildren[2][size] = new NavigationItem(mContext.getString(R.string.navigation_places_other));
         }
     }
 

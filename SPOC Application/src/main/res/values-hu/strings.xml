@@ -5,6 +5,7 @@
     <string name="cab_selectAll">Mind kijelölése</string>
     <string name="cancel">Mégse</string>
     <string name="close">Bezár</string>
+    <string name="contentDescription_thumbnail">Miniatűr</string>
     <string name="details_action_delete">Törlés</string>
     <string name="details_action_rotate">Forgatás</string>
     <string name="details_action_share">Megosztás…</string>
@@ -48,11 +49,14 @@
     <string name="message_pictureNotDeleted_fileNotExist">A kép nem lett törölve. A fájl már nem létezik.</string>
     <string name="message_preparingToShare">Felkészülés megosztásra…</string>
     <string name="navigation_date">Dátum</string>
+    <string name="navigation_date_older">Régebbi…</string>
     <string name="navigation_drawer_close">Navigációs sáv bezárása</string>
     <string name="navigation_drawer_open">Navigációs sáv megnyitása</string>
     <string name="navigation_folders">Mappák</string>
+    <string name="navigation_home">Kezdőképernyő</string>
     <string name="navigation_people">Személyek</string>
     <string name="navigation_places">Helyek</string>
+    <string name="navigation_places_other">Egyéb helyek…</string>
     <string name="navigation_settings">Beállítások</string>
     <string name="navigation_tags">Címkék</string>
     <string name="no">Nem</string>
@@ -85,9 +89,7 @@
     <string name="settings_whitelist_summary">Galériához hozzáadandó mappák kiválasztása</string>
     <string name="settings_whitelist_title">Fehér lista</string>
     <string name="splash_button_continueInBackground">Folytatás a háttérben</string>
-    <string name="title_activity_gallery">Galéria</string>
-    <string name="navigation_home">Kezdőképernyő</string>
-    <string name="yes">Igen</string>
     <string name="splash_contentDescription_logo">SPOC Embléma</string>
-    <string name="contentDescription_thumbnail">Miniatűr</string>
+    <string name="title_activity_gallery">Galéria</string>
+    <string name="yes">Igen</string>
 </resources>

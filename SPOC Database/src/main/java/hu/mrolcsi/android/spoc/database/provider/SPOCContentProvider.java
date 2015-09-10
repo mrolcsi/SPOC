@@ -39,6 +39,8 @@ public final class SPOCContentProvider extends ContentProvider {
     private static final int IMAGES_WITH_DAY_TAKEN = 14;
     private static final int IMAGES_BY_DAY_TAKEN = 15;
     private static final int IMAGES_BY_DAY_TAKEN_COUNT = 16;
+    private static final int IMAGES_WITH_LABELS = 17;
+    private static final int IMAGES_WITH_LABELS_COUNT = 18;
 
     private static final int LABELS_LIST = 20;
     private static final int LABEL_BY_ID = 21;
@@ -56,6 +58,8 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN, IMAGES_WITH_DAY_TAKEN);                   // content://authority/images/day_taken         > SELECT * FROM images INNER JOIN images_by_day
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN + "/#", IMAGES_BY_DAY_TAKEN);              // content://authority/images/day_taken/#       > SELECT * FROM images INNER JOIN images_by_day WHERE day_taken = #
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN + "/count", IMAGES_BY_DAY_TAKEN_COUNT);    // content://authority/images/day_taken/count   > SELECT count(_id), day_taken FROM images INNER JOIN images_by_day GROUP BY day_taken
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Image.COLUMN_LOCATION + "/count", IMAGES_WITH_LABELS_COUNT);             // content://authority/images/location/count    > SELECT * FROM images_with_labels GROUP BY location
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search", IMAGES_WITH_LABELS);                                                // content://authority/images/search            > SELECT * FROM images_with_labels
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search/*", IMAGE_SEARCH);                                                    // content://authority/images/search/*          > SELECT * FROM images_with_labels WHERE column LIKE '%*%'
 
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME, LABELS_LIST);                                                                   // content://authority/labels                   > SELECT * FROM labels > INSERT INTO labels
@@ -123,6 +127,12 @@ public final class SPOCContentProvider extends ContentProvider {
                 builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
                 builder.appendWhere(Image.COLUMN_FILENAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase(Locale.getDefault()) + "%' OR " + Label.COLUMN_NAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase() + "%'");
                 break;
+            case IMAGES_WITH_LABELS:
+                builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
+                if (sortOrder == null) {
+                    sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
+                }
+                break;
             case IMAGES_WITH_DAY_TAKEN:
                 builder.setTables(Image.TABLE_NAME + " INNER JOIN " + Views.IMAGES_BY_DAY_NAME + " ON " + Views.IMAGES_BY_DAY_NAME + "._id=" + Image.TABLE_NAME + "._id");
                 if (sortOrder == null) {
@@ -143,6 +153,12 @@ public final class SPOCContentProvider extends ContentProvider {
                 }
                 sortOrder = Views.IMAGES_BY_DAY_DAY_TAKEN + " DESC";
                 return builder.query(db, projection, selection, selectionArgs, Views.IMAGES_BY_DAY_DAY_TAKEN, null, sortOrder);
+            case IMAGES_WITH_LABELS_COUNT:
+                builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
+                if (sortOrder == null) {
+                    sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
+                }
+                return builder.query(db, projection, selection, selectionArgs, Label.COLUMN_NAME, null, sortOrder);
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
         }

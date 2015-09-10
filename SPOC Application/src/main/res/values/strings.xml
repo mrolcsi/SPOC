@@ -5,6 +5,7 @@
     <string name="cab_selectAll">Select All</string>
     <string name="cancel">Cancel</string>
     <string name="close">Close</string>
+    <string name="contentDescription_thumbnail">Thumbnail</string>
     <string name="details_action_delete">Delete</string>
     <string name="details_action_rotate">Rotate</string>
     <string name="details_action_share">Share…</string>
@@ -48,11 +49,14 @@
     <string name="message_pictureNotDeleted_fileNotExist">Picture could not be deleted. File does not exist anymore.</string>
     <string name="message_preparingToShare">Preparing to share…</string>
     <string name="navigation_date">Date</string>
+    <string name="navigation_date_older">Older…</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_folders">Folders</string>
+    <string name="navigation_home">Home</string>
     <string name="navigation_people">People</string>
     <string name="navigation_places">Places</string>
+    <string name="navigation_places_other">Other places…</string>
     <string name="navigation_settings">Settings</string>
     <string name="navigation_tags">Tags</string>
     <string name="no">No</string>
@@ -86,9 +90,7 @@
     <string name="settings_whitelist_summary">Select directories to include in Gallery</string>
     <string name="settings_whitelist_title">Whitelist</string>
     <string name="splash_button_continueInBackground">Continue in background</string>
-    <string name="title_activity_gallery">Gallery</string>
-    <string name="navigation_home">Home</string>
-    <string name="yes">Yes</string>
     <string name="splash_contentDescription_logo">SPOC Logo</string>
-    <string name="contentDescription_thumbnail">Thumbnail</string>
+    <string name="title_activity_gallery">Gallery</string>
+    <string name="yes">Yes</string>
 </resources>

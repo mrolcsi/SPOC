@@ -337,8 +337,9 @@ public final class GalleryActivity extends AppCompatActivity {
     }
 
     public void swapFragment(ISPOCFragment newFragment) {
-        if (mCurrentFragment != null && mCurrentFragment != newFragment) //avoid storing the same fragment more than once
+        if (mCurrentFragment != null && mCurrentFragment != newFragment) { //avoid storing the same fragment more than once
             mFragmentStack.push(mCurrentFragment);
+        }
 
         mCurrentFragment = newFragment;
 
