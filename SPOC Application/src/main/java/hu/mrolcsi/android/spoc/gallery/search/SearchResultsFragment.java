@@ -45,7 +45,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         setRetainInstance(true);
 
         mSuggestionArgs.putStringArray(LabelTableLoader.ARG_PROJECTION, new String[]{"_id", Label.COLUMN_NAME, Label.COLUMN_TYPE});
-        mSuggestionArgs.putString(LabelTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + " LIKE '%_TEXT' AND " + Label.COLUMN_NAME + " LIKE ?");
+        mSuggestionArgs.putString(LabelTableLoader.ARG_SELECTION, Label.COLUMN_NAME + " LIKE ?");
         mSuggestionArgs.putStringArray(LabelTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
         mSuggestionArgs.putString(LabelTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
     }

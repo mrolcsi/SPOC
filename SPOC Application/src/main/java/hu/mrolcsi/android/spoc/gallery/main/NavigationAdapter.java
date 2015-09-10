@@ -278,7 +278,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
             /*
             SELECT count(image_id), label_id, name
             FROM images_with_labels
-            WHERE type = 'LOCATION_LOCALITY_TEXT'
+            WHERE type = 'LOCATION_LOCALITY'
             GROUP BY name
             ORDER BY date_taken DESC
              */
@@ -286,7 +286,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
             loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Image.COLUMN_LOCATION).appendPath("count").build());
             loader.setProjection(new String[]{"count(_id)", Label.COLUMN_NAME, Label2Image.COLUMN_LABEL_ID});
             loader.setSelection(Label.COLUMN_TYPE + " = ?");
-            loader.setSelectionArgs(new String[]{LabelType.LOCATION_LOCALITY_TEXT.name()});
+            loader.setSelectionArgs(new String[]{LabelType.LOCATION_LOCALITY.name()});
 
             return loader;
         }
@@ -297,8 +297,10 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == DATE_LOADER_ID) {
-
             int size = Math.min(3, data.getCount() - 1);
+
+            if (size < 0) return;
+
             mChildren[1] = new NavigationItem[size + 1];
 
             for (int i = 0; i < size; i++) {
@@ -312,8 +314,10 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
         }
 
         if (loader.getId() == PLACES_LOADER_ID) {
-
             int size = Math.min(3, data.getCount() - 1);
+
+            if (size < 0) return;
+
             mChildren[2] = new NavigationItem[size + 1];
 
             for (int i = 0; i < size; i++) {
@@ -324,6 +328,8 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
             }
             mChildren[2][size] = new NavigationItem(mContext.getString(R.string.navigation_places_other));
         }
+
+        notifyDataSetChanged();
     }
 
     @Override

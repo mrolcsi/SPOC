@@ -24,7 +24,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 9;
+    public static final int DATABASE_VERSION = 10;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -58,9 +58,10 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.createTable(connectionSource, Image.class);
             TableUtils.createTable(connectionSource, Label.class);
             TableUtils.createTable(connectionSource, Label2Image.class);
-            //TableUtils.createTable(connectionSource, Contact.class);
-            //TableUtils.createTable(connectionSource, Contact2Image.class);
+            TableUtils.createTable(connectionSource, Contact.class);
+            TableUtils.createTable(connectionSource, Contact2Image.class);
             database.execSQL(Views.IMAGES_WITH_LABELS_CREATE);
+            database.execSQL(Views.IMAGES_BY_DAY_CREATE);
         } catch (SQLException e) {
             Log.w(getClass().getName(), e);
         }
@@ -101,21 +102,12 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             //rename some label types
 
             ContentValues values = new ContentValues();
-            values.put(Label.COLUMN_TYPE, LabelType.LOCATION_LOCALITY_TEXT.name());
+            values.put(Label.COLUMN_TYPE, LabelType.LOCATION_LOCALITY.name());
             database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"LOCATION_LOCALITY"});
 
             values.clear();
-            values.put(Label.COLUMN_TYPE, LabelType.LOCATION_COUNTRY_TEXT.name());
+            values.put(Label.COLUMN_TYPE, LabelType.LOCATION_COUNTRY.name());
             database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"LOCATION_COUNTRY"});
-
-            values.clear();
-            values.put(Label.COLUMN_TYPE, LabelType.PEOPLE_FIRSTNAME_TEXT.name());
-            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"PEOPLE_FIRST_NAME"});
-
-            values.clear();
-            values.put(Label.COLUMN_TYPE, LabelType.PEOPLE_LASTNAME_TEXT.name());
-            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"PEOPLE_LAST_NAME"});
-
         }
         if (oldVersion < 8) {
             //add Date Taken to view
@@ -131,6 +123,42 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             //create ImagesByDay view
             database.execSQL("DROP VIEW IF EXISTS " + Views.IMAGES_BY_DAY_NAME);
             database.execSQL(Views.IMAGES_BY_DAY_CREATE);
+        }
+        if (oldVersion < 10) {
+            try {
+                //create Contacts and Contacts2Images tables
+                TableUtils.createTable(connectionSource, Contact.class);
+                TableUtils.createTable(connectionSource, Contact2Image.class);
+            } catch (SQLException e) {
+                Log.w(getClass().getSimpleName(), e);
+            }
+
+            //remove unused labels
+
+            database.delete(Label.TABLE_NAME, "type IN (?,?,?,?,?)",
+                    new String[]{"DATE_YEAR_NUMERIC", "DATE_MONTH_NUMERIC", "DATE_DAY_NUMERIC", "PEOPLE_FIRSTNAME_TEXT", "PEOPLE_LASTNAME_TEXT"});
+
+            //rename label types
+
+            ContentValues values = new ContentValues();
+            values.put(Label.COLUMN_TYPE, LabelType.LOCATION_LOCALITY.name());
+            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"LOCATION_LOCALITY_TEXT"});
+
+            values.clear();
+            values.put(Label.COLUMN_TYPE, LabelType.LOCATION_COUNTRY.name());
+            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"LOCATION_COUNTRY_TEXT"});
+
+            values.clear();
+            values.put(Label.COLUMN_TYPE, LabelType.DATE_DAY.name());
+            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"DATE_DAY_TEXT"});
+
+            values.clear();
+            values.put(Label.COLUMN_TYPE, LabelType.DATE_MONTH.name());
+            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"DATE_MONTH_TEXT"});
+
+            values.clear();
+            values.put(Label.COLUMN_TYPE, LabelType.FOLDER.name());
+            database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"DIRECTORY_TEXT"});
         }
     }
 

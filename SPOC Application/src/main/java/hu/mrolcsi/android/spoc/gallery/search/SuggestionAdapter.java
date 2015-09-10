@@ -40,22 +40,21 @@ public class SuggestionAdapter extends CursorAdapter {
         ((TextView) view).setText(name);
 
         switch (type) {
-            case DATE_MONTH_TEXT:
-            case DATE_DAY_TEXT:
+            case DATE_MONTH:
+            case DATE_DAY:
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.calendar, 0, 0, 0);
                 break;
-            case LOCATION_COUNTRY_TEXT:
-            case LOCATION_LOCALITY_TEXT:
+            case LOCATION_COUNTRY:
+            case LOCATION_LOCALITY:
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.map_marker, 0, 0, 0);
                 break;
-            case PEOPLE_FIRSTNAME_TEXT:
-            case PEOPLE_LASTNAME_TEXT:
+            case CONTACT:
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.group, 0, 0, 0);
                 break;
-            case DIRECTORY_TEXT:
+            case FOLDER:
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.folder, 0, 0, 0);
                 break;
-            case CUSTOM_TEXT:
+            case CUSTOM:
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.tag, 0, 0, 0);
                 break;
             default:

@@ -1,6 +1,5 @@
 package hu.mrolcsi.android.spoc.database.model;
 
-import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
@@ -13,32 +12,30 @@ import com.j256.ormlite.table.DatabaseTable;
 @SuppressWarnings("unused")
 @DatabaseTable(tableName = "contacts")
 public class Contact {
+
     public static final String TABLE_NAME = "contacts";
-    public static final String COLUMN_CONTACT_KEY = "contact_key";
+    public static final String COLUMN_CONTACT_KEY = "key";
+    //public static final String COLUMN_FAMILY_NAME = "family_name";
     public static final String COLUMN_NAME = "name";
-    public static final String COLUMN_PHOTO = "photo";
+    public static final String COLUMN_TYPE = "type";
 
     @DatabaseField(generatedId = true)
     private int _id;
     @DatabaseField(columnName = COLUMN_CONTACT_KEY, unique = true, index = true)
     private String contactKey;
-    @DatabaseField(columnName = COLUMN_NAME, canBeNull = false)
+    @DatabaseField(columnName = COLUMN_NAME)
     private String name;
-    @DatabaseField(columnName = COLUMN_PHOTO, dataType = DataType.BYTE_ARRAY)
-    private byte[] photo;
+    @DatabaseField(columnName = COLUMN_TYPE, defaultValue = "CONTACT")
+    private String type;
 
     public Contact() {
     }
 
-    public Contact(String name) {
-        this.name = name;
-    }
-
-    public Contact(String contactKey, String name, byte[] photo) {
-        this.contactKey = contactKey;
-        this.name = name;
-        this.photo = photo;
-    }
+//    public Contact(String contactKey, String familyName, byte[] photo) {
+//        this.contactKey = contactKey;
+//        this.familyName = familyName;
+//        this.photo = photo;
+//    }
 
     public int get_id() {
         return _id;
@@ -56,19 +53,11 @@ public class Contact {
         this.contactKey = contactKey;
     }
 
-    public String getName() {
-        return name;
-    }
+//    public String getFamilyName() {
+//        return familyName;
+//    }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public byte[] getPhoto() {
-        return photo;
-    }
-
-    public void setPhoto(byte[] photo) {
-        this.photo = photo;
-    }
+//    public void setFamilyName(String familyName) {
+//        this.familyName = familyName;
+//    }
 }

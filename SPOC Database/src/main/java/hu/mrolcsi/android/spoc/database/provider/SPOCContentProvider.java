@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
+import hu.mrolcsi.android.spoc.database.model.Contact;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.model.Views;
@@ -31,6 +32,7 @@ public final class SPOCContentProvider extends ContentProvider {
     public static final Uri LABELS_URI = Uri.withAppendedPath(CONTENT_URI, Label.TABLE_NAME);
     public static final Uri LABELS_2_IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Label2Image.TABLE_NAME);
     public static final Uri SEARCH_URI = CONTENT_URI.buildUpon().appendPath(Image.TABLE_NAME).appendPath("search").build();
+    public static final Uri CONTACTS_URI = Uri.withAppendedPath(CONTENT_URI, Contact.TABLE_NAME);
 
     private static final int IMAGES_LIST = 10;
     private static final int IMAGE_BY_ID = 11;
@@ -47,6 +49,10 @@ public final class SPOCContentProvider extends ContentProvider {
     private static final int LABEL_BY_NAME = 22;
     private static final int LABELS_BY_IMAGE_ID = 23;
     private static final int LABELS_2_IMAGES = 24;
+
+    private static final int CONTACTS_LIST = 31;
+    private static final int CONTACT_BY_ID = 32;
+    private static final int CONTACT_BY_KEY = 33;
 
     private static final UriMatcher URI_MATCHER;
 
@@ -68,6 +74,10 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label2Image.COLUMN_IMAGE_ID + "/#", LABELS_BY_IMAGE_ID);                 // content://authority/labels/image_id/#        > SELECT * FROM labels INNER JOIN labels2images WHERE image_id = #
 
         URI_MATCHER.addURI(AUTHORITY, Label2Image.TABLE_NAME, LABELS_2_IMAGES);                                                         // content://authority/images2labels            > INSERT INTO images2labels
+
+        URI_MATCHER.addURI(AUTHORITY, Contact.TABLE_NAME, CONTACTS_LIST);                                                               // content://authority/contacts                 > SELECT * FROM contacts
+        URI_MATCHER.addURI(AUTHORITY, Contact.TABLE_NAME + "/#", CONTACT_BY_ID);                                                        // content://authority/contacts/#               > SELECT * FROM contacts WHERE _id = #
+        URI_MATCHER.addURI(AUTHORITY, Contact.TABLE_NAME + "/" + Contact.COLUMN_CONTACT_KEY + "/*", CONTACT_BY_KEY);                    // content://authority/contacts/key/*           > SELECT * FROM contacts WHERE key = *
     }
 
     private DatabaseHelper dbHelper;
@@ -82,66 +92,62 @@ public final class SPOCContentProvider extends ContentProvider {
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        final String firstSegment = uri.getPathSegments().get(0);
+
+        if (firstSegment.equals(Image.TABLE_NAME)) {
+            return queryImages(uri, projection, selection, selectionArgs, sortOrder);
+        }
+        if (firstSegment.equals(Label.TABLE_NAME)) {
+            return queryLabels(uri, projection, selection, selectionArgs, sortOrder);
+        }
+        if (firstSegment.equals(Contact.TABLE_NAME)) {
+            return queryContacts(uri, projection, selection, selectionArgs, sortOrder);
+        }
+
+        throw new IllegalArgumentException("Unsupported URI: " + uri);
+    }
+
+    private Cursor queryImages(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         final SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+        builder.setTables(Image.TABLE_NAME);
         boolean useAuthority = false;
 
         switch (URI_MATCHER.match(uri)) {
             case IMAGES_LIST:
-                builder.setTables(Image.TABLE_NAME);
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
                 }
                 break;
             case IMAGE_BY_ID:
-                builder.setTables(Image.TABLE_NAME);
                 builder.appendWhere("_id" + " = " + uri.getLastPathSegment());
                 break;
             case IMAGE_BY_MEDIASTORE_ID:
-                builder.setTables(Image.TABLE_NAME);
                 builder.appendWhere(Image.COLUMN_MEDIASTORE_ID + " = " + uri.getLastPathSegment());
                 break;
-            case LABELS_LIST:
-                builder.setTables(Label.TABLE_NAME);
-                break;
-            case LABEL_BY_ID:
-                builder.setTables(Label.TABLE_NAME);
-                builder.appendWhere("_id = " + uri.getLastPathSegment());
-                break;
-            case LABEL_BY_NAME:
-                builder.setTables(Label.TABLE_NAME);
-                builder.appendWhere(Label.COLUMN_NAME + " = '" + uri.getLastPathSegment() + "'");
-                break;
-            case LABELS_BY_IMAGE_ID:
-                if (projection == null) {
-                    projection = new String[]{Label.TABLE_NAME + ".*"};
-                }
-                builder.setTables(Label.TABLE_NAME + "INNER JOIN " + Label2Image.TABLE_NAME + " ON " + Label.TABLE_NAME + "._id" + " = " + Label2Image.COLUMN_LABEL_ID);
-                builder.appendWhere(Label2Image.COLUMN_IMAGE_ID + "=" + uri.getLastPathSegment());
-                break;
             case IMAGE_SEARCH:
+                builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
                 if (projection == null) {
                     projection = new String[]{"DISTINCT _id", Image.COLUMN_FILENAME};
                 }
-                builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
                 builder.appendWhere(Image.COLUMN_FILENAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase(Locale.getDefault()) + "%' OR " + Label.COLUMN_NAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase() + "%'");
                 break;
             case IMAGES_WITH_LABELS:
                 builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
-                if (sortOrder == null) {
+                if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
                 }
                 break;
             case IMAGES_WITH_DAY_TAKEN:
                 builder.setTables(Image.TABLE_NAME + " INNER JOIN " + Views.IMAGES_BY_DAY_NAME + " ON " + Views.IMAGES_BY_DAY_NAME + "._id=" + Image.TABLE_NAME + "._id");
-                if (sortOrder == null) {
+                if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
                 }
                 break;
             case IMAGES_BY_DAY_TAKEN:
                 builder.setTables(Image.TABLE_NAME + " INNER JOIN " + Views.IMAGES_BY_DAY_NAME + " ON " + Views.IMAGES_BY_DAY_NAME + "._id=" + Image.TABLE_NAME + "._id");
-                if (sortOrder == null) {
+                if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
                 }
                 builder.appendWhere(Views.IMAGES_BY_DAY_DAY_TAKEN + "=" + uri.getLastPathSegment());
@@ -155,10 +161,75 @@ public final class SPOCContentProvider extends ContentProvider {
                 return builder.query(db, projection, selection, selectionArgs, Views.IMAGES_BY_DAY_DAY_TAKEN, null, sortOrder);
             case IMAGES_WITH_LABELS_COUNT:
                 builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
-                if (sortOrder == null) {
+                if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
                 }
                 return builder.query(db, projection, selection, selectionArgs, Label.COLUMN_NAME, null, sortOrder);
+            default:
+                throw new IllegalArgumentException("Unsupported URI: " + uri);
+        }
+
+        Cursor cursor = builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+
+        //noinspection ConstantConditions
+        if (useAuthority) cursor.setNotificationUri(getContext().getContentResolver(), CONTENT_URI);
+        else cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+        return cursor;
+    }
+
+    private Cursor queryLabels(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        final SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+        builder.setTables(Label.TABLE_NAME);
+        boolean useAuthority = false;
+
+        switch (URI_MATCHER.match(uri)) {
+            case LABELS_LIST:
+                break;
+            case LABEL_BY_ID:
+                builder.appendWhere("_id = " + uri.getLastPathSegment());
+                break;
+            case LABEL_BY_NAME:
+                builder.appendWhere(Label.COLUMN_NAME + " = '" + uri.getLastPathSegment() + "'");
+                break;
+            case LABELS_BY_IMAGE_ID:
+                builder.setTables(Label.TABLE_NAME + "INNER JOIN " + Label2Image.TABLE_NAME + " ON " + Label.TABLE_NAME + "._id" + " = " + Label2Image.COLUMN_LABEL_ID);
+                if (projection == null) {
+                    projection = new String[]{Label.TABLE_NAME + ".*"};
+                }
+                builder.appendWhere(Label2Image.COLUMN_IMAGE_ID + "=" + uri.getLastPathSegment());
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported URI: " + uri);
+        }
+
+        Cursor cursor = builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+
+        //noinspection ConstantConditions
+        if (useAuthority) cursor.setNotificationUri(getContext().getContentResolver(), CONTENT_URI);
+        else cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+        return cursor;
+    }
+
+    private Cursor queryContacts(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        final SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+        builder.setTables(Contact.TABLE_NAME);
+        boolean useAuthority = false;
+
+        switch (URI_MATCHER.match(uri)) {
+            case CONTACTS_LIST:
+                break;
+            case CONTACT_BY_ID:
+                builder.appendWhere("_id=" + uri.getLastPathSegment());
+                break;
+            case CONTACT_BY_KEY:
+                builder.appendWhere(Contact.COLUMN_CONTACT_KEY + "='" + uri.getLastPathSegment() + "'");
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
         }
@@ -213,6 +284,9 @@ public final class SPOCContentProvider extends ContentProvider {
             case LABELS_2_IMAGES:
                 id = db.insertWithOnConflict(Label2Image.TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
                 return getUriForId(id, uri);
+            case CONTACTS_LIST:
+                id = db.insert(Contact.TABLE_NAME, null, contentValues);
+                return getUriForId(id, uri);
             default:
                 throw new IllegalArgumentException("Unsupported Uri for insertion: " + uri);
         }
@@ -244,6 +318,15 @@ public final class SPOCContentProvider extends ContentProvider {
                 where = "_id" + " = " + idStr;
                 if (!TextUtils.isEmpty(selection)) where += " AND " + selection;
                 delCount = db.delete(Label.TABLE_NAME, where, selectionArgs);
+                break;
+            case CONTACTS_LIST:
+                delCount = db.delete(Contact.TABLE_NAME, selection, selectionArgs);
+                break;
+            case CONTACT_BY_ID:
+                idStr = uri.getLastPathSegment();
+                where = "_id" + " = " + idStr;
+                if (!TextUtils.isEmpty(selection)) where += " AND " + selection;
+                delCount = db.delete(Contact.TABLE_NAME, where, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
@@ -284,6 +367,17 @@ public final class SPOCContentProvider extends ContentProvider {
                     where += " AND " + selection;
                 }
                 updateCount = db.update(Label.TABLE_NAME, contentValues, where, selectionArgs);
+                break;
+            case CONTACTS_LIST:
+                updateCount = db.update(Contact.TABLE_NAME, contentValues, selection, selectionArgs);
+                break;
+            case CONTACT_BY_ID:
+                idStr = uri.getLastPathSegment();
+                where = "_id" + " = " + idStr;
+                if (!TextUtils.isEmpty(selection)) {
+                    where += " AND " + selection;
+                }
+                updateCount = db.update(Contact.TABLE_NAME, contentValues, where, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);

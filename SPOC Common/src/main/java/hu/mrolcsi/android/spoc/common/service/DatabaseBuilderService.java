@@ -4,7 +4,6 @@ import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.*;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
 import android.location.Geocoder;
 import android.media.ExifInterface;
@@ -19,7 +18,6 @@ import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
-import com.j256.ormlite.dao.RuntimeExceptionDao;
 import hu.mrolcsi.android.spoc.common.R;
 import hu.mrolcsi.android.spoc.common.helper.ListHelper;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
@@ -34,7 +32,6 @@ import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -98,9 +95,9 @@ public class DatabaseBuilderService extends IntentService {
             startService(cacheIntent);
         }
 
-        //TODO: cleanUpContacts();
+        cleanUpContacts();
 
-        //TODO: updateContactsFromContactsProvider();
+        updateContactsFromContactsProvider();
 
         //TODO: updateContactsFromFacebook();
 
@@ -139,7 +136,6 @@ public class DatabaseBuilderService extends IntentService {
             cursor.close();
         }
 
-
         Log.v(getClass().getSimpleName(), "Image clean up done.");
     }
 
@@ -166,7 +162,7 @@ public class DatabaseBuilderService extends IntentService {
             String filename;
             long dateTaken;
             String location;
-            ContentValues values;
+            ContentValues values = new ContentValues();
             Uri imagesByMediaStoreIdUri = Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, Image.COLUMN_MEDIASTORE_ID);
 
             mOps.clear();
@@ -177,11 +173,10 @@ public class DatabaseBuilderService extends IntentService {
                 dateTaken = mediaStoreCursor.getLong(indexDateTaken);
 
                 if (new File(filename).exists() && !listHelper.isInBlacklist(filename)) {
-                    values = new ContentValues();
+                    values.clear();
                     values.put(Image.COLUMN_MEDIASTORE_ID, mediaStoreId);
                     values.put(Image.COLUMN_FILENAME, filename);
                     values.put(Image.COLUMN_DATE_TAKEN, dateTaken);
-
 
                     final Cursor imageCursor = getContentResolver().query(Uri.withAppendedPath(imagesByMediaStoreIdUri, String.valueOf(mediaStoreId)),
                             new String[]{"_id", Image.COLUMN_LOCATION},
@@ -221,18 +216,6 @@ public class DatabaseBuilderService extends IntentService {
         Log.v(getClass().getSimpleName(), "Update from MediaStore done.");
     }
 
-    private void cleanUpContacts() {
-        //TODO: delete invalid contacts from db
-        Log.v(getClass().getSimpleName(), "Cleaning up contacts...");
-        try {
-            //delete everything for now
-            final int deletedRows = DatabaseHelper.getInstance().getContactsDao().deleteBuilder().delete();
-            Log.v(getClass().getSimpleName(), "Contacts clean up done. Deleted " + deletedRows + " contacts");
-        } catch (SQLException e) {
-            Log.w(getClass().getName(), e);
-        }
-    }
-
     private void updateImagesFromWhiteList() {
         Log.v(getClass().getSimpleName(), "Updating images from Whitelist...");
         final List<String> whitelist = new ListHelper(getApplicationContext()).getWhitelist();
@@ -251,14 +234,14 @@ public class DatabaseBuilderService extends IntentService {
         try {
             File dir;
             String location;
-            ContentValues values;
+            ContentValues values = new ContentValues();
 
             mOps.clear();
 
             for (String s : whitelist) {
                 dir = new File(s);
                 for (File file : dir.listFiles(filter)) {
-                    values = new ContentValues();
+                    values.clear();
                     values.put(Image.COLUMN_FILENAME, file.getAbsolutePath());
 
                     Date date;
@@ -333,79 +316,70 @@ public class DatabaseBuilderService extends IntentService {
         return null;
     }
 
+    private void cleanUpContacts() {
+        Log.v(getClass().getSimpleName(), "Cleaning up contacts...");
+
+        getContentResolver().delete(SPOCContentProvider.CONTACTS_URI, null, null);
+
+        Log.v(getClass().getSimpleName(), "Contacts cleanup done.");
+    }
+
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void updateContactsFromContactsProvider() {
-        //TODO: collect contacts from ContactProvider > createOrUpdate
-        Uri uri = ContactsContract.Contacts.CONTENT_URI;
+        Log.v(getClass().getSimpleName(), "Updating contacts from ContactsProvider...");
+
+        Uri uri = ContactsContract.Data.CONTENT_URI;
         String[] projection = new String[]{
                 ContactsContract.Contacts._ID,
                 ContactsContract.Contacts.LOOKUP_KEY,
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? ContactsContract.Contacts.DISPLAY_NAME_PRIMARY : ContactsContract.Contacts.DISPLAY_NAME,
-                ContactsContract.Contacts.PHOTO_ID
         };
+        String selection = ContactsContract.Data.MIMETYPE + " = '" + ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE + "'";
 
-        Cursor cursor = null;
-        final SQLiteDatabase db = DatabaseHelper.getInstance().getWritableDatabase();
-        final RuntimeExceptionDao<Contact, Integer> contactsDao = DatabaseHelper.getInstance().getContactsDao();
-
-        db.beginTransaction();
+        final Cursor cursorWithContacts = getContentResolver().query(uri, projection, selection, null, null);
         try {
-            cursor = getContentResolver().query(uri, null, null, null, null);
-
-            int indexId = cursor.getColumnIndex(projection[0]);
-            int indexKey = cursor.getColumnIndex(projection[1]);
-            int indexName = cursor.getColumnIndex(projection[2]);
-            int indexPhoto = cursor.getColumnIndex(projection[3]);
-
-            String key;
+            String lookupKey;
             String displayName;
-            byte[] photo;
+            ContentValues values = new ContentValues();
 
-            List<Contact> contacts;
-            Contact contact;
+            mOps.clear();
 
-            while (cursor.moveToNext()) {
-                key = cursor.getString(indexKey);
-                displayName = cursor.getString(indexName);
-                photo = queryContactImage(cursor.getInt(indexPhoto));
+            while (cursorWithContacts.moveToNext()) {
+                //TODO: check for existing
+                lookupKey = cursorWithContacts.getString(1);
+                displayName = cursorWithContacts.getString(2);
 
-                contacts = contactsDao.queryForEq(Contact.COLUMN_CONTACT_KEY, key);
-                if (contacts.size() > 0) {
-                    contact = contacts.get(0);
-                    contact.setName(displayName);
-                    contact.setPhoto(photo);
+                final Cursor innerCursor = getContentResolver().query(SPOCContentProvider.CONTACTS_URI.buildUpon().appendPath(Contact.COLUMN_CONTACT_KEY).appendPath(lookupKey).build(),
+                        new String[]{"_id"},
+                        null, null, null);
+
+                values.clear();
+                values.put(Contact.COLUMN_CONTACT_KEY, lookupKey);
+                values.put(Contact.COLUMN_NAME, displayName);
+
+                if (innerCursor.moveToFirst()) {
+                    mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, String.valueOf(innerCursor.getLong(0)))).withValues(values).build());
                 } else {
-                    contact = new Contact(key, displayName, photo);
+                    mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.CONTACTS_URI).withValues(values).build());
                 }
-                contactsDao.createOrUpdate(contact);
+
+                innerCursor.close();
             }
-            db.setTransactionSuccessful();
+
+            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
+        } catch (RemoteException | OperationApplicationException e) {
+            Log.w(getClass().getSimpleName(), e);
         } finally {
-            if (cursor != null) cursor.close();
-            db.endTransaction();
+            if (cursorWithContacts != null) cursorWithContacts.close();
         }
+
+        Log.v(getClass().getSimpleName(), "Update from ContactsProvider done.");
     }
 
     private void updateContactsFromFacebook() {
         Log.v(getClass().getSimpleName(), "Updating contacts from Facebook...");
         //TODO: update contacts from Facebook
         Log.v(getClass().getSimpleName(), "Update from Facebook done.");
-    }
-
-    private byte[] queryContactImage(int photoId) {
-        Cursor c = getContentResolver().query(ContactsContract.Data.CONTENT_URI,
-                new String[]{ContactsContract.CommonDataKinds.Photo.PHOTO},
-                ContactsContract.Data._ID + "=?",
-                new String[]{Integer.toString(photoId)},
-                null);
-        byte[] imageBytes = null;
-        if (c != null) {
-            if (c.moveToFirst()) {
-                imageBytes = c.getBlob(0);
-            }
-            c.close();
-        }
-        return imageBytes;
     }
 
     private void generateLabels() {
@@ -430,7 +404,6 @@ public class DatabaseBuilderService extends IntentService {
                 Log.w(getClass().getSimpleName(), e);
             } catch (OperationApplicationException ignored) {
                 //ignore duplicates.
-                Log.w(getClass().getSimpleName(), ignored);
             }
         }
 
@@ -454,20 +427,11 @@ public class DatabaseBuilderService extends IntentService {
 
         final long imageId = cursorWithImage.getLong(0);
 
-        final String year = String.valueOf(calendar.get(Calendar.YEAR));
-        createLabel(imageId, year, LabelType.DATE_YEAR_NUMERIC);
-
-        final String month = String.valueOf(calendar.get(Calendar.MONTH) + 1);
-        createLabel(imageId, month, LabelType.DATE_MONTH_NUMERIC);
-
-        final String dayOfMonth = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
-        createLabel(imageId, dayOfMonth, LabelType.DATE_DAY_NUMERIC);
-
         final String monthText = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
-        createLabel(imageId, monthText, LabelType.DATE_MONTH_TEXT);
+        createLabel(imageId, monthText, LabelType.DATE_MONTH);
 
         final String dayOfWeek = calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault());
-        createLabel(imageId, dayOfWeek, LabelType.DATE_DAY_TEXT);
+        createLabel(imageId, dayOfWeek, LabelType.DATE_DAY);
     }
 
     private void generateLabelsFromLocation(Cursor cursorWithImage) {
@@ -477,8 +441,8 @@ public class DatabaseBuilderService extends IntentService {
 
         final long imageId = cursorWithImage.getLong(0);
 
-        createLabel(imageId, locationStrings[0], LabelType.LOCATION_LOCALITY_TEXT);
-        createLabel(imageId, locationStrings[1], LabelType.LOCATION_COUNTRY_TEXT);
+        createLabel(imageId, locationStrings[0], LabelType.LOCATION_LOCALITY);
+        createLabel(imageId, locationStrings[1], LabelType.LOCATION_COUNTRY);
     }
 
     private void generateLabelsFromFilename(Cursor cursorWithImage) {
@@ -490,7 +454,7 @@ public class DatabaseBuilderService extends IntentService {
 
         //skip first (empty) and last (filename)
         for (int i = 1; i < filenameSplit.length - 1; i++) {
-            createLabel(imageId, filenameSplit[i], LabelType.DIRECTORY_TEXT);
+            createLabel(imageId, filenameSplit[i], LabelType.FOLDER);
         }
     }
 
