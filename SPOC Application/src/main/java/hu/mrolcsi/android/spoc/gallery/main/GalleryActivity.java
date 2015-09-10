@@ -173,7 +173,7 @@ public final class GalleryActivity extends AppCompatActivity {
 
     private void setUpNavigationView() {
 
-        final NavigationAdapter navigationAdapter = new NavigationAdapter(this);
+        final NavigationAdapter navigationAdapter = new NavigationAdapter(this, getSupportLoaderManager());
         mNavigation.setAdapter(navigationAdapter);
         mNavigation.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
             @Override

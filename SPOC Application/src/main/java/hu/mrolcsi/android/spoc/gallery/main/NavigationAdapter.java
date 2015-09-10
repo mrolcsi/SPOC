@@ -2,15 +2,27 @@ package hu.mrolcsi.android.spoc.gallery.main;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import hu.mrolcsi.android.spoc.database.model.Views;
+import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,14 +31,24 @@ import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView
  * Time: 15:39
  */
 
-public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpandableListAdapter {
+public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpandableListAdapter implements LoaderManager.LoaderCallbacks<Cursor> {
+
+    private static final int DATE_LOADER_ID = 987;
+    private static final int PLACES_LOADER_ID = 876;
 
     private final Context mContext;
     private final LayoutInflater mInflater;
+    //private final DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM);
+    private final DateFormat dateFormat = new SimpleDateFormat("MMMM d.", Locale.getDefault());
 
     private NavigationItem[] mGroups;
 
-    public NavigationAdapter(Context context) {
+    private NavigationItem[][] mChildren;
+    private CursorLoader mDateLoader;
+    private CursorLoader mPlacesLoader;
+
+
+    public NavigationAdapter(Context context, LoaderManager loaderManager) {
         this.mContext = context;
         mInflater = LayoutInflater.from(context);
 
@@ -34,6 +56,10 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
         for (int i = 0; i < getGroupCount(); i++) {
             mGroups[i] = createGroupItems(i);
         }
+
+        mChildren = new NavigationItem[getGroupCount()][4];
+
+        loaderManager.initLoader(DATE_LOADER_ID, null, this);
     }
 
     @SuppressWarnings("deprecation")
@@ -124,9 +150,8 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     }
 
     @Override
-    public Object getChild(int i, int i1) {
-        // TODO
-        return null;
+    public Object getChild(int groupPosition, int childPosition) {
+        return mChildren[groupPosition][childPosition];
     }
 
     @Override
@@ -199,17 +224,41 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
 
     @Override
     public View getRealChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-        // TODO
+        NavigationItemHolder holder;
         if (convertView == null) {
+            holder = new NavigationItemHolder();
+
             convertView = mInflater.inflate(R.layout.navigation_child_item, parent, false);
+
+            holder.tvTitle = (TextView) convertView.findViewById(android.R.id.title);
+            holder.tvCount = (TextView) convertView.findViewById(R.id.count);
+
+            convertView.setTag(holder);
+        } else {
+            holder = (NavigationItemHolder) convertView.getTag();
         }
+
+        NavigationItem childItem = (NavigationItem) getChild(groupPosition, childPosition);
+
+        if (childItem == null) {
+            childItem = new NavigationItem();
+        }
+
+        holder.tvTitle.setText(childItem.title);
+        if (childItem.count > 0) {
+            holder.tvCount.setVisibility(View.VISIBLE);
+            holder.tvCount.setText(String.valueOf(childItem.count));
+        } else {
+            holder.tvCount.setVisibility(View.INVISIBLE);
+        }
+
         return convertView;
     }
 
     @Override
     public int getRealChildrenCount(int groupPosition) {
         if (groupPosition == 0 || groupPosition == getGroupCount() - 1) return 0;
-        return 3;
+        return 4;
     }
 
     @Override
@@ -217,16 +266,60 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
         return true;
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (id == DATE_LOADER_ID) {
+            CursorLoader loader = new CursorLoader(mContext);
+
+            loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Views.IMAGES_BY_DAY_DAY_TAKEN).appendPath("count").build());
+
+            return loader;
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (loader.getId() == DATE_LOADER_ID) {
+            for (int i = 0; i < getRealChildrenCount(1) - 1; i++) {
+                data.moveToPosition(i);
+                mChildren[1][i] = new NavigationItem();
+                mChildren[1][i].count = data.getInt(0);
+                final long dayLong = data.getLong(1);
+                mChildren[1][i].title = dateFormat.format(new Date(dayLong));
+            }
+            mChildren[1][getRealChildrenCount(1) - 1] = new NavigationItem("Older...");
+        }
+
+        if (loader.getId() == PLACES_LOADER_ID) {
+
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        // TODO
+    }
+
     class NavigationItemHolder {
         TextView tvTitle;
         ImageView imgIcon;
         ImageView imgGroupIndicator;
+        TextView tvCount;
     }
 
     class NavigationItem {
-        CharSequence title;
-        Drawable icon;
-        boolean isExpandable;
+        CharSequence title = "Navigation Item";
+        Drawable icon = null;
+        int count = 0;
+        boolean isExpandable = false;
         boolean isExpanded = false;
+
+        public NavigationItem() {
+        }
+
+        public NavigationItem(String title) {
+            this.title = title;
+        }
     }
 }
