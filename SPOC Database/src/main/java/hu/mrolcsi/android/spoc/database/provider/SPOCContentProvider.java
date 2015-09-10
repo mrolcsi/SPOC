@@ -10,8 +10,8 @@ import android.text.TextUtils;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.model.Label;
+import hu.mrolcsi.android.spoc.database.model.Views;
 import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
-import hu.mrolcsi.android.spoc.database.model.view.LabelSearchView;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -30,34 +30,40 @@ public final class SPOCContentProvider extends ContentProvider {
     public static final Uri IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Image.TABLE_NAME);
     public static final Uri LABELS_URI = Uri.withAppendedPath(CONTENT_URI, Label.TABLE_NAME);
     public static final Uri LABELS_2_IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Label2Image.TABLE_NAME);
-    public static final Uri SEARCH_URI = Uri.withAppendedPath(CONTENT_URI, "search");
+    public static final Uri SEARCH_URI = CONTENT_URI.buildUpon().appendPath(Image.TABLE_NAME).appendPath("search").build();
 
     private static final int IMAGES_LIST = 10;
     private static final int IMAGE_BY_ID = 11;
     private static final int IMAGE_BY_MEDIASTORE_ID = 12;
+    private static final int IMAGE_SEARCH = 13;
+    private static final int IMAGES_WITH_DAY_TAKEN = 14;
+    private static final int IMAGES_BY_DAY_TAKEN = 15;
+    private static final int IMAGES_BY_DAY_TAKEN_COUNT = 16;
+
     private static final int LABELS_LIST = 20;
     private static final int LABEL_BY_ID = 21;
     private static final int LABEL_BY_NAME = 22;
-    private static final int LABELS_BY_IMAGE_ID = 30;
-    private static final int LABELS_2_IMAGES = 40;
-    private static final int SEARCH = 50;
-    //and so on
+    private static final int LABELS_BY_IMAGE_ID = 23;
+    private static final int LABELS_2_IMAGES = 24;
+
     private static final UriMatcher URI_MATCHER;
 
     static {
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
-        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME, IMAGES_LIST);
-        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/#", IMAGE_BY_ID);
-        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Image.COLUMN_MEDIASTORE_ID + "/#", IMAGE_BY_MEDIASTORE_ID);
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME, IMAGES_LIST);                                                                   // content://authority/images                   > SELECT * FROM images > INSERT INTO images2labels
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/#", IMAGE_BY_ID);                                                            // content://authority/images/#                 > SELECT * FROM images WHERE _id = #
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Image.COLUMN_MEDIASTORE_ID + "/#", IMAGE_BY_MEDIASTORE_ID);              // content://authority/images/mediastore_id/#   > SELECT * FROM images WHERE mediastore_id = #
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN, IMAGES_WITH_DAY_TAKEN);                   // content://authority/images/day_taken         > SELECT * FROM images INNER JOIN images_by_day
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN + "/#", IMAGES_BY_DAY_TAKEN);              // content://authority/images/day_taken/#       > SELECT * FROM images INNER JOIN images_by_day WHERE day_taken = #
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN + "/count", IMAGES_BY_DAY_TAKEN_COUNT);    // content://authority/images/day_taken/count   > SELECT count(_id), day_taken FROM images INNER JOIN images_by_day GROUP BY day_taken
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search/*", IMAGE_SEARCH);                                                    // content://authority/images/search/*          > SELECT * FROM images_with_labels WHERE column LIKE '%*%'
 
-        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME, LABELS_LIST);
-        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/#", LABEL_BY_ID);
-        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label.COLUMN_NAME + "/*", LABEL_BY_NAME);
-        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label2Image.COLUMN_IMAGE_ID + "/#", LABELS_BY_IMAGE_ID);
+        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME, LABELS_LIST);                                                                   // content://authority/labels                   > SELECT * FROM labels > INSERT INTO labels
+        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/#", LABEL_BY_ID);                                                            // content://authority/labels/#                 > SELECT * FROM labels WHERE _id = #
+        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label.COLUMN_NAME + "/*", LABEL_BY_NAME);                                // content://authority/labels/name/*            > SELECT * FROM labels WHERE name = *
+        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label2Image.COLUMN_IMAGE_ID + "/#", LABELS_BY_IMAGE_ID);                 // content://authority/labels/image_id/#        > SELECT * FROM labels INNER JOIN labels2images WHERE image_id = #
 
-        URI_MATCHER.addURI(AUTHORITY, Label2Image.TABLE_NAME, LABELS_2_IMAGES);
-
-        URI_MATCHER.addURI(AUTHORITY, "search/*", SEARCH);
+        URI_MATCHER.addURI(AUTHORITY, Label2Image.TABLE_NAME, LABELS_2_IMAGES);                                                         // content://authority/images2labels            > INSERT INTO images2labels
     }
 
     private DatabaseHelper dbHelper;
@@ -110,13 +116,33 @@ public final class SPOCContentProvider extends ContentProvider {
                 builder.setTables(Label.TABLE_NAME + "INNER JOIN " + Label2Image.TABLE_NAME + " ON " + Label.TABLE_NAME + "._id" + " = " + Label2Image.COLUMN_LABEL_ID);
                 builder.appendWhere(Label2Image.COLUMN_IMAGE_ID + "=" + uri.getLastPathSegment());
                 break;
-            case SEARCH:
+            case IMAGE_SEARCH:
                 if (projection == null) {
                     projection = new String[]{"DISTINCT _id", Image.COLUMN_FILENAME};
                 }
-                builder.setTables(LabelSearchView.VIEW_NAME);
+                builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
                 builder.appendWhere(Image.COLUMN_FILENAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase(Locale.getDefault()) + "%' OR " + Label.COLUMN_NAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase() + "%'");
                 break;
+            case IMAGES_WITH_DAY_TAKEN:
+                builder.setTables(Image.TABLE_NAME + " INNER JOIN " + Views.IMAGES_BY_DAY_NAME + " ON " + Views.IMAGES_BY_DAY_NAME + "._id=" + Image.TABLE_NAME + "._id");
+                if (sortOrder == null) {
+                    sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
+                }
+                break;
+            case IMAGES_BY_DAY_TAKEN:
+                builder.setTables(Image.TABLE_NAME + " INNER JOIN " + Views.IMAGES_BY_DAY_NAME + " ON " + Views.IMAGES_BY_DAY_NAME + "._id=" + Image.TABLE_NAME + "._id");
+                if (sortOrder == null) {
+                    sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
+                }
+                builder.appendWhere(Views.IMAGES_BY_DAY_DAY_TAKEN + "=" + uri.getLastPathSegment());
+                break;
+            case IMAGES_BY_DAY_TAKEN_COUNT:
+                builder.setTables(Image.TABLE_NAME + " INNER JOIN " + Views.IMAGES_BY_DAY_NAME + " ON " + Views.IMAGES_BY_DAY_NAME + "._id=" + Image.TABLE_NAME + "._id");
+                if (projection == null) {
+                    projection = new String[]{"count(" + Image.TABLE_NAME + "._id)", Views.IMAGES_BY_DAY_DAY_TAKEN};
+                }
+                sortOrder = Views.IMAGES_BY_DAY_DAY_TAKEN + " DESC";
+                return builder.query(db, projection, selection, selectionArgs, Views.IMAGES_BY_DAY_DAY_TAKEN, null, sortOrder);
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
         }
@@ -135,6 +161,7 @@ public final class SPOCContentProvider extends ContentProvider {
         final int match = URI_MATCHER.match(uri);
         switch (match) {
             case IMAGES_LIST:
+            case IMAGES_WITH_DAY_TAKEN:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Image.TABLE_NAME;
             case IMAGE_BY_ID:
             case IMAGE_BY_MEDIASTORE_ID:
@@ -147,8 +174,8 @@ public final class SPOCContentProvider extends ContentProvider {
                 return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Label.TABLE_NAME;
             case LABELS_2_IMAGES:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Label2Image.TABLE_NAME;
-            case SEARCH:
-                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + LabelSearchView.VIEW_NAME;
+            case IMAGE_SEARCH:
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Views.IMAGES_WITH_LABELS_NAME;
             default:
                 return null;
         }

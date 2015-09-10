@@ -8,13 +8,9 @@ import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import hu.mrolcsi.android.spoc.database.model.Contact;
-import hu.mrolcsi.android.spoc.database.model.Image;
-import hu.mrolcsi.android.spoc.database.model.Label;
-import hu.mrolcsi.android.spoc.database.model.LabelType;
+import hu.mrolcsi.android.spoc.database.model.*;
 import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
 import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
-import hu.mrolcsi.android.spoc.database.model.view.LabelSearchView;
 
 import java.sql.SQLException;
 
@@ -28,7 +24,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 8;
+    public static final int DATABASE_VERSION = 9;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -64,7 +60,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.createTable(connectionSource, Label2Image.class);
             //TableUtils.createTable(connectionSource, Contact.class);
             //TableUtils.createTable(connectionSource, Contact2Image.class);
-            database.execSQL(LabelSearchView.CREATE_SQL);
+            database.execSQL(Views.IMAGES_WITH_LABELS_CREATE);
         } catch (SQLException e) {
             Log.w(getClass().getName(), e);
         }
@@ -98,8 +94,8 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         if (oldVersion < 6) {
             //5: add LabelSearch view
             //6: add type column to search-view
-            database.execSQL("DROP VIEW IF EXISTS " + LabelSearchView.VIEW_NAME);
-            database.execSQL(LabelSearchView.CREATE_SQL);
+            database.execSQL("DROP VIEW IF EXISTS " + Views.IMAGES_WITH_LABELS_NAME);
+            database.execSQL(Views.IMAGES_WITH_LABELS_CREATE);
         }
         if (oldVersion < 7) {
             //rename some label types
@@ -123,8 +119,18 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         }
         if (oldVersion < 8) {
             //add Date Taken to view
-            database.execSQL("DROP VIEW IF EXISTS " + LabelSearchView.VIEW_NAME);
-            database.execSQL(LabelSearchView.CREATE_SQL);
+            database.execSQL("DROP VIEW IF EXISTS " + Views.IMAGES_WITH_LABELS_NAME);
+            database.execSQL(Views.IMAGES_WITH_LABELS_CREATE);
+        }
+        if (oldVersion < 9) {
+            //rename labelSearchView to images_with_labels
+            //add label_id column
+            database.execSQL("DROP VIEW IF EXISTS labelSearchView");
+            database.execSQL("DROP VIEW IF EXISTS " + Views.IMAGES_WITH_LABELS_NAME);
+            database.execSQL(Views.IMAGES_WITH_LABELS_CREATE);
+            //create ImagesByDay view
+            database.execSQL("DROP VIEW IF EXISTS " + Views.IMAGES_BY_DAY_NAME);
+            database.execSQL(Views.IMAGES_BY_DAY_CREATE);
         }
     }
 
