@@ -63,7 +63,6 @@ public final class GalleryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
 
-
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mNavigation = (AnimatedExpandableListView) findViewById(R.id.navigation);
 

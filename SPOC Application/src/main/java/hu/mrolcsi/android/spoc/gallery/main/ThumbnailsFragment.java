@@ -79,6 +79,8 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
             findViews();
         }
 
+        showSystemUI();
+
         return mRootView;
     }
 
@@ -86,6 +88,10 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
         twList = (TwoWayView) mRootView.findViewById(R.id.list);
         twList.setHasFixedSize(true);
         twList.setAdapter(null);
+
+        final int statusBarHeight = GeneralUtils.getStatusBarHeight(getResources());
+        final int navigationBarHeight = GeneralUtils.getNavigationBarHeight(getResources());
+        mRootView.setPadding(0, statusBarHeight, 0, navigationBarHeight);
 
         ((SpannableGridLayoutManager) twList.getLayoutManager()).setNumColumns(getResources().getInteger(R.integer.preferredColumns));
 
@@ -139,6 +145,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
                 }
             }
         });
+
         final HideOnScrollListener hideOnScrollListener = new HideOnScrollListener() {
             @Override
             public void hide() {

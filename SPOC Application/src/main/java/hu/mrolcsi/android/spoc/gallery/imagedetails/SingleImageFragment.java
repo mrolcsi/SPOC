@@ -114,16 +114,30 @@ public class SingleImageFragment extends SPOCFragment {
                 @Override
                 public void onViewTap(View view, float v, float v1) {
                     toggleFullScreen();
-                    if (isFullscreen()) {
-                        mOverlayDrawable.setAlpha(0);
-                        photoView.setImageDrawable(new LayerDrawable(new Drawable[]{mBitmapDrawable, mOverlayDrawable}));
-                    } else {
-                        mOverlayDrawable.setAlpha(200);
-                        photoView.setImageDrawable(new LayerDrawable(new Drawable[]{mBitmapDrawable, mOverlayDrawable}));
+                }
+            });
+
+            addOnFullscreenChangeListener(new OnFullscreenChangeListener() {
+                @Override
+                public void onFullScreenChanged(boolean isFullscreen) {
+                    if (mOverlayDrawable != null) {
+                        if (isFullscreen) {
+                            mOverlayDrawable.setAlpha(0);
+                            final float scale = photoView.getScale();
+                            photoView.invalidate();
+                            photoView.setScale(scale);
+
+                        } else {
+                            mOverlayDrawable.setAlpha(200);
+                            final float scale = photoView.getScale();
+                            photoView.invalidate();
+                            photoView.setScale(scale);
+                        }
                     }
                 }
             });
         }
+
         return mRootView;
     }
 
@@ -165,6 +179,12 @@ public class SingleImageFragment extends SPOCFragment {
                 mBitmapDrawable = new BitmapDrawable(getResources(), resource);
                 mOverlayBitmap = Bitmap.createBitmap(resource.getWidth(), resource.getHeight(), Bitmap.Config.ARGB_8888);
                 mOverlayDrawable = new BitmapDrawable(getResources(), mOverlayBitmap);
+
+                if (isFullscreen()) {
+                    mOverlayDrawable.setAlpha(0);
+                } else {
+                    mOverlayDrawable.setAlpha(200);
+                }
 
                 LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{mBitmapDrawable, mOverlayDrawable});
                 photoView.setImageDrawable(layerDrawable);

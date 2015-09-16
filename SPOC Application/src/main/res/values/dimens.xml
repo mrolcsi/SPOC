@@ -20,4 +20,6 @@
     <dimen name="navigation_iconMargin">16dp</dimen>
     <dimen name="navigation_textMargin">72dp</dimen>
     <dimen name="navigation_itemHeight">48dp</dimen>
+
+    <dimen name="status_bar_height">25dp</dimen>
 </resources>

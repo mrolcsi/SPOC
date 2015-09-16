@@ -5,8 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:layout_height="match_parent">
 
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
@@ -20,17 +19,18 @@
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent">
+            android:background="@android:color/transparent"
+            android:paddingTop="25dp">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@null"
-            android:elevation="0dp"
-            app:layout_scrollFlags="scroll|enterAlways"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            tools:ignore="UnusedAttribute" />
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@null"
+                android:elevation="0dp"
+                app:layout_scrollFlags="scroll|enterAlways"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                tools:ignore="UnusedAttribute"/>
 
         </android.support.design.widget.AppBarLayout>
 
@@ -49,6 +49,7 @@
         android:fitsSystemWindows="true"
         android:groupIndicator="@null"
         android:listSelector="@android:color/transparent"
+        android:paddingTop="25dp"
         app:menu="@menu/navigation" />
 
 </hu.mrolcsi.android.spoc.gallery.common.widgets.DrawerLayout>
