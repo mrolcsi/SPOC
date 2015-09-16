@@ -16,28 +16,24 @@ import java.util.List;
  * Time: 16:39
  */
 
-public class FaceDetectorTask extends AsyncTask<Void, Void, List<RectF>> {
+public class FaceDetectorTask extends AsyncTask<Bitmap, Void, List<RectF>> {
 
-    private final Bitmap bitmap;
-
-    public FaceDetectorTask(Bitmap bitmap) {
-        this.bitmap = bitmap;
+    public FaceDetectorTask() {
     }
 
     @Override
-    protected List<RectF> doInBackground(Void... voids) {
+    protected List<RectF> doInBackground(Bitmap... bitmaps) {
 
         //detect faces
-        FaceDetector detector = new FaceDetector(bitmap.getWidth(), bitmap.getHeight(), 5);
+        FaceDetector detector = new FaceDetector(bitmaps[0].getWidth(), bitmaps[0].getHeight(), 5);
         FaceDetector.Face[] faces = new FaceDetector.Face[5];
-        detector.findFaces(bitmap, faces);
+        detector.findFaces(bitmaps[0], faces);
 
         List<RectF> rectangles = new ArrayList<>();
 
-        for (int i = 0, facesLength = faces.length; i < facesLength; i++) {
-            FaceDetector.Face face = faces[i];
+        for (FaceDetector.Face face : faces) {
             //check for valid face
-            if (face != null && face.confidence() > 0.6f) {
+            if (face != null && face.confidence() > 0.5f) {
 
                 if (isCancelled()) {
                     detector = null;

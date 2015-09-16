@@ -6,18 +6,20 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.*;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.ShareActionProvider;
-import android.util.Log;
 import android.view.*;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.signature.StringSignature;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.FaceDetectorTask;
@@ -52,10 +54,12 @@ public class SingleImageFragment extends SPOCFragment {
 
     private String mImagePath;
 
-    private Bitmap mBitmap;
-    private Canvas mCanvas;
+    private BitmapDrawable mOverlayDrawable;
+    private BitmapDrawable mBitmapDrawable;
     private FaceDetectorTask mDetector;
     private List<RectF> mFacePositions;
+    private BitmapImageViewTarget mBitmapTarget;
+    private Bitmap mOverlayBitmap;
 
     public static SingleImageFragment newInstance(long imageId, String imagePath, String location) {
         final SingleImageFragment f = new SingleImageFragment();
@@ -111,9 +115,11 @@ public class SingleImageFragment extends SPOCFragment {
                 public void onViewTap(View view, float v, float v1) {
                     toggleFullScreen();
                     if (isFullscreen()) {
-                        loadImage();
+                        mOverlayDrawable.setAlpha(0);
+                        photoView.setImageDrawable(new LayerDrawable(new Drawable[]{mBitmapDrawable, mOverlayDrawable}));
                     } else {
-                        drawFaces();
+                        mOverlayDrawable.setAlpha(200);
+                        photoView.setImageDrawable(new LayerDrawable(new Drawable[]{mBitmapDrawable, mOverlayDrawable}));
                     }
                 }
             });
@@ -132,40 +138,49 @@ public class SingleImageFragment extends SPOCFragment {
     }
 
     private void loadImage() {
+
+        if (mBitmapTarget != null) {
+            Glide.clear(mBitmapTarget);
+        }
+
+        mBitmapTarget = new BitmapImageViewTarget(photoView) {
+            @Override
+            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                if (mFacePositions == null) {
+                    mDetector = new FaceDetectorTask() {
+                        @Override
+                        protected void onPostExecute(List<RectF> rectFs) {
+                            mFacePositions = rectFs;
+                            drawFaces();
+                        }
+                    };
+                    mDetector.execute(resource);
+                }
+
+                super.onResourceReady(resource, glideAnimation);
+            }
+
+            @Override
+            protected void setResource(Bitmap resource) {
+                mBitmapDrawable = new BitmapDrawable(getResources(), resource);
+                mOverlayBitmap = Bitmap.createBitmap(resource.getWidth(), resource.getHeight(), Bitmap.Config.ARGB_8888);
+                mOverlayDrawable = new BitmapDrawable(getResources(), mOverlayBitmap);
+
+                LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{mBitmapDrawable, mOverlayDrawable});
+                photoView.setImageDrawable(layerDrawable);
+            }
+        };
+
         Glide.with(this)
                 .fromString()
                 .asBitmap()
                 .fitCenter()
                 .override(mDesiredWidth, mDesiredHeight)
-                .listener(new RequestListener<String, Bitmap>() {
-                    @Override
-                    public boolean onException(Exception e, String model, Target<Bitmap> target, boolean isFirstResource) {
-                        Log.w(getClass().getSimpleName(), model, e);
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onResourceReady(Bitmap resource, String model, Target<Bitmap> target, boolean isFromMemoryCache, boolean isFirstResource) {
-                        mBitmap = resource;
-
-                        if (mFacePositions == null) {
-                            mDetector = new FaceDetectorTask(resource) {
-                                @Override
-                                protected void onPostExecute(List<RectF> rectFs) {
-                                    mFacePositions = rectFs;
-                                    mCanvas = new Canvas(mBitmap);
-                                }
-                            };
-                            mDetector.execute();
-                        }
-                        return false;
-                    }
-                })
                 .error(hu.mrolcsi.android.spoc.common.R.drawable.error)
                 .diskCacheStrategy(DiskCacheStrategy.RESULT)
                 .signature(new StringSignature(mImagePath + "_big"))
                 .load(mImagePath)
-                .into(photoView);
+                .into(mBitmapTarget);
     }
 
     @Override
@@ -232,16 +247,26 @@ public class SingleImageFragment extends SPOCFragment {
         super.onDestroyView();
 
         Glide.clear(photoView);
+        Glide.clear(mBitmapTarget);
         Glide.get(getActivity()).clearMemory();
 
         if (mDetector != null) {
             mDetector.cancel(true);
         }
+
+        if (mOverlayBitmap != null) {
+            mOverlayBitmap.recycle();
+            mOverlayBitmap = null;
+
+            mOverlayDrawable = null;
+        }
     }
 
     private void drawFaces() {
 
-        if (mFacePositions == null || mFacePositions.isEmpty()) return;
+        if (mFacePositions == null || mFacePositions.isEmpty()) {
+            return;
+        }
 
         Paint paint = new Paint();
         paint.setColor(getResources().getColor(R.color.background_material_light));
@@ -251,8 +276,10 @@ public class SingleImageFragment extends SPOCFragment {
 
         final int cornerRadius = getResources().getDimensionPixelSize(R.dimen.margin_small);
 
+        final Canvas canvas = new Canvas(mOverlayDrawable.getBitmap());
+
         for (RectF rect : mFacePositions) {
-            mCanvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint);
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint);
         }
 
         photoView.invalidate();

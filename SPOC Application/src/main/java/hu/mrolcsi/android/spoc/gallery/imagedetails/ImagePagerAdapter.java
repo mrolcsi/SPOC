@@ -5,7 +5,6 @@ import android.database.DataSetObserver;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.util.SparseArray;
 import hu.mrolcsi.android.spoc.database.model.Image;
 
 /**
@@ -25,7 +24,7 @@ public class ImagePagerAdapter extends FragmentStatePagerAdapter {
     private boolean mDataValid;
     private DataSetObserver mDataSetObserver;
 
-    private SparseArray<Fragment> mFragmentCache = new SparseArray<>();
+    //private SparseArray<Fragment> mFragmentCache = new SparseArray<>();
 
     public ImagePagerAdapter(FragmentManager fm, Cursor cursor) {
         super(fm);
@@ -42,17 +41,20 @@ public class ImagePagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        if (mFragmentCache.get(position) != null) return mFragmentCache.get(position);
-        else if (mCursor != null && mDataValid) {
+//        if (mFragmentCache.get(position) != null) {
+//            return mFragmentCache.get(position);
+//        } else {
+        if (mCursor != null && mDataValid) {
             mCursor.moveToPosition(position);
             final String imagePath = mCursor.getString(iFilename);
             final long imageId = mCursor.getLong(iID);
             final String location = mCursor.getString(iLocation);
 
             final SingleImageFragment fragment = SingleImageFragment.newInstance(imageId, imagePath, location);
-            mFragmentCache.put(position, fragment);
+            //mFragmentCache.put(position, fragment);
             return fragment;
         }
+//        }
         return null;
     }
 
