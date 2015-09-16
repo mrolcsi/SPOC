@@ -121,8 +121,10 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
                 }
             });
 
-            final int navigationBarHeight = GeneralUtils.getNavigationBarHeight(getResources());
-            rlInfo.setPadding(0, 0, 0, navigationBarHeight);
+            if (Build.VERSION.SDK_INT >= 16) {
+                final int navigationBarHeight = GeneralUtils.getNavigationBarHeight(getResources());
+                rlInfo.setPadding(0, 0, 0, navigationBarHeight);
+            }
 
             if (savedInstanceState != null) mCurrentPageIndex = savedInstanceState.getInt(ARG_SELECTED_POSITION);
         }
