@@ -316,10 +316,58 @@ public class DatabaseBuilderService extends IntentService {
         return null;
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void cleanUpContacts() {
         Log.v(getClass().getSimpleName(), "Cleaning up contacts...");
 
-        getContentResolver().delete(SPOCContentProvider.CONTACTS_URI, null, null);
+        final Cursor query = getContentResolver().query(
+                SPOCContentProvider.CONTACTS_URI,
+                new String[]{"_id", Contact.COLUMN_CONTACT_KEY},
+                null, null, null);
+
+        try {
+            mOps.clear();
+
+            Uri lookupUri;
+            Uri contactUri;
+            ContentValues values = new ContentValues();
+
+            while (query.moveToNext()) {
+                lookupUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_LOOKUP_URI, query.getString(1));
+                contactUri = ContactsContract.Contacts.lookupContact(getContentResolver(), lookupUri);
+
+                if (contactUri == null) {
+                    //contact does not exist
+                    mOps.add(ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).build());
+                } else {
+                    //update contact with info from provider
+                    final Cursor cursorWithContact = getContentResolver().query(contactUri,
+                            new String[]{
+                                    ContactsContract.Contacts._ID,
+                                    ContactsContract.Contacts.LOOKUP_KEY,
+                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? ContactsContract.Contacts.DISPLAY_NAME_PRIMARY : ContactsContract.Contacts.DISPLAY_NAME},
+                            null, null, null);
+
+                    if (cursorWithContact.moveToFirst()) {
+                        values.clear();
+                        values.put(Contact.COLUMN_CONTACT_KEY, cursorWithContact.getString(1));
+                        values.put(Contact.COLUMN_NAME, cursorWithContact.getString(2));
+
+                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).withValues(values).build());
+                    }
+
+                    cursorWithContact.close();
+                }
+            }
+
+            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
+        } catch (RemoteException | OperationApplicationException e) {
+            Log.w(getClass().getSimpleName(), e);
+        } finally {
+            if (query != null) {
+                query.close();
+            }
+        }
 
         Log.v(getClass().getSimpleName(), "Contacts cleanup done.");
     }
@@ -345,10 +393,10 @@ public class DatabaseBuilderService extends IntentService {
             mOps.clear();
 
             while (cursorWithContacts.moveToNext()) {
-                //TODO: check for existing
                 lookupKey = cursorWithContacts.getString(1);
                 displayName = cursorWithContacts.getString(2);
 
+                //check for existing
                 final Cursor innerCursor = getContentResolver().query(SPOCContentProvider.CONTACTS_URI.buildUpon().appendPath(Contact.COLUMN_CONTACT_KEY).appendPath(lookupKey).build(),
                         new String[]{"_id"},
                         null, null, null);
@@ -357,11 +405,15 @@ public class DatabaseBuilderService extends IntentService {
                 values.put(Contact.COLUMN_CONTACT_KEY, lookupKey);
                 values.put(Contact.COLUMN_NAME, displayName);
 
-                if (innerCursor.moveToFirst()) {
-                    mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, String.valueOf(innerCursor.getLong(0)))).withValues(values).build());
-                } else {
+                if (!innerCursor.moveToFirst()) {
                     mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.CONTACTS_URI).withValues(values).build());
                 }
+                /*
+                else {
+                    //already updated during cleanup
+                    //mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, String.valueOf(innerCursor.getLong(0)))).withValues(values).build());
+                }
+                 */
 
                 innerCursor.close();
             }
@@ -413,8 +465,6 @@ public class DatabaseBuilderService extends IntentService {
         values.put(Label2Image.COLUMN_IMAGE_ID, 555);
         values.put(Label2Image.COLUMN_LABEL_ID, 555);
         values.put(Label2Image.COLUMN_DATE, Calendar.getInstance().getTimeInMillis());
-
-        final Uri insert = getContentResolver().insert(SPOCContentProvider.LABELS_2_IMAGES_URI, values);
 
         long endTime = System.currentTimeMillis();
         Log.v(getClass().getSimpleName(), String.format("Labels generated in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
