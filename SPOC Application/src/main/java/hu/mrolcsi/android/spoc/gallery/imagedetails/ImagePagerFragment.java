@@ -26,7 +26,6 @@ import android.widget.TextView;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
-import hu.mrolcsi.android.spoc.common.utils.GeneralUtils;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -121,11 +120,6 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
                     updateInfo();
                 }
             });
-
-            if (Build.VERSION.SDK_INT >= 16) {
-                final int navigationBarHeight = GeneralUtils.getNavigationBarHeight(getResources());
-                rlInfo.setPadding(0, 0, 0, navigationBarHeight);
-            }
 
             if (savedInstanceState != null) mCurrentPageIndex = savedInstanceState.getInt(ARG_SELECTED_POSITION);
         }

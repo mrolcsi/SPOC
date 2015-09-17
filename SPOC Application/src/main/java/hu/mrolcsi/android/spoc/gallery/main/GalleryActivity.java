@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -31,7 +30,6 @@ import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
-import hu.mrolcsi.android.spoc.common.utils.GeneralUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
 import hu.mrolcsi.android.spoc.gallery.search.SearchResultsFragment;
@@ -62,15 +60,6 @@ public final class GalleryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (Build.VERSION.SDK_INT >= 16) {
-            View decorView = getWindow().getDecorView();
-            int flags = 0;
-            flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-            flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-            flags |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-            decorView.setSystemUiVisibility(flags);
-        }
 
         setContentView(R.layout.activity_gallery);
 
@@ -183,11 +172,6 @@ public final class GalleryActivity extends AppCompatActivity {
 
     private void setUpNavigationView() {
 
-        if (Build.VERSION.SDK_INT >= 16) {
-            final int statusBarHeight = GeneralUtils.getStatusBarHeight(getResources());
-            mNavigation.setPadding(0, statusBarHeight, 0, 0);
-        }
-
         final NavigationAdapter navigationAdapter = new NavigationAdapter(this, getSupportLoaderManager());
         mNavigation.setAdapter(navigationAdapter);
         mNavigation.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
@@ -261,11 +245,6 @@ public final class GalleryActivity extends AppCompatActivity {
     @TargetApi(21)
     private void setUpDrawerToggle() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-        if (Build.VERSION.SDK_INT >= 16) {
-            final int statusBarHeight = GeneralUtils.getStatusBarHeight(getResources());
-            findViewById(R.id.appBar).setPadding(0, statusBarHeight, 0, 0);
-        }
 
         setSupportActionBar(toolbar);
 

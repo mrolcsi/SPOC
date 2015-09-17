@@ -6,7 +6,10 @@ import android.app.ProgressDialog;
 import android.content.*;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.os.*;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.CursorLoader;
@@ -85,12 +88,6 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
         twList = (TwoWayView) mRootView.findViewById(R.id.list);
         twList.setHasFixedSize(true);
         twList.setAdapter(null);
-
-        if (Build.VERSION.SDK_INT >= 16) {
-            final int statusBarHeight = GeneralUtils.getStatusBarHeight(getResources());
-            final int navigationBarHeight = GeneralUtils.getNavigationBarHeight(getResources());
-            mRootView.setPadding(0, statusBarHeight, 0, navigationBarHeight);
-        }
 
         ((SpannableGridLayoutManager) twList.getLayoutManager()).setNumColumns(getResources().getInteger(R.integer.preferredColumns));
 
