@@ -12,6 +12,7 @@ import hu.mrolcsi.android.spoc.database.model.Contact;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.model.Views;
+import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
 import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
 
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public final class SPOCContentProvider extends ContentProvider {
     public static final Uri LABELS_2_IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Label2Image.TABLE_NAME);
     public static final Uri SEARCH_URI = CONTENT_URI.buildUpon().appendPath(Image.TABLE_NAME).appendPath("search").build();
     public static final Uri CONTACTS_URI = Uri.withAppendedPath(CONTENT_URI, Contact.TABLE_NAME);
+    public static final Uri CONTACTS_2_IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Contact2Image.TABLE_NAME);
 
     private static final int IMAGES_LIST = 10;
     private static final int IMAGE_BY_ID = 11;
@@ -53,6 +55,7 @@ public final class SPOCContentProvider extends ContentProvider {
     private static final int CONTACTS_LIST = 31;
     private static final int CONTACT_BY_ID = 32;
     private static final int CONTACT_BY_KEY = 33;
+    private static final int CONTACTS_2_IMAGES = 34;
 
     private static final UriMatcher URI_MATCHER;
 
@@ -78,6 +81,8 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Contact.TABLE_NAME, CONTACTS_LIST);                                                               // content://authority/contacts                 > SELECT * FROM contacts
         URI_MATCHER.addURI(AUTHORITY, Contact.TABLE_NAME + "/#", CONTACT_BY_ID);                                                        // content://authority/contacts/#               > SELECT * FROM contacts WHERE _id = #
         URI_MATCHER.addURI(AUTHORITY, Contact.TABLE_NAME + "/" + Contact.COLUMN_CONTACT_KEY + "/*", CONTACT_BY_KEY);                    // content://authority/contacts/key/*           > SELECT * FROM contacts WHERE key = *
+
+        URI_MATCHER.addURI(AUTHORITY, Contact2Image.TABLE_NAME, CONTACTS_2_IMAGES);                                                     // content://authority/contacts2images          > INSERT INTO contacts2images
     }
 
     private DatabaseHelper dbHelper;
@@ -286,6 +291,9 @@ public final class SPOCContentProvider extends ContentProvider {
                 return getUriForId(id, uri);
             case CONTACTS_LIST:
                 id = db.insert(Contact.TABLE_NAME, null, contentValues);
+                return getUriForId(id, uri);
+            case CONTACTS_2_IMAGES:
+                id = db.insertWithOnConflict(Contact2Image.TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
                 return getUriForId(id, uri);
             default:
                 throw new IllegalArgumentException("Unsupported Uri for insertion: " + uri);

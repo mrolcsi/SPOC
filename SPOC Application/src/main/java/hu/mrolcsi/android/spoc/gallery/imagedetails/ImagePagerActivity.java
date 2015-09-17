@@ -70,16 +70,6 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
     private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
     Handler mHideHandler = new Handler();
     /**
-     * The instance of the {@link SystemUiHider} for this activity.
-     */
-    private SystemUiHider mSystemUiHider;
-    Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            mSystemUiHider.hide();
-        }
-    };
-    /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away
      * while interacting with activity UI.
@@ -91,6 +81,16 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
                 delayedHide(AUTO_HIDE_DELAY_MILLIS);
             }
             return false;
+        }
+    };
+    /**
+     * The instance of the {@link SystemUiHider} for this activity.
+     */
+    private SystemUiHider mSystemUiHider;
+    Runnable mHideRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mSystemUiHider.hide();
         }
     };
     private ViewPager vpDetailsPager;
@@ -303,7 +303,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
             if (!TextUtils.isEmpty(imageLocation)) {
                 tvLocation.setText(imageLocation);
             } else {
-                final Cursor cursorWithImage = getContentResolver().query(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getLong(SingleImageFragment.ARG_IMAGE_ID))), new String[]{Image.COLUMN_LOCATION}, null, null, null);
+                final Cursor cursorWithImage = getContentResolver().query(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID))), new String[]{Image.COLUMN_LOCATION}, null, null, null);
                 if (cursorWithImage.moveToFirst()) {
                     if (cursorWithImage.getString(0) != null) {
                         tvLocation.setText(cursorWithImage.getString(0));
@@ -334,7 +334,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
                                         ContentValues values = new ContentValues();
                                         values.put(Image.COLUMN_LOCATION, locationText);
 
-                                        getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getLong(SingleImageFragment.ARG_IMAGE_ID))), values, null, null);
+                                        getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID))), values, null, null);
 
                                         tvLocation.setText(locationText);
                                     }
@@ -368,8 +368,8 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
 
         if (mCurrentPageIndex < 0 && data != null && getIntent() != null && getIntent().hasExtra(ARG_SELECTED_POSITION)) {
             mCurrentPageIndex = getIntent().getIntExtra(ARG_SELECTED_POSITION, 0);
+            vpDetailsPager.setCurrentItem(mCurrentPageIndex);
         }
-        vpDetailsPager.setCurrentItem(mCurrentPageIndex);
     }
 
     @Override

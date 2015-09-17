@@ -47,7 +47,7 @@ public class ImagePagerAdapter extends FragmentStatePagerAdapter {
         if (mCursor != null && mDataValid) {
             mCursor.moveToPosition(position);
             final String imagePath = mCursor.getString(iFilename);
-            final long imageId = mCursor.getLong(iID);
+            final int imageId = mCursor.getInt(iID);
             final String location = mCursor.getString(iLocation);
 
             final SingleImageFragment fragment = SingleImageFragment.newInstance(imageId, imagePath, location);

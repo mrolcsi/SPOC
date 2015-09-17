@@ -24,7 +24,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 10;
+    public static final int DATABASE_VERSION = 11;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -159,6 +159,15 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             values.clear();
             values.put(Label.COLUMN_TYPE, LabelType.FOLDER.name());
             database.update(Label.TABLE_NAME, values, "type = ?", new String[]{"DIRECTORY_TEXT"});
+        }
+        if (oldVersion < 11) {
+            //make contactId and imageId in contacts2images unique
+            try {
+                TableUtils.dropTable(connectionSource, Contact2Image.class, true);
+                TableUtils.createTable(connectionSource, Contact2Image.class);
+            } catch (SQLException e) {
+                Log.w(getClass().getSimpleName(), e);
+            }
         }
     }
 

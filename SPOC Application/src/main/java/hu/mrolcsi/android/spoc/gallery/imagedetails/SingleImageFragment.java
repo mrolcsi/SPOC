@@ -24,6 +24,7 @@ import com.bumptech.glide.signature.StringSignature;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.FaceDetectorTask;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
@@ -42,7 +43,7 @@ import java.util.List;
  * Time: 20:19
  */
 
-public class SingleImageFragment extends SPOCFragment {
+public class SingleImageFragment extends SPOCFragment { //TODO: contacts on image loader
 
     public static final String ARG_IMAGE_ID = "SPOC.Gallery.Details.ImageId";
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
@@ -58,15 +59,15 @@ public class SingleImageFragment extends SPOCFragment {
     private BitmapDrawable mOverlayDrawable;
     private BitmapDrawable mBitmapDrawable;
     private FaceDetectorTask mDetector;
-    private List<RectF> mFacePositions;
+    private List<Contact2Image> mFacePositions;
     private BitmapImageViewTarget mBitmapTarget;
     private Bitmap mOverlayBitmap;
 
-    public static SingleImageFragment newInstance(long imageId, String imagePath, String location) {
+    public static SingleImageFragment newInstance(int imageId, String imagePath, String location) {
         final SingleImageFragment f = new SingleImageFragment();
 
         final Bundle args = new Bundle();
-        args.putLong(ARG_IMAGE_ID, imageId);
+        args.putInt(ARG_IMAGE_ID, imageId);
         args.putString(ARG_IMAGE_PATH, imagePath);
         args.putString(ARG_IMAGE_LOCATION, location);
         f.setArguments(args);
@@ -179,10 +180,12 @@ public class SingleImageFragment extends SPOCFragment {
             @Override
             public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
                 if (mFacePositions == null) {
-                    mDetector = new FaceDetectorTask() {
+                    mDetector = new FaceDetectorTask(getActivity(), getArguments().getInt(ARG_IMAGE_ID)) {
                         @Override
-                        protected void onPostExecute(List<RectF> rectFs) {
-                            mFacePositions = rectFs;
+                        protected void onPostExecute(List<Contact2Image> contact2ImageList) {
+
+                            mFacePositions = contact2ImageList;
+
                             drawFaces();
                         }
                     };
