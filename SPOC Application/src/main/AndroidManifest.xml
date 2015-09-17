@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
     package="hu.mrolcsi.android.spoc.gallery"
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -19,7 +19,6 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.SPOC"
         tools:ignore="UnusedAttribute">
-
         <activity
             android:name=".main.GalleryActivity"
             android:label="@string/title_activity_gallery"
@@ -48,6 +47,17 @@
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="ed56220fdb5988cc5c8783bba5ebbf57313f06c0" />
+
+        <activity
+            android:name=".imagedetails.ImagePagerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_image_pager"
+            android:parentActivityName=".main.GalleryActivity"
+            android:theme="@style/Theme.SPOC.Fullscreen">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="hu.mrolcsi.android.spoc.gallery.main.GalleryActivity"/>
+        </activity>
     </application>
 
 </manifest>

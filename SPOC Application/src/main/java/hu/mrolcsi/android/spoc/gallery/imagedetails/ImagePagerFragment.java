@@ -49,6 +49,7 @@ import java.util.Locale;
  * Time: 19:52
  */
 
+@Deprecated
 public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks {
 
     public static final String ARG_SELECTED_POSITION = "SPOC.Gallery.Pager.SelectedPosition";

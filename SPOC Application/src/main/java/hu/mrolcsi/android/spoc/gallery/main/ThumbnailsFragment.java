@@ -31,7 +31,7 @@ import hu.mrolcsi.android.spoc.common.utils.GeneralUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.HideOnScrollListener;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
-import hu.mrolcsi.android.spoc.gallery.imagedetails.ImagePagerFragment;
+import hu.mrolcsi.android.spoc.gallery.imagedetails.ImagePagerActivity;
 import org.lucasr.twowayview.ItemClickSupport;
 import org.lucasr.twowayview.ItemSelectionSupport;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
@@ -106,20 +106,26 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
                     return;
                 }
 
-                ImagePagerFragment fragment = new ImagePagerFragment();
-
-                Bundle args = new Bundle();
-                args.putInt(ImagePagerFragment.ARG_LOADER_ID, mImagesLoader.getId());
-                args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
-                args.putBundle(ARG_QUERY_BUNDLE, mQueryArgs);
-
                 mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
                 mSavedOrientation = getResources().getConfiguration().orientation;
                 mSavedPosition = i;
 
-                fragment.setArguments(args);
+//                Bundle args = new Bundle();
+//                args.putInt(ImagePagerFragment.ARG_LOADER_ID, mImagesLoader.getId());
+//                args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
+//                args.putBundle(ARG_QUERY_BUNDLE, mQueryArgs);
 
-                ((GalleryActivity) getActivity()).swapFragment(fragment);
+//                ImagePagerFragment fragment = new ImagePagerFragment();
+//                fragment.setArguments(args);
+//                ((GalleryActivity) getActivity()).swapFragment(fragment);
+
+                Intent imagePagerIntent = new Intent(getActivity(), ImagePagerActivity.class);
+
+                imagePagerIntent.putExtra(ImagePagerActivity.ARG_LOADER_ID, mImagesLoader.getId());
+                imagePagerIntent.putExtra(ImagePagerActivity.ARG_SELECTED_POSITION, i);
+                imagePagerIntent.putExtra(ARG_QUERY_BUNDLE, mQueryArgs);
+
+                startActivity(imagePagerIntent);
             }
         });
         itemClick.setOnItemLongClickListener(new ItemClickSupport.OnItemLongClickListener() {

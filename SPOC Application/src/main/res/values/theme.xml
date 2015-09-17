@@ -18,4 +18,11 @@
         <item name="windowActionBar">false</item>
 
     </style>
+
+    <style name="Theme.SPOC.Fullscreen"
+           parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="metaButtonBarStyle">@style/ButtonBar</item>
+        <item name="metaButtonBarButtonStyle">@style/ButtonBarButton</item>
+    </style>
 </resources>
