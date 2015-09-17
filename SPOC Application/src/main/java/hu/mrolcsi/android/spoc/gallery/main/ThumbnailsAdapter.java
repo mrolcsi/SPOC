@@ -27,12 +27,12 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
     private final Context context;
     private final int mThumbnailSize;
 
-    private int iData;
+    private int iData = -1;
     private int mCount = 0;
     private boolean mUseColumnSpan = true;
 
-    public ThumbnailsAdapter(Context context, Cursor cursor) {
-        super(context, cursor);
+    public ThumbnailsAdapter(Context context) {
+        super(context, null);
         this.context = context;
 
         int preferredColumns = context.getResources().getInteger(R.integer.preferredColumns);
@@ -43,9 +43,6 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
         } else columnSpan = 1;
 
         mThumbnailSize = context.getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-        iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
-
-        setHasStableIds(true);
     }
 
     @Override
@@ -71,6 +68,10 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
     public void onBindViewHolder(ImageViewHolder holder, Cursor cursor) {
         if (cursor == null || !isDataValid()) {
             return;
+        }
+
+        if (iData < 0) {
+            iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
         }
 
         String filename = cursor.getString(iData);

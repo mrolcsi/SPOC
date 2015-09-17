@@ -201,6 +201,12 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     public void onStart() {
         super.onStart();
 
+        SpannableGridLayoutManager layoutManager = ((SpannableGridLayoutManager) twList.getLayoutManager());
+        layoutManager.setNumColumns(getResources().getInteger(R.integer.preferredColumns));
+        layoutManager.setNumRows(getResources().getInteger(R.integer.preferredColumns));
+        mAdapter = new ThumbnailsAdapter(getActivity());
+        twList.setAdapter(mAdapter);
+
         int loaderId = ImageTableLoader.ID;
         Bundle loaderArgs = null;
         if (getArguments() != null) {
@@ -259,11 +265,11 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
         mQueryArgs.putString(ImageTableLoader.ARG_SORT_ORDER, ((CursorLoader) loader).getSortOrder());
 
         if (mAdapter == null) {
-            mAdapter = new ThumbnailsAdapter(getActivity(), data);
+            mAdapter = new ThumbnailsAdapter(getActivity());
             twList.setAdapter(mAdapter);
-        } else {
-            mAdapter.changeCursor(data);
         }
+        mAdapter.changeCursor(data);
+
 
         if (mListInstanceState != null && mSavedOrientation == getResources().getConfiguration().orientation) { //different orientation -> different layout params
             twList.getLayoutManager().onRestoreInstanceState(mListInstanceState);
