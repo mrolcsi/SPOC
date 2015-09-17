@@ -21,7 +21,6 @@ import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.*;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
@@ -71,6 +70,16 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
     private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
     Handler mHideHandler = new Handler();
     /**
+     * The instance of the {@link SystemUiHider} for this activity.
+     */
+    private SystemUiHider mSystemUiHider;
+    Runnable mHideRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mSystemUiHider.hide();
+        }
+    };
+    /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away
      * while interacting with activity UI.
@@ -84,18 +93,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
             return false;
         }
     };
-    /**
-     * The instance of the {@link SystemUiHider} for this activity.
-     */
-    private SystemUiHider mSystemUiHider;
-    Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            mSystemUiHider.hide();
-        }
-    };
     private ViewPager vpDetailsPager;
-    private RelativeLayout rlInfo;
     private TextView tvLocation;
     private TextView tvDateTaken;
 
@@ -117,7 +115,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
         // this activity.
         mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
         mSystemUiHider.setup();
-        mSystemUiHider.setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
+        mSystemUiHider.addOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
             // Cached values.
             int mControlsHeight;
             int mShortAnimTime;
@@ -179,7 +177,6 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
         super.onPostCreate(savedInstanceState);
 
         vpDetailsPager = (ViewPager) findViewById(R.id.fullscreen_content);
-        rlInfo = (RelativeLayout) findViewById(R.id.fullscreen_content_controls);
 
         tvLocation = (TextView) findViewById(R.id.tvLocation);
         tvDateTaken = (TextView) findViewById(R.id.tvDateTaken);
@@ -380,5 +377,9 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
         if (mAdapter != null) {
             mAdapter.changeCursor(null);
         }
+    }
+
+    public SystemUiHider getSystemUiHider() {
+        return mSystemUiHider;
     }
 }

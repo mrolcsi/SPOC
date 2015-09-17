@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.os.Build;
 import android.view.View;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A utility class that helps with showing and hiding system UI such as the
  * status bar and navigation/system bar. This class uses backward-compatibility
@@ -79,7 +82,7 @@ public abstract class SystemUiHider {
     /**
      * The current visibility callback.
      */
-    protected OnVisibilityChangeListener mOnVisibilityChangeListener = sDummyListener;
+    protected List<OnVisibilityChangeListener> mOnVisibilityChangeListeners = new ArrayList<>();
 
     protected SystemUiHider(Activity activity, View anchorView, int flags) {
         mActivity = activity;
@@ -145,12 +148,16 @@ public abstract class SystemUiHider {
      * Registers a callback, to be triggered when the system UI visibility
      * changes.
      */
-    public void setOnVisibilityChangeListener(OnVisibilityChangeListener listener) {
-        if (listener == null) {
-            listener = sDummyListener;
+    public void addOnVisibilityChangeListener(OnVisibilityChangeListener listener) {
+        if (listener != null) {
+            mOnVisibilityChangeListeners.add(listener);
         }
+    }
 
-        mOnVisibilityChangeListener = listener;
+    public void removeOnVisibilityChangeListener(OnVisibilityChangeListener listener) {
+        if (listener != null) {
+            mOnVisibilityChangeListeners.remove(listener);
+        }
     }
 
     /**

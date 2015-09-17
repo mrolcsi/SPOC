@@ -30,8 +30,6 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
     private static List<OnFullscreenChangeListener> onFullscreenChangeListeners = new ArrayList<>();
     protected View mRootView;
 
-    private boolean isFullscreen = false;
-
     @Override
     public int getNavigationItemPosition() {
         if (getArguments() == null) return -1;
@@ -165,6 +163,7 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
      * Detects and toggles immersive mode (also known as "hidey bar" mode).
      */
     @TargetApi(Build.VERSION_CODES.KITKAT)
+    @Deprecated
     public void toggleFullScreen() {
 
 //        if (isFullscreen) {
@@ -215,63 +214,6 @@ public abstract class SPOCFragment extends Fragment implements ISPOCFragment {
 
         for (OnFullscreenChangeListener listener : onFullscreenChangeListeners) {
             listener.onFullScreenChanged(isFullscreen());
-        }
-    }
-
-    // This snippet hides the system bars.
-    protected void hideSystemUI() {
-        isFullscreen = true;
-        if (Build.VERSION.SDK_INT >= 11) {
-
-            // Set the IMMERSIVE flag.
-            // Set the content to appear under the system bars so that the content
-            // doesn't resize when the system bars hide and show.
-
-            View decorView = getActivity().getWindow().getDecorView();
-
-            int flags = decorView.getSystemUiVisibility();
-
-            if (Build.VERSION.SDK_INT >= 14) {
-                flags |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION; // hide nav bar
-            }
-            if (Build.VERSION.SDK_INT >= 16) {
-                flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-                flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-                flags |= View.SYSTEM_UI_FLAG_FULLSCREEN; // hide status bar
-            }
-            if (Build.VERSION.SDK_INT >= 19) {
-                flags |= View.SYSTEM_UI_FLAG_IMMERSIVE;
-            }
-
-            decorView.setSystemUiVisibility(flags);
-        }
-
-        for (OnFullscreenChangeListener listener : onFullscreenChangeListeners) {
-            listener.onFullScreenChanged(true);
-        }
-    }
-
-    // This snippet shows the system bars. It does this by removing all the flags
-    // except for the ones that make the content appear under the system bars.
-    protected void showSystemUI() {
-        isFullscreen = false;
-        if (Build.VERSION.SDK_INT >= 11) {
-
-            View decorView = getActivity().getWindow().getDecorView();
-
-            int flags = decorView.getSystemUiVisibility();
-
-            if (Build.VERSION.SDK_INT >= 16) {
-                flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-                flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-                flags |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-            }
-
-            decorView.setSystemUiVisibility(flags);
-        }
-
-        for (OnFullscreenChangeListener listener : onFullscreenChangeListeners) {
-            listener.onFullScreenChanged(true);
         }
     }
 

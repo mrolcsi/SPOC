@@ -27,6 +27,7 @@ import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
+import hu.mrolcsi.android.spoc.gallery.common.utils.SystemUiHider;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -91,6 +92,25 @@ public class SingleImageFragment extends SPOCFragment {
             //noinspection deprecation
             mDesiredHeight = display.getHeight();
         }
+
+        ((ImagePagerActivity) getActivity()).getSystemUiHider().addOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
+            @Override
+            public void onVisibilityChange(boolean visible) {
+                if (mOverlayDrawable != null) {
+                    if (!visible) {
+                        mOverlayDrawable.setAlpha(0);
+                        final float scale = photoView.getScale();
+                        photoView.invalidate();
+                        photoView.setScale(scale);
+                    } else {
+                        mOverlayDrawable.setAlpha(200);
+                        final float scale = photoView.getScale();
+                        photoView.invalidate();
+                        photoView.setScale(scale);
+                    }
+                }
+            }
+        });
     }
 
     @Nullable
@@ -110,29 +130,27 @@ public class SingleImageFragment extends SPOCFragment {
                 http://www.arthurwang.net/android/arrayindexoutofboundsexception-with-photoview-library-and-drawerlayout
              */
             photoView = (PhotoView) mRootView.findViewById(R.id.image);
-            photoView.setOnViewTapListener(new PhotoViewAttacher.OnViewTapListener() {
+            photoView.setOnPhotoTapListener(new PhotoViewAttacher.OnPhotoTapListener() {
                 @Override
-                public void onViewTap(View view, float v, float v1) {
-                    toggleFullScreen();
-                }
-            });
+                public void onPhotoTap(View view, float x, float y) {
+                    // x and y are values between 0 and 1,
+                    // [0,0] being the top left corner of the photo,
+                    // [1,1] being the bottom right corner.
 
-            addOnFullscreenChangeListener(new OnFullscreenChangeListener() {
-                @Override
-                public void onFullScreenChanged(boolean isFullscreen) {
-                    if (mOverlayDrawable != null) {
-                        if (isFullscreen) {
-                            mOverlayDrawable.setAlpha(0);
-                            final float scale = photoView.getScale();
-                            photoView.invalidate();
-                            photoView.setScale(scale);
+                    if (mFacePositions != null && !mFacePositions.isEmpty()) {
+                        float realX = x * mOverlayBitmap.getWidth();
+                        float realY = y * mOverlayBitmap.getHeight();
 
+                        int i = 0;
+                        while (i < mFacePositions.size() && !mFacePositions.get(i).contains(realX, realY)) i++;
+
+                        if (i < mFacePositions.size()) {
+                            //awesome!
                         } else {
-                            mOverlayDrawable.setAlpha(200);
-                            final float scale = photoView.getScale();
-                            photoView.invalidate();
-                            photoView.setScale(scale);
+                            ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
                         }
+                    } else {
+                        ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
                     }
                 }
             });

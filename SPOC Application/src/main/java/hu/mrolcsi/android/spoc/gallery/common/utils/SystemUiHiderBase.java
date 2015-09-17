@@ -46,7 +46,9 @@ public class SystemUiHiderBase extends SystemUiHider {
                     WindowManager.LayoutParams.FLAG_FULLSCREEN,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }
-        mOnVisibilityChangeListener.onVisibilityChange(false);
+        for (OnVisibilityChangeListener listener : mOnVisibilityChangeListeners) {
+            listener.onVisibilityChange(false);
+        }
         mVisible = false;
     }
 
@@ -57,7 +59,9 @@ public class SystemUiHiderBase extends SystemUiHider {
                     0,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }
-        mOnVisibilityChangeListener.onVisibilityChange(true);
+        for (OnVisibilityChangeListener listener : mOnVisibilityChangeListeners) {
+            listener.onVisibilityChange(true);
+        }
         mVisible = true;
     }
 }

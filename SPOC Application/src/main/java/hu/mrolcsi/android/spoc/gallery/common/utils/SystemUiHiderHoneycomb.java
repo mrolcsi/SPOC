@@ -54,7 +54,9 @@ public class SystemUiHiderHoneycomb extends SystemUiHiderBase {
 
                 // Trigger the registered listener and cache the visibility
                 // state.
-                mOnVisibilityChangeListener.onVisibilityChange(false);
+                for (OnVisibilityChangeListener listener : mOnVisibilityChangeListeners) {
+                    listener.onVisibilityChange(false);
+                }
                 mVisible = false;
 
             } else {
@@ -70,7 +72,9 @@ public class SystemUiHiderHoneycomb extends SystemUiHiderBase {
 
                 // Trigger the registered listener and cache the visibility
                 // state.
-                mOnVisibilityChangeListener.onVisibilityChange(true);
+                for (OnVisibilityChangeListener listener : mOnVisibilityChangeListeners) {
+                    listener.onVisibilityChange(true);
+                }
                 mVisible = true;
             }
         }
