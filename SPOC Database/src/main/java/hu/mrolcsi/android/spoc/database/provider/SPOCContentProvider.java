@@ -45,6 +45,7 @@ public final class SPOCContentProvider extends ContentProvider {
     private static final int IMAGES_BY_DAY_TAKEN_COUNT = 16;
     private static final int IMAGES_WITH_LABELS = 17;
     private static final int IMAGES_WITH_LABELS_COUNT = 18;
+    private static final int IMAGES_WITH_CONTACTS = 19;
 
     private static final int LABELS_LIST = 20;
     private static final int LABEL_BY_ID = 21;
@@ -70,6 +71,7 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Image.COLUMN_LOCATION + "/count", IMAGES_WITH_LABELS_COUNT);             // content://authority/images/location/count    > SELECT * FROM images_with_labels GROUP BY location
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search", IMAGES_WITH_LABELS);                                                // content://authority/images/search            > SELECT * FROM images_with_labels
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search/*", IMAGE_SEARCH);                                                    // content://authority/images/search/*          > SELECT * FROM images_with_labels WHERE column LIKE '%*%'
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Contact.TABLE_NAME, IMAGES_WITH_CONTACTS);                               // content://authority/images/contacts          > SELECT * FROM images INNER JOIN contacts2images LEFT JOIN contacts [WHERE image_id/contacts_id = ?]
 
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME, LABELS_LIST);                                                                   // content://authority/labels                   > SELECT * FROM labels > INSERT INTO labels
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/#", LABEL_BY_ID);                                                            // content://authority/labels/#                 > SELECT * FROM labels WHERE _id = #
@@ -136,7 +138,8 @@ public final class SPOCContentProvider extends ContentProvider {
                 if (projection == null) {
                     projection = new String[]{"DISTINCT _id", Image.COLUMN_FILENAME};
                 }
-                builder.appendWhere(Image.COLUMN_FILENAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase(Locale.getDefault()) + "%' OR " + Label.COLUMN_NAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase() + "%'");
+                builder.appendWhere(Image.COLUMN_FILENAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase(Locale.getDefault()) + "%' OR " +
+                        Label.COLUMN_NAME + " LIKE '%" + uri.getLastPathSegment().toLowerCase() + "%'");
                 break;
             case IMAGES_WITH_LABELS:
                 builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
@@ -170,6 +173,23 @@ public final class SPOCContentProvider extends ContentProvider {
                     sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
                 }
                 return builder.query(db, projection, selection, selectionArgs, Label.COLUMN_NAME, null, sortOrder);
+            case IMAGES_WITH_CONTACTS:
+                builder.setTables(Image.TABLE_NAME + " INNER JOIN " + Contact2Image.TABLE_NAME + " ON " + Image.TABLE_NAME + "._id=" + Contact2Image.TABLE_NAME + "." + Contact2Image.COLUMN_IMAGE_ID +
+                        " LEFT JOIN " + Contact.TABLE_NAME + " ON " + Contact.TABLE_NAME + "._id=" + Contact2Image.TABLE_NAME + "." + Contact2Image.COLUMN_CONTACT_ID);
+                if (projection == null) {
+                    projection = new String[]{
+                            Image.TABLE_NAME + "._id AS image_id",
+                            Image.TABLE_NAME + "." + Image.COLUMN_FILENAME,
+                            Contact.TABLE_NAME + "._id AS contact_id",
+                            Contact.COLUMN_NAME,
+                            Contact.COLUMN_CONTACT_KEY,
+                            Contact2Image.COLUMN_X1,
+                            Contact2Image.COLUMN_X2,
+                            Contact2Image.COLUMN_Y1,
+                            Contact2Image.COLUMN_Y2
+                    };
+                }
+                return builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
         }

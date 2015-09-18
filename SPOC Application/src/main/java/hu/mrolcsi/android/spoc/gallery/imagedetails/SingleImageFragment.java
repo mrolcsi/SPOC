@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.graphics.*;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -12,6 +13,7 @@ import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.ShareActionProvider;
 import android.view.*;
@@ -23,8 +25,11 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.signature.StringSignature;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.FaceDetectorTask;
+import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.database.model.Contact;
 import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
+import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
@@ -34,6 +39,7 @@ import uk.co.senab.photoview.PhotoViewAttacher;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,7 +49,7 @@ import java.util.List;
  * Time: 20:19
  */
 
-public class SingleImageFragment extends SPOCFragment { //TODO: contacts on image loader
+public class SingleImageFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks { //TODO: contacts on image loader
 
     public static final String ARG_IMAGE_ID = "SPOC.Gallery.Details.ImageId";
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
@@ -55,6 +61,7 @@ public class SingleImageFragment extends SPOCFragment { //TODO: contacts on imag
     private int mDesiredHeight;
 
     private String mImagePath;
+    private int mImageId;
 
     private BitmapDrawable mOverlayDrawable;
     private BitmapDrawable mBitmapDrawable;
@@ -147,6 +154,7 @@ public class SingleImageFragment extends SPOCFragment { //TODO: contacts on imag
 
                         if (i < mFacePositions.size()) {
                             //awesome!
+                            Toast.makeText(getActivity(), "Face tap!\n" + mFacePositions.get(i).toString(), Toast.LENGTH_SHORT).show();
                         } else {
                             ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
                         }
@@ -165,7 +173,18 @@ public class SingleImageFragment extends SPOCFragment { //TODO: contacts on imag
         super.onStart();
 
         mImagePath = getArguments().getString(ARG_IMAGE_PATH);
+        mImageId = getArguments().getInt(ARG_IMAGE_ID);
         //GlideHelper.loadBigImage(this, mImagePath, mDesiredWidth, mDesiredHeight, photoView);
+
+        mDetector = new FaceDetectorTask(getActivity(), mImageId) {
+            @Override
+            protected void onPostExecute(List<Contact2Image> contact2ImageList) {
+
+                mFacePositions = contact2ImageList;
+
+                drawFaces();
+            }
+        };
 
         loadImage();
     }
@@ -177,20 +196,15 @@ public class SingleImageFragment extends SPOCFragment { //TODO: contacts on imag
         }
 
         mBitmapTarget = new BitmapImageViewTarget(photoView) {
+
             @Override
             public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                if (mFacePositions == null) {
-                    mDetector = new FaceDetectorTask(getActivity(), getArguments().getInt(ARG_IMAGE_ID)) {
-                        @Override
-                        protected void onPostExecute(List<Contact2Image> contact2ImageList) {
 
-                            mFacePositions = contact2ImageList;
-
-                            drawFaces();
-                        }
-                    };
-                    mDetector.execute(resource);
-                }
+                Bundle args = new Bundle();
+                args.putString(ImageTableLoader.ARG_URI_STRING, SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Contact.TABLE_NAME).build().toString());
+                args.putString(ImageTableLoader.ARG_SELECTION, Contact2Image.COLUMN_IMAGE_ID + "=?");
+                args.putStringArray(ImageTableLoader.ARG_SELECTION_ARGS, new String[]{String.valueOf(mImageId)});
+                getLoaderManager().initLoader(mImageId * 125, args, new ImageTableLoader(getActivity(), SingleImageFragment.this));
 
                 super.onResourceReady(resource, glideAnimation);
             }
@@ -201,10 +215,10 @@ public class SingleImageFragment extends SPOCFragment { //TODO: contacts on imag
                 mOverlayBitmap = Bitmap.createBitmap(resource.getWidth(), resource.getHeight(), Bitmap.Config.ARGB_8888);
                 mOverlayDrawable = new BitmapDrawable(getResources(), mOverlayBitmap);
 
-                if (isFullscreen()) {
-                    mOverlayDrawable.setAlpha(0);
-                } else {
+                if (((ImagePagerActivity) getActivity()).getSystemUiHider().isVisible()) {
                     mOverlayDrawable.setAlpha(200);
+                } else {
+                    mOverlayDrawable.setAlpha(0);
                 }
 
                 LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{mBitmapDrawable, mOverlayDrawable});
@@ -301,6 +315,8 @@ public class SingleImageFragment extends SPOCFragment { //TODO: contacts on imag
 
             mOverlayDrawable = null;
         }
+
+        getLoaderManager().destroyLoader(mImageId * 125);
     }
 
     private void drawFaces() {
@@ -324,5 +340,44 @@ public class SingleImageFragment extends SPOCFragment { //TODO: contacts on imag
         }
 
         photoView.invalidate();
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+    }
+
+    @Override
+    public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
+        // TODO
+        if (loader.getId() == mImageId * 125) {
+            if (data.getCount() > 0) {
+                //get column indices
+                int iContactId = data.getColumnIndex(Contact2Image.COLUMN_CONTACT_ID);
+                int x1 = data.getColumnIndex(Contact2Image.COLUMN_X1);
+                int x2 = data.getColumnIndex(Contact2Image.COLUMN_X2);
+                int y1 = data.getColumnIndex(Contact2Image.COLUMN_Y1);
+                int y2 = data.getColumnIndex(Contact2Image.COLUMN_Y2);
+
+                mFacePositions = new ArrayList<>();
+
+                Contact2Image c2i;
+
+                //load faces from cursor
+                while (data.moveToNext()) {
+                    c2i = new Contact2Image();
+                    c2i.setImageId(mImageId);
+                    c2i.setContactId(data.getInt(iContactId));
+                    c2i.set(data.getFloat(x1), data.getFloat(y1), data.getFloat(x2), data.getFloat(y2));
+                    mFacePositions.add(c2i);
+                }
+                drawFaces();
+            } else {
+                //detect faces
+                if (mFacePositions == null) {
+                    mDetector.execute(mBitmapDrawable.getBitmap());
+                }
+            }
+        }
     }
 }
