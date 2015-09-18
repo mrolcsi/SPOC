@@ -224,8 +224,8 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
     public void onResume() {
         super.onResume();
 
-        ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
-        swipeRefreshLayout.setRefreshing(GeneralUtils.isServiceRunning(manager, DatabaseBuilderService.class));
+//        ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
+//        swipeRefreshLayout.setRefreshing(GeneralUtils.isServiceRunning(manager, DatabaseBuilderService.class));
     }
 
     @Override
