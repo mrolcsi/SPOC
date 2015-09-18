@@ -14,11 +14,11 @@ import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
  * Time: 14:23
  */
 
-public class LabelTableLoader extends LoaderBase {
+public class LabelsTableLoader extends LoaderBase {
 
     public static final int ID = 94;
 
-    public LabelTableLoader(Context context, LoaderCallbacks loaderCallbacks) {
+    public LabelsTableLoader(Context context, LoaderCallbacks loaderCallbacks) {
         super(context, loaderCallbacks);
     }
 

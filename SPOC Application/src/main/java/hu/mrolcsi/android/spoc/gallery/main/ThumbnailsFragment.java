@@ -27,7 +27,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Toast;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
-import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
 import hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.common.utils.GeneralUtils;
@@ -47,7 +47,7 @@ import org.lucasr.twowayview.widget.TwoWayView;
  * Time: 21:12
  */
 
-public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks, SwipeRefreshLayout.OnRefreshListener {
+public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoader.LoaderCallbacks, SwipeRefreshLayout.OnRefreshListener {
 
     public static final String ARG_QUERY_BUNDLE = "SPOC.Gallery.Thumbnails.ARGUMENT_BUNDLE";
     private static final String ARG_LOADER_ID = "SPOC.Gallery.Thumbnails.LOADER_ID";
@@ -204,7 +204,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
         mAdapter = new ThumbnailsAdapter(getActivity());
         twList.setAdapter(mAdapter);
 
-        int loaderId = ImageTableLoader.ID;
+        int loaderId = ImagesTableLoader.ID;
         Bundle loaderArgs = null;
         if (getArguments() != null) {
             if (getArguments().containsKey(ARG_LOADER_ID)) {
@@ -212,7 +212,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
             }
             loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
         }
-        mImagesLoader = (CursorLoader) getLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(getActivity(), this));
+        mImagesLoader = (CursorLoader) getLoaderManager().restartLoader(loaderId, loaderArgs, new ImagesTableLoader(getActivity(), this));
 
         IntentFilter mDatabaseBuilderIntentFilter = new IntentFilter();
         mDatabaseBuilderIntentFilter.addAction(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY);
@@ -247,7 +247,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, final Cursor data) {
-        if (loader.getId() != ImageTableLoader.ID) return;
+        if (loader.getId() != ImagesTableLoader.ID) return;
 
         Log.d(getClass().getSimpleName(), "onLoadComplete");
         if (data == null) {
@@ -255,11 +255,11 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
             return;
         }
 
-        mQueryArgs.putString(ImageTableLoader.ARG_URI_STRING, ((CursorLoader) loader).getUri().toString());
-        mQueryArgs.putStringArray(ImageTableLoader.ARG_PROJECTION, ((CursorLoader) loader).getProjection());
-        mQueryArgs.putString(ImageTableLoader.ARG_SELECTION, ((CursorLoader) loader).getSelection());
-        mQueryArgs.putStringArray(ImageTableLoader.ARG_SELECTION_ARGS, ((CursorLoader) loader).getSelectionArgs());
-        mQueryArgs.putString(ImageTableLoader.ARG_SORT_ORDER, ((CursorLoader) loader).getSortOrder());
+        mQueryArgs.putString(ImagesTableLoader.ARG_URI_STRING, ((CursorLoader) loader).getUri().toString());
+        mQueryArgs.putStringArray(ImagesTableLoader.ARG_PROJECTION, ((CursorLoader) loader).getProjection());
+        mQueryArgs.putString(ImagesTableLoader.ARG_SELECTION, ((CursorLoader) loader).getSelection());
+        mQueryArgs.putStringArray(ImagesTableLoader.ARG_SELECTION_ARGS, ((CursorLoader) loader).getSelectionArgs());
+        mQueryArgs.putString(ImagesTableLoader.ARG_SORT_ORDER, ((CursorLoader) loader).getSortOrder());
 
         if (mAdapter == null) {
             mAdapter = new ThumbnailsAdapter(getActivity());
@@ -282,7 +282,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImageTableLoader
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        if (loader.getId() != ImageTableLoader.ID) return;
+        if (loader.getId() != ImagesTableLoader.ID) return;
 
         Log.d(getClass().getSimpleName(), "onLoaderReset");
         if (mAdapter != null) {

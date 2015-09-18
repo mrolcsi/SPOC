@@ -24,7 +24,7 @@ import java.sql.SQLException;
 @SuppressWarnings("unused")
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
-    public static final int DATABASE_VERSION = 11;
+    public static final int DATABASE_VERSION = 12;
     private static final String DATABASE_NAME = "spoc.db";
     private static Context context;
     private static DatabaseHelper ourInstance;
@@ -168,6 +168,13 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             } catch (SQLException e) {
                 Log.w(getClass().getSimpleName(), e);
             }
+        }
+        if (oldVersion < 12) {
+            //add images_with_contacts helper view and add contacts to images_with_labels view
+            database.execSQL("DROP VIEW IF EXISTS " + Views.LABELS_WITH_CONTACTS_NAME);
+            database.execSQL(Views.LABELS_WITH_CONTACTS_CREATE);
+            database.execSQL("DROP VIEW IF EXISTS " + Views.IMAGES_WITH_LABELS_NAME);
+            database.execSQL(Views.IMAGES_WITH_LABELS_CREATE);
         }
     }
 

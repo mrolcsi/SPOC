@@ -49,7 +49,8 @@ public class SuggestionAdapter extends CursorAdapter {
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.map_marker, 0, 0, 0);
                 break;
             case CONTACT:
-                ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.group, 0, 0, 0);
+                ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.user, 0, 0, 0);
+                //TODO: load contact photo
                 break;
             case FOLDER:
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.folder, 0, 0, 0);
@@ -60,5 +61,10 @@ public class SuggestionAdapter extends CursorAdapter {
             default:
                 break;
         }
+    }
+
+    @Override
+    public CharSequence convertToString(Cursor cursor) {
+        return cursor.getString(1);
     }
 }

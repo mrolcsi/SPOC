@@ -92,4 +92,5 @@
     <string name="splash_contentDescription_logo">SPOC Logo</string>
     <string name="title_activity_gallery">Gallery</string>
     <string name="yes">Yes</string>
+    <string name="singleImage_faceTag_hint">Who is this?</string>
 </resources>

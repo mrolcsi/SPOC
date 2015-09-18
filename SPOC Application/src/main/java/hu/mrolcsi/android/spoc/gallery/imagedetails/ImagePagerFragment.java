@@ -25,7 +25,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
-import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -49,7 +49,7 @@ import java.util.Locale;
  */
 
 @Deprecated
-public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks {
+public class ImagePagerFragment extends SPOCFragment implements ImagesTableLoader.LoaderCallbacks {
 
     public static final String ARG_SELECTED_POSITION = "SPOC.Gallery.Pager.SelectedPosition";
     public static final String ARG_LOADER_ID = "SPOC.Gallery.Pager.LoaderId";
@@ -136,7 +136,7 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
     public void onStart() {
         super.onStart();
 
-        int loaderId = ImageTableLoader.ID;
+        int loaderId = ImagesTableLoader.ID;
         Bundle loaderArgs = null;
 
         if (getArguments() != null) {
@@ -146,9 +146,9 @@ public class ImagePagerFragment extends SPOCFragment implements ImageTableLoader
             loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
 
             final String[] projection = new String[]{"_id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION};
-            loaderArgs.putStringArray(ImageTableLoader.ARG_PROJECTION, projection);
+            loaderArgs.putStringArray(ImagesTableLoader.ARG_PROJECTION, projection);
         }
-        getLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(getActivity(), this));
+        getLoaderManager().restartLoader(loaderId, loaderArgs, new ImagesTableLoader(getActivity(), this));
     }
 
     @Override

@@ -13,8 +13,8 @@ import android.text.TextUtils;
 import android.view.*;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
-import hu.mrolcsi.android.spoc.common.loader.LabelTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -44,10 +44,10 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        mSuggestionArgs.putStringArray(LabelTableLoader.ARG_PROJECTION, new String[]{"_id", Label.COLUMN_NAME, Label.COLUMN_TYPE});
-        mSuggestionArgs.putString(LabelTableLoader.ARG_SELECTION, Label.COLUMN_NAME + " LIKE ?");
-        mSuggestionArgs.putStringArray(LabelTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
-        mSuggestionArgs.putString(LabelTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
+        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"_id", Label.COLUMN_NAME, Label.COLUMN_TYPE});
+        mSuggestionArgs.putString(LabelsTableLoader.ARG_SELECTION, Label.COLUMN_NAME + " LIKE ?");
+        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
+        mSuggestionArgs.putString(LabelsTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
     }
 
     @Nullable
@@ -76,7 +76,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         super.onStart();
         mImagesLoader.reset();
 
-        mSuggestionsLoader = (CursorLoader) getLoaderManager().initLoader(LabelTableLoader.ID, mSuggestionArgs, new LabelTableLoader(getActivity(), this));
+        mSuggestionsLoader = (CursorLoader) getLoaderManager().initLoader(LabelsTableLoader.ID, mSuggestionArgs, new LabelsTableLoader(getActivity(), this));
     }
 
     @Override
@@ -183,12 +183,12 @@ public class SearchResultsFragment extends ThumbnailsFragment {
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
         super.onLoadComplete(loader, data);
 
-        if (loader.getId() == LabelTableLoader.ID) {
+        if (loader.getId() == LabelsTableLoader.ID) {
             //load suggestions to adapter
             mSuggestionsAdapter.changeCursor(data);
         }
 
-        if (loader.getId() == ImageTableLoader.ID) {
+        if (loader.getId() == ImagesTableLoader.ID) {
             if (twList.getAdapter() == null) {
                 twList.setAdapter(mAdapter);
             }
@@ -203,7 +203,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
     public void onLoaderReset(Loader<Cursor> loader) {
         super.onLoaderReset(loader);
 
-        if (loader.getId() == LabelTableLoader.ID) {
+        if (loader.getId() == LabelsTableLoader.ID) {
             mSuggestionsAdapter.changeCursor(null);
         }
     }

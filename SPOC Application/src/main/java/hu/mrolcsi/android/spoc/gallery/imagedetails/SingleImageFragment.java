@@ -15,8 +15,14 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.ShareActionProvider;
 import android.view.*;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.AutoCompleteTextView;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -25,15 +31,19 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.signature.StringSignature;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.FaceDetectorTask;
-import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.ContactsTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.database.model.Contact;
+import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 import hu.mrolcsi.android.spoc.gallery.common.utils.SystemUiHider;
+import hu.mrolcsi.android.spoc.gallery.search.SuggestionAdapter;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -49,13 +59,19 @@ import java.util.List;
  * Time: 20:19
  */
 
-public class SingleImageFragment extends SPOCFragment implements ImageTableLoader.LoaderCallbacks { //TODO: contacts on image loader
+public class SingleImageFragment extends SPOCFragment implements ImagesTableLoader.LoaderCallbacks { //TODO: contacts on image loader
 
     public static final String ARG_IMAGE_ID = "SPOC.Gallery.Details.ImageId";
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
     public static final String ARG_IMAGE_LOCATION = "SPOC.Gallery.Details.Location";
 
+    private static final AccelerateInterpolator ACC_INTERPOLATOR = new AccelerateInterpolator(2);
+    private static final DecelerateInterpolator DEC_INTERPOLATOR = new DecelerateInterpolator(2);
+
     private PhotoView photoView;
+    private View mFaceTagStatic;
+    private View mFaceTagEditable;
+    private FaceTagViewHolder mFaceTagViewHolder;
 
     private int mDesiredWidth;
     private int mDesiredHeight;
@@ -70,6 +86,9 @@ public class SingleImageFragment extends SPOCFragment implements ImageTableLoade
     private BitmapImageViewTarget mBitmapTarget;
     private Bitmap mOverlayBitmap;
 
+    private Bundle mSuggestionArgs = new Bundle();
+    private SuggestionAdapter mSuggestionsAdapter;
+
     public static SingleImageFragment newInstance(int imageId, String imagePath, String location) {
         final SingleImageFragment f = new SingleImageFragment();
 
@@ -80,6 +99,17 @@ public class SingleImageFragment extends SPOCFragment implements ImageTableLoade
         f.setArguments(args);
 
         return f;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"_id", Label.COLUMN_NAME, Label.COLUMN_TYPE});
+        //mSuggestionArgs.putString(LabelTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "=" + LabelType.CONTACT.name() + " AND " + Label.COLUMN_NAME + " LIKE ?");
+        //mSuggestionArgs.putString(LabelTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "='" + LabelType.CONTACT.name() + "'");
+        //mSuggestionArgs.putStringArray(LabelTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
+        mSuggestionArgs.putString(LabelsTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
     }
 
     @TargetApi(13)
@@ -119,6 +149,7 @@ public class SingleImageFragment extends SPOCFragment implements ImageTableLoade
                 }
             }
         });
+
     }
 
     @Nullable
@@ -146,16 +177,32 @@ public class SingleImageFragment extends SPOCFragment implements ImageTableLoade
                     // [1,1] being the bottom right corner.
 
                     if (mFacePositions != null && !mFacePositions.isEmpty()) {
-                        float realX = x * mOverlayBitmap.getWidth();
-                        float realY = y * mOverlayBitmap.getHeight();
+                        float photoX = x * mOverlayBitmap.getWidth();
+                        float photoY = y * mOverlayBitmap.getHeight();
 
                         int i = 0;
-                        while (i < mFacePositions.size() && !mFacePositions.get(i).contains(realX, realY)) i++;
+                        while (i < mFacePositions.size() && !mFacePositions.get(i).contains(photoX, photoY)) i++;
 
                         if (i < mFacePositions.size()) {
                             //awesome!
-                            Toast.makeText(getActivity(), "Face tap!\n" + mFacePositions.get(i).toString(), Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(getActivity(), "Face tap!\n" + mFacePositions.get(i).toString(), Toast.LENGTH_SHORT).show();
+                            showFaceTag(mFacePositions.get(i));
                         } else {
+                            ViewCompat.animate(mFaceTagStatic).alpha(0).setInterpolator(ACC_INTERPOLATOR).withEndAction(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mFaceTagStatic.setVisibility(View.GONE);
+                                }
+                            }).start();
+                            ViewCompat.animate(mFaceTagEditable).alpha(0).setInterpolator(ACC_INTERPOLATOR).withEndAction(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mFaceTagEditable.setVisibility(View.GONE);
+                                }
+                            }).start();
+                            //mFaceTagStatic.setVisibility(View.GONE);
+                            //mFaceTagEditable.setVisibility(View.GONE);
+
                             ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
                         }
                     } else {
@@ -163,7 +210,13 @@ public class SingleImageFragment extends SPOCFragment implements ImageTableLoade
                     }
                 }
             });
+
+            mFaceTagStatic = mRootView.findViewById(R.id.faceTagStatic);
+            mFaceTagEditable = mRootView.findViewById(R.id.faceTagEditable);
         }
+
+        mFaceTagStatic.setVisibility(View.GONE);
+        mFaceTagEditable.setVisibility(View.GONE);
 
         return mRootView;
     }
@@ -186,6 +239,8 @@ public class SingleImageFragment extends SPOCFragment implements ImageTableLoade
             }
         };
 
+        getLoaderManager().initLoader(ContactsTableLoader.ID, mSuggestionArgs, new ContactsTableLoader(getActivity(), this));
+
         loadImage();
     }
 
@@ -201,10 +256,10 @@ public class SingleImageFragment extends SPOCFragment implements ImageTableLoade
             public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
 
                 Bundle args = new Bundle();
-                args.putString(ImageTableLoader.ARG_URI_STRING, SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Contact.TABLE_NAME).build().toString());
-                args.putString(ImageTableLoader.ARG_SELECTION, Contact2Image.COLUMN_IMAGE_ID + "=?");
-                args.putStringArray(ImageTableLoader.ARG_SELECTION_ARGS, new String[]{String.valueOf(mImageId)});
-                getLoaderManager().initLoader(mImageId * 125, args, new ImageTableLoader(getActivity(), SingleImageFragment.this));
+                args.putString(ImagesTableLoader.ARG_URI_STRING, SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Contact.TABLE_NAME).build().toString());
+                args.putString(ImagesTableLoader.ARG_SELECTION, Contact2Image.COLUMN_IMAGE_ID + "=?");
+                args.putStringArray(ImagesTableLoader.ARG_SELECTION_ARGS, new String[]{String.valueOf(mImageId)});
+                getLoaderManager().initLoader(mImageId * 125, args, new ImagesTableLoader(getActivity(), SingleImageFragment.this));
 
                 super.onResourceReady(resource, glideAnimation);
             }
@@ -342,9 +397,71 @@ public class SingleImageFragment extends SPOCFragment implements ImageTableLoade
         photoView.invalidate();
     }
 
+    private void showFaceTag(Contact2Image contact) {
+
+        if (contact.getContactId() > 0) {
+            //existing contact
+            ViewCompat.animate(mFaceTagStatic).alpha(255).setInterpolator(DEC_INTERPOLATOR).withStartAction(new Runnable() {
+                @Override
+                public void run() {
+                    mFaceTagStatic.setVisibility(View.VISIBLE);
+                }
+            }).start();
+            ViewCompat.animate(mFaceTagEditable).alpha(0).setInterpolator(ACC_INTERPOLATOR).withEndAction(new Runnable() {
+                @Override
+                public void run() {
+                    mFaceTagEditable.setVisibility(View.GONE);
+                }
+            }).start();
+        } else {
+            //unknown contact
+            ViewCompat.animate(mFaceTagStatic).alpha(0).setInterpolator(ACC_INTERPOLATOR).withEndAction(new Runnable() {
+                @Override
+                public void run() {
+                    mFaceTagStatic.setVisibility(View.GONE);
+                }
+            }).start();
+            ViewCompat.animate(mFaceTagEditable).alpha(255).setInterpolator(DEC_INTERPOLATOR).withStartAction(new Runnable() {
+                @Override
+                public void run() {
+                    mFaceTagEditable.setVisibility(View.VISIBLE);
+                }
+            }).start();
+        }
+
+        if (mFaceTagViewHolder == null) {
+            mFaceTagViewHolder = new FaceTagViewHolder();
+            //find views
+            mFaceTagViewHolder.editableName = (AutoCompleteTextView) mFaceTagEditable.findViewById(R.id.etName);
+            mFaceTagViewHolder.staticImage = (ImageView) mFaceTagStatic.findViewById(R.id.imgProfilePic);
+            mFaceTagViewHolder.staticName = (TextView) mFaceTagStatic.findViewById(R.id.tvName);
+
+            //set listeners
+            mFaceTagViewHolder.editableName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                    // TODO: save tag
+                    return false;
+                }
+            });
+            mFaceTagViewHolder.editableName.setDropDownWidth(ViewGroup.LayoutParams.MATCH_PARENT);
+            mFaceTagViewHolder.editableName.setAdapter(mSuggestionsAdapter);
+        }
+
+        //load contact image
+        //set image to imageview
+        //set contact name to textview/edittext
+
+
+        //set x,y of view
+        //attach to parent
+    }
+
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-
+        if (loader.getId() == LabelsTableLoader.ID) {
+            mSuggestionsAdapter.changeCursor(null);
+        }
     }
 
     @Override
@@ -379,5 +496,18 @@ public class SingleImageFragment extends SPOCFragment implements ImageTableLoade
                 }
             }
         }
+
+        if (loader.getId() == ContactsTableLoader.ID) {
+            if (mSuggestionsAdapter == null) {
+                mSuggestionsAdapter = new SuggestionAdapter(getActivity());
+            }
+            mSuggestionsAdapter.changeCursor(data);
+        }
+    }
+
+    class FaceTagViewHolder {
+        TextView staticName;
+        AutoCompleteTextView editableName;
+        ImageView staticImage;
     }
 }

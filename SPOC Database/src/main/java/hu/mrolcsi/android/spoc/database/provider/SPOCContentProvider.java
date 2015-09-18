@@ -52,6 +52,7 @@ public final class SPOCContentProvider extends ContentProvider {
     private static final int LABEL_BY_NAME = 22;
     private static final int LABELS_BY_IMAGE_ID = 23;
     private static final int LABELS_2_IMAGES = 24;
+    private static final int LABELS_WITH_CONTACTS = 25;
 
     private static final int CONTACTS_LIST = 31;
     private static final int CONTACT_BY_ID = 32;
@@ -77,6 +78,7 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/#", LABEL_BY_ID);                                                            // content://authority/labels/#                 > SELECT * FROM labels WHERE _id = #
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label.COLUMN_NAME + "/*", LABEL_BY_NAME);                                // content://authority/labels/name/*            > SELECT * FROM labels WHERE name = *
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Label2Image.COLUMN_IMAGE_ID + "/#", LABELS_BY_IMAGE_ID);                 // content://authority/labels/image_id/#        > SELECT * FROM labels INNER JOIN labels2images WHERE image_id = #
+        URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/" + Contact.TABLE_NAME, LABELS_WITH_CONTACTS);                               // content://authority/labels/contacts          > SELECT * FROM labels UNION SELECT * from contacts
 
         URI_MATCHER.addURI(AUTHORITY, Label2Image.TABLE_NAME, LABELS_2_IMAGES);                                                         // content://authority/images2labels            > INSERT INTO images2labels
 
@@ -212,6 +214,13 @@ public final class SPOCContentProvider extends ContentProvider {
 
         switch (URI_MATCHER.match(uri)) {
             case LABELS_LIST:
+                break;
+            case LABELS_WITH_CONTACTS:
+                projection = new String[]{
+                        "_id",
+                        Label.COLUMN_NAME,
+                        Label.COLUMN_TYPE
+                };
                 break;
             case LABEL_BY_ID:
                 builder.appendWhere("_id = " + uri.getLastPathSegment());

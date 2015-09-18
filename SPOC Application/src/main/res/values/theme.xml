@@ -15,6 +15,10 @@
         <!-- You can also set colorControlNormal, colorControlActivated
              colorControlHighlight, and colorSwitchThumbNormal. -->
 
+        <item name="colorControlActivated">@android:color/white</item>
+        <item name="colorControlHighlight">@android:color/white</item>
+        <item name="colorControlNormal">@color/background_material_light</item>
+
         <item name="windowActionBar">false</item>
 
     </style>

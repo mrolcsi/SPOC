@@ -21,9 +21,11 @@ import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.*;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.TextView;
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
-import hu.mrolcsi.android.spoc.common.loader.ImageTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -45,7 +47,7 @@ import java.util.Locale;
  *
  * @see SystemUiHider
  */
-public class ImagePagerActivity extends AppCompatActivity implements ImageTableLoader.LoaderCallbacks {
+public class ImagePagerActivity extends AppCompatActivity implements ImagesTableLoader.LoaderCallbacks {
 
     public static final String ARG_SELECTED_POSITION = "SPOC.Gallery.Pager.SelectedPosition";
     public static final String ARG_LOADER_ID = "SPOC.Gallery.Pager.LoaderId";
@@ -70,6 +72,16 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
     private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
     Handler mHideHandler = new Handler();
     /**
+     * The instance of the {@link SystemUiHider} for this activity.
+     */
+    private SystemUiHider mSystemUiHider;
+    Runnable mHideRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mSystemUiHider.hide();
+        }
+    };
+    /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away
      * while interacting with activity UI.
@@ -81,16 +93,6 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
                 delayedHide(AUTO_HIDE_DELAY_MILLIS);
             }
             return false;
-        }
-    };
-    /**
-     * The instance of the {@link SystemUiHider} for this activity.
-     */
-    private SystemUiHider mSystemUiHider;
-    Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            mSystemUiHider.hide();
         }
     };
     private ViewPager vpDetailsPager;
@@ -118,7 +120,8 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
         mSystemUiHider.addOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
             // Cached values.
             int mControlsHeight;
-            int mShortAnimTime;
+            DecelerateInterpolator decelerateInterpolator;
+            AccelerateInterpolator accelerateInterpolator;
 
             @Override
             @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
@@ -127,10 +130,13 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
                 if (mControlsHeight == 0) {
                     mControlsHeight = controlsView.getHeight();
                 }
-                if (mShortAnimTime == 0) {
-                    mShortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+                if (decelerateInterpolator == null) {
+                    decelerateInterpolator = new DecelerateInterpolator(2);
                 }
-                ViewCompat.animate(controlsView).translationY(visible ? 0 : mControlsHeight).setDuration(mShortAnimTime);
+                if (accelerateInterpolator == null) {
+                    accelerateInterpolator = new AccelerateInterpolator(2);
+                }
+                ViewCompat.animate(controlsView).translationY(visible ? 0 : mControlsHeight).setInterpolator(visible ? decelerateInterpolator : accelerateInterpolator);
 
                 if (getSupportActionBar() != null) {
                     if (visible) {
@@ -219,19 +225,19 @@ public class ImagePagerActivity extends AppCompatActivity implements ImageTableL
     protected void onStart() {
         super.onStart();
 
-        int loaderId = ImageTableLoader.ID;
+        int loaderId = ImagesTableLoader.ID;
         Bundle loaderArgs = null;
 
         if (getIntent() != null) {
             if (getIntent().hasExtra(ARG_LOADER_ID)) {
-                loaderId = getIntent().getIntExtra(ARG_LOADER_ID, ImageTableLoader.ID);
+                loaderId = getIntent().getIntExtra(ARG_LOADER_ID, ImagesTableLoader.ID);
             }
             loaderArgs = getIntent().getBundleExtra(ThumbnailsFragment.ARG_QUERY_BUNDLE);
 
             final String[] projection = new String[]{"_id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION};
-            loaderArgs.putStringArray(ImageTableLoader.ARG_PROJECTION, projection);
+            loaderArgs.putStringArray(ImagesTableLoader.ARG_PROJECTION, projection);
         }
-        getSupportLoaderManager().restartLoader(loaderId, loaderArgs, new ImageTableLoader(this, this));
+        getSupportLoaderManager().restartLoader(loaderId, loaderArgs, new ImagesTableLoader(this, this));
     }
 
     @Override

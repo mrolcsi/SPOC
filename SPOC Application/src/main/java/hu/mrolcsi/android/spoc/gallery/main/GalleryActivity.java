@@ -28,7 +28,6 @@ import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
-import hu.mrolcsi.android.spoc.common.loader.MediaStoreLoader;
 import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
@@ -147,8 +146,6 @@ public final class GalleryActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        getSupportLoaderManager().destroyLoader(MediaStoreLoader.ID);
 
         if (mServiceIntent != null) {
             stopService(mServiceIntent);
