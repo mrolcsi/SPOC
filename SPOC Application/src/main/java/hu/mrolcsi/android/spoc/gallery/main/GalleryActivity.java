@@ -298,7 +298,10 @@ public final class GalleryActivity extends AppCompatActivity {
             public void onFocusChange(View view, boolean b) {
                 if (b) {
                     if (!(mCurrentFragment instanceof SearchResultsFragment)) {
+                        Bundle args = new Bundle();
+                        args.putInt(SearchResultsFragment.ARG_LOADER_ID, 15);
                         final SearchResultsFragment resultsFragment = new SearchResultsFragment();
+                        resultsFragment.setArguments(args);
                         swapFragment(resultsFragment);
                     }
                 }

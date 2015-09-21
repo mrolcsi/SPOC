@@ -20,7 +20,10 @@ import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.*;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.TextView;
@@ -81,20 +84,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
             mSystemUiHider.hide();
         }
     };
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-            return false;
-        }
-    };
+
     private ViewPager vpDetailsPager;
     private TextView tvLocation;
     private TextView tvDateTaken;
@@ -102,6 +92,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
     private ImagePagerAdapter mAdapter;
     private int mCurrentPageIndex = -1;
     private LocationFinderTask mLocationFinderTask;
+    private int mLoaderId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,7 +137,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
                     }
                 }
 
-                //noinspection PointlessBooleanExpression
+                //noinspection PointlessBooleanExpression,ConstantConditions
                 if (visible && AUTO_HIDE) {
                     // Schedule a hide().
                     delayedHide(AUTO_HIDE_DELAY_MILLIS);
@@ -225,19 +216,17 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
     protected void onStart() {
         super.onStart();
 
-        int loaderId = ImagesTableLoader.ID;
         Bundle loaderArgs = null;
-
         if (getIntent() != null) {
             if (getIntent().hasExtra(ARG_LOADER_ID)) {
-                loaderId = getIntent().getIntExtra(ARG_LOADER_ID, ImagesTableLoader.ID);
+                mLoaderId = getIntent().getIntExtra(ARG_LOADER_ID, 0);
             }
             loaderArgs = getIntent().getBundleExtra(ThumbnailsFragment.ARG_QUERY_BUNDLE);
 
-            final String[] projection = new String[]{"_id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION};
+            final String[] projection = new String[]{"DISTINCT _id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION};
             loaderArgs.putStringArray(ImagesTableLoader.ARG_PROJECTION, projection);
         }
-        getSupportLoaderManager().restartLoader(loaderId, loaderArgs, new ImagesTableLoader(this, this));
+        getSupportLoaderManager().restartLoader(mLoaderId, loaderArgs, new ImagesTableLoader(this, this));
     }
 
     @Override
@@ -361,20 +350,22 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
-        if (mAdapter == null) {
-            try {
-                mAdapter = new ImagePagerAdapter(getSupportFragmentManager(), data);
-                vpDetailsPager.setAdapter(mAdapter);
-            } catch (NullPointerException e) {
-                Log.w(getClass().getSimpleName(), e.toString() + ": Premature loading?");
+        if (loader.getId() == mLoaderId) {
+            if (mAdapter == null) {
+                try {
+                    mAdapter = new ImagePagerAdapter(getSupportFragmentManager(), data);
+                    vpDetailsPager.setAdapter(mAdapter);
+                } catch (NullPointerException e) {
+                    Log.w(getClass().getSimpleName(), e.toString() + ": Premature loading?");
+                }
+            } else {
+                mAdapter.changeCursor(data);
             }
-        } else {
-            mAdapter.changeCursor(data);
-        }
 
-        if (mCurrentPageIndex < 0 && data != null && getIntent() != null && getIntent().hasExtra(ARG_SELECTED_POSITION)) {
-            mCurrentPageIndex = getIntent().getIntExtra(ARG_SELECTED_POSITION, 0);
-            vpDetailsPager.setCurrentItem(mCurrentPageIndex);
+            if (mCurrentPageIndex < 0 && data != null && getIntent() != null && getIntent().hasExtra(ARG_SELECTED_POSITION)) {
+                mCurrentPageIndex = getIntent().getIntExtra(ARG_SELECTED_POSITION, 0);
+                vpDetailsPager.setCurrentItem(mCurrentPageIndex);
+            }
         }
     }
 

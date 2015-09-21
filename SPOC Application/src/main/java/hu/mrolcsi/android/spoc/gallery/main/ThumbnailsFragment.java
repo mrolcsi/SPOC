@@ -49,20 +49,23 @@ import org.lucasr.twowayview.widget.TwoWayView;
 
 public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoader.LoaderCallbacks, SwipeRefreshLayout.OnRefreshListener {
 
+    public static final int IMAGES_LOADER_ID = 1;
+
     public static final String ARG_QUERY_BUNDLE = "SPOC.Gallery.Thumbnails.ARGUMENT_BUNDLE";
-    private static final String ARG_LOADER_ID = "SPOC.Gallery.Thumbnails.LOADER_ID";
+    public static final String ARG_LOADER_ID = "SPOC.Gallery.Thumbnails.LOADER_ID";
     protected ThumbnailsAdapter mAdapter;
     protected CursorLoader mImagesLoader;
     protected FloatingActionButton fabSearch;
     protected TwoWayView twList;
     protected SwipeRefreshLayout swipeRefreshLayout;
+    protected Bundle mQueryArgs = new Bundle();
+    protected int mLoaderId;
     private Parcelable mListInstanceState;
     private int mSavedOrientation = Configuration.ORIENTATION_UNDEFINED;
     private Integer mSavedPosition;
     private ActionMode mActionMode;
     private ItemSelectionSupport mItemSelectionSupport;
     private MenuItem mSearchMenuItem;
-    private Bundle mQueryArgs = new Bundle();
     private BroadcastReceiver mDatabaseWatcher = new DatabaseBuilderWatcher();
 
     @Override
@@ -106,15 +109,6 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
                 mListInstanceState = twList.getLayoutManager().onSaveInstanceState();
                 mSavedOrientation = getResources().getConfiguration().orientation;
                 mSavedPosition = i;
-
-//                Bundle args = new Bundle();
-//                args.putInt(ImagePagerFragment.ARG_LOADER_ID, mImagesLoader.getId());
-//                args.putInt(ImagePagerFragment.ARG_SELECTED_POSITION, i);
-//                args.putBundle(ARG_QUERY_BUNDLE, mQueryArgs);
-
-//                ImagePagerFragment fragment = new ImagePagerFragment();
-//                fragment.setArguments(args);
-//                ((GalleryActivity) getActivity()).swapFragment(fragment);
 
                 Intent imagePagerIntent = new Intent(getActivity(), ImagePagerActivity.class);
 
@@ -204,15 +198,15 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
         mAdapter = new ThumbnailsAdapter(getActivity());
         twList.setAdapter(mAdapter);
 
-        int loaderId = ImagesTableLoader.ID;
+        mLoaderId = IMAGES_LOADER_ID;
         Bundle loaderArgs = null;
         if (getArguments() != null) {
             if (getArguments().containsKey(ARG_LOADER_ID)) {
-                loaderId = getArguments().getInt(ARG_LOADER_ID);
+                mLoaderId = getArguments().getInt(ARG_LOADER_ID);
             }
             loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
         }
-        mImagesLoader = (CursorLoader) getLoaderManager().restartLoader(loaderId, loaderArgs, new ImagesTableLoader(getActivity(), this));
+        mImagesLoader = (CursorLoader) getLoaderManager().restartLoader(mLoaderId, loaderArgs, new ImagesTableLoader(getActivity(), this));
 
         IntentFilter mDatabaseBuilderIntentFilter = new IntentFilter();
         mDatabaseBuilderIntentFilter.addAction(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY);
@@ -247,10 +241,10 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, final Cursor data) {
-        if (loader.getId() != ImagesTableLoader.ID) return;
+        if (loader.getId() != mLoaderId) return;
 
         Log.d(getClass().getSimpleName(), "onLoadComplete");
-        if (data == null) {
+        if (data == null || data.getCount() == 0) {
             DialogUtils.buildErrorDialog(getActivity()).setMessage(getString(R.string.error_noPictures)).show();
             return;
         }
@@ -282,7 +276,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        if (loader.getId() != ImagesTableLoader.ID) return;
+        if (loader.getId() != mLoaderId) return;
 
         Log.d(getClass().getSimpleName(), "onLoaderReset");
         if (mAdapter != null) {

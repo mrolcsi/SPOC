@@ -68,7 +68,9 @@ import java.util.Locale;
  * Time: 20:19
  */
 
-public class SingleImageFragment extends SPOCFragment implements ImagesTableLoader.LoaderCallbacks { //TODO: contacts on image loader
+public class SingleImageFragment extends SPOCFragment implements ImagesTableLoader.LoaderCallbacks {
+
+    public static final int SUGGESTIONS_LOADER_ID = 51;
 
     public static final String ARG_IMAGE_ID = "SPOC.Gallery.Details.ImageId";
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
@@ -84,7 +86,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
     private String mImagePath;
     private int mImageId;
-    private CursorLoader mImageLoader;
+    private CursorLoader mFacesLoader;
 
     private BitmapDrawable mOverlayDrawable;
     private BitmapDrawable mBitmapDrawable;
@@ -235,14 +237,15 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         mDetector = new FaceDetectorTask(getActivity(), mImageId) {
             @Override
             protected void onPostExecute(List<Contact2Image> contact2ImageList) {
-
-                mFacePositions = contact2ImageList;
-
-                drawFaces();
+                mDetector = null;
+                if (!contact2ImageList.isEmpty()) {
+                    mFacesLoader.reset();
+                    mFacesLoader.startLoading();
+                }
             }
         };
 
-        mSuggestionsLoader = (CursorLoader) getLoaderManager().initLoader(ContactsTableLoader.ID, mSuggestionArgs, new ContactsTableLoader(getActivity(), this));
+        mSuggestionsLoader = (CursorLoader) getLoaderManager().initLoader(SUGGESTIONS_LOADER_ID, mSuggestionArgs, new ContactsTableLoader(getActivity(), this));
 
         loadImage();
     }
@@ -262,7 +265,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 args.putString(ImagesTableLoader.ARG_URI_STRING, SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Contact.TABLE_NAME).build().toString());
                 args.putString(ImagesTableLoader.ARG_SELECTION, Contact2Image.COLUMN_IMAGE_ID + "=?");
                 args.putStringArray(ImagesTableLoader.ARG_SELECTION_ARGS, new String[]{String.valueOf(mImageId)});
-                mImageLoader = (CursorLoader) getLoaderManager().initLoader(mImageId + 100, args, new ImagesTableLoader(getActivity(), SingleImageFragment.this));
+                mFacesLoader = (CursorLoader) getLoaderManager().initLoader(mImageId + 100, args, new ImagesTableLoader(getActivity(), SingleImageFragment.this));
 
                 super.onResourceReady(resource, glideAnimation);
             }
@@ -474,7 +477,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        if (loader.getId() == LabelsTableLoader.ID) {
+        if (loader.getId() == SUGGESTIONS_LOADER_ID) {
             mSuggestionsAdapter.changeCursor(null);
         }
     }
@@ -510,13 +513,13 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 drawFaces();
             } else {
                 //detect faces
-                if (mFacePositions == null) {
+                if (mFacePositions == null && mDetector != null) {
                     mDetector.execute(mBitmapDrawable.getBitmap());
                 }
             }
         }
 
-        if (loader.getId() == ContactsTableLoader.ID) {
+        if (loader.getId() == SUGGESTIONS_LOADER_ID) {
             if (mSuggestionsAdapter == null) {
                 mSuggestionsAdapter = new SuggestionAdapter(getActivity());
             }
@@ -553,42 +556,6 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         android.widget.TextView staticName;
         android.widget.AutoCompleteTextView editableName;
         android.widget.ImageView staticImage;
-        final android.view.View.OnClickListener onRemoveClickListener = new android.view.View.OnClickListener() {
-            @Override
-            public void onClick(android.view.View view) {
-                if (mSelectedFace != null) {
-                    DialogUtils.buildConfirmDialog(getActivity()).setMessage(R.string.singleImage_confirm_untagFace).setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            final Cursor cursorWithMinId = getActivity().getContentResolver().query(SPOCContentProvider.CONTACTS_2_IMAGES_URI, new String[]{"min(" + Contact2Image.COLUMN_CONTACT_ID + ")"}, "" + Contact2Image.COLUMN_IMAGE_ID + " = ?", new String[]{String.valueOf(mImageId)}, null);
-                            try {
-                                if (cursorWithMinId.moveToFirst()) {
-                                    int lowestId = Math.min(cursorWithMinId.getInt(0) - 1, -1);
-
-                                    ContentValues values = new ContentValues();
-                                    values.put(Contact2Image.COLUMN_CONTACT_ID, lowestId);
-                                    final int update = getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_2_IMAGES_URI, String.valueOf(mSelectedFace.get_id())), values, null, null);
-                                    if (update > 0) {
-                                        Toast.makeText(getActivity(), R.string.singleImage_message_faceUntagged, Toast.LENGTH_SHORT).show();
-
-                                        mSelectedFace.setContactId(lowestId);
-
-                                        mImageLoader.reset();
-                                        mImageLoader.startLoading();
-
-                                        showFaceTag(mSelectedFace);
-                                    } else {
-                                        Toast.makeText(getActivity(), R.string.singleImage_message_faceNotUntagged, Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            } finally {
-                                cursorWithMinId.close();
-                            }
-                        }
-                    }).show();
-                }
-            }
-        };
         final android.widget.TextView.OnEditorActionListener onEditorActionListener = new android.widget.TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(android.widget.TextView textView, int actionId, android.view.KeyEvent keyEvent) {
@@ -621,8 +588,8 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
                     if (updateCount > 0) {
                         android.widget.Toast.makeText(getActivity(), R.string.singleImage_message_faceTagged, android.widget.Toast.LENGTH_SHORT).show();
-                        mImageLoader.reset();
-                        mImageLoader.startLoading();
+                        mFacesLoader.reset();
+                        mFacesLoader.startLoading();
                         showFaceTag(mSelectedFace);
                     } else {
                         android.widget.Toast.makeText(getActivity(), R.string.singleImage_message_faceNotTagged, android.widget.Toast.LENGTH_SHORT).show();
@@ -631,6 +598,42 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                     return false;
                 }
                 return false;
+            }
+        };
+        final android.view.View.OnClickListener onRemoveClickListener = new android.view.View.OnClickListener() {
+            @Override
+            public void onClick(android.view.View view) {
+                if (mSelectedFace != null) {
+                    DialogUtils.buildConfirmDialog(getActivity()).setMessage(R.string.singleImage_confirm_untagFace).setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            final Cursor cursorWithMinId = getActivity().getContentResolver().query(SPOCContentProvider.CONTACTS_2_IMAGES_URI, new String[]{"min(" + Contact2Image.COLUMN_CONTACT_ID + ")"}, "" + Contact2Image.COLUMN_IMAGE_ID + " = ?", new String[]{String.valueOf(mImageId)}, null);
+                            try {
+                                if (cursorWithMinId.moveToFirst()) {
+                                    int lowestId = Math.min(cursorWithMinId.getInt(0) - 1, -1);
+
+                                    ContentValues values = new ContentValues();
+                                    values.put(Contact2Image.COLUMN_CONTACT_ID, lowestId);
+                                    final int update = getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_2_IMAGES_URI, String.valueOf(mSelectedFace.get_id())), values, null, null);
+                                    if (update > 0) {
+                                        Toast.makeText(getActivity(), R.string.singleImage_message_faceUntagged, Toast.LENGTH_SHORT).show();
+
+                                        mSelectedFace.setContactId(lowestId);
+
+                                        mFacesLoader.reset();
+                                        mFacesLoader.startLoading();
+
+                                        showFaceTag(mSelectedFace);
+                                    } else {
+                                        Toast.makeText(getActivity(), R.string.singleImage_message_faceNotUntagged, Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            } finally {
+                                cursorWithMinId.close();
+                            }
+                        }
+                    }).show();
+                }
             }
         };
     }

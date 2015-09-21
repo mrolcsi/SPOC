@@ -70,9 +70,7 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
             return;
         }
 
-        if (iData < 0) {
-            iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
-        }
+        iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
 
         String filename = cursor.getString(iData);
 

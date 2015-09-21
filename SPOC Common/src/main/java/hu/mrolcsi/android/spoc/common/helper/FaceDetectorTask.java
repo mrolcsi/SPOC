@@ -86,10 +86,6 @@ public class FaceDetectorTask extends AsyncTask<Bitmap, Void, List<Contact2Image
             }
         }
 
-        //TODO: store in database
-        // or use service?
-        // ^ too many big bitmaps, potential OOMs
-
         try {
             context.getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, ops);
         } catch (RemoteException | OperationApplicationException e) {

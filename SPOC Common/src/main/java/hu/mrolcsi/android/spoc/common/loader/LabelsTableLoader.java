@@ -16,8 +16,6 @@ import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 public class LabelsTableLoader extends LoaderBase {
 
-    public static final int ID = 94;
-
     public LabelsTableLoader(Context context, LoaderCallbacks loaderCallbacks) {
         super(context, loaderCallbacks);
     }

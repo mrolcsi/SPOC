@@ -13,7 +13,6 @@ import android.text.TextUtils;
 import android.view.*;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
 import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
@@ -31,6 +30,9 @@ import java.util.Locale;
  */
 
 public class SearchResultsFragment extends ThumbnailsFragment {
+
+    public static final int IMAGES_LOADER_ID = 30;
+    public static final int SUGGESTIONS_LOADER_ID = 31;
 
     private TextView tvMessage;
     private String mQuery;
@@ -76,7 +78,16 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         super.onStart();
         mImagesLoader.reset();
 
-        mSuggestionsLoader = (CursorLoader) getLoaderManager().initLoader(LabelsTableLoader.ID, mSuggestionArgs, new LabelsTableLoader(getActivity(), this));
+        mSuggestionsLoader = (CursorLoader) getLoaderManager().initLoader(SUGGESTIONS_LOADER_ID, mSuggestionArgs, new LabelsTableLoader(getActivity(), this));
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (mSearchView != null && !TextUtils.isEmpty(mSearchView.getQuery())) {
+            performSearch(mSearchView.getQuery().toString());
+        }
     }
 
     @Override
@@ -183,12 +194,12 @@ public class SearchResultsFragment extends ThumbnailsFragment {
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
         super.onLoadComplete(loader, data);
 
-        if (loader.getId() == LabelsTableLoader.ID) {
+        if (loader.getId() == SUGGESTIONS_LOADER_ID) {
             //load suggestions to adapter
             mSuggestionsAdapter.changeCursor(data);
         }
 
-        if (loader.getId() == ImagesTableLoader.ID) {
+        if (loader.getId() == mLoaderId) {
             if (twList.getAdapter() == null) {
                 twList.setAdapter(mAdapter);
             }
@@ -203,7 +214,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
     public void onLoaderReset(Loader<Cursor> loader) {
         super.onLoaderReset(loader);
 
-        if (loader.getId() == LabelsTableLoader.ID) {
+        if (loader.getId() == SUGGESTIONS_LOADER_ID) {
             mSuggestionsAdapter.changeCursor(null);
         }
     }

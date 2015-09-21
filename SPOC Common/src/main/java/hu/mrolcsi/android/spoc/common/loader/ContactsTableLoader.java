@@ -18,8 +18,6 @@ import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 public class ContactsTableLoader extends LoaderBase {
 
-    public static final int ID = 23;
-
     public ContactsTableLoader(Context context, LoaderCallbacks loaderCallbacks) {
         super(context, loaderCallbacks);
     }

@@ -37,8 +37,8 @@ import java.util.Locale;
 
 public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpandableListAdapter implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final int DATE_LOADER_ID = 987;
-    private static final int PLACES_LOADER_ID = 876;
+    private static final int DATE_LOADER_ID = 40;
+    private static final int PLACES_LOADER_ID = 41;
 
     private final Context mContext;
     private final LayoutInflater mInflater;

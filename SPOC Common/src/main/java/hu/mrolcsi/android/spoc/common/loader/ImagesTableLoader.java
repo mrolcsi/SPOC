@@ -17,8 +17,6 @@ import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 public class ImagesTableLoader extends LoaderBase {
 
-    public static final int ID = 324;
-
     public ImagesTableLoader(Context context, LoaderCallbacks loaderCallbacks) {
         super(context, loaderCallbacks);
     }
