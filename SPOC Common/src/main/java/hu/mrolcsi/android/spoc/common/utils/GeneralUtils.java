@@ -1,6 +1,10 @@
 package hu.mrolcsi.android.spoc.common.utils;
 
+import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.Context;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,5 +21,12 @@ public abstract class GeneralUtils {
             }
         }
         return false;
+    }
+
+    public static void hideSoftKeyboard(Activity activity, View view) {
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
+        }
     }
 }

@@ -9,14 +9,23 @@
         android:id="@+id/imgProfilePic"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_marginEnd="@dimen/margin_xsmall"
-        android:layout_marginRight="@dimen/margin_xsmall"
         android:src="@drawable/user"/>
 
     <TextView
         android:id="@+id/tvName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
         android:gravity="center_vertical"
-        android:text="Teszt Elek"/>
+        android:padding="@dimen/margin_small"
+        android:text="@string/message_loading"
+        android:textSize="@dimen/abc_text_size_medium_material"/>
+
+    <ImageButton
+        android:id="@+id/btnRemove"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:background="@drawable/abc_btn_borderless_material"
+        android:src="@drawable/remove"/>
 </LinearLayout>

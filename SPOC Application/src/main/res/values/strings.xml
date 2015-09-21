@@ -41,6 +41,7 @@
     <string name="error_noPictures">No pictures found.</string>
     <string name="error_noResults">No pictures found.</string>
     <string name="message_deletingPictures">Deleting…</string>
+    <string name="message_loading">Loading…</string>
     <string name="message_multiplePicturesDeleted">%d pictures deleted.</string>
     <string name="message_multiplePicturesFound">%d pictures found.</string>
     <string name="message_onePictureFound">%d picture found.</string>
@@ -89,13 +90,16 @@
     <string name="settings_whitelist_help"><![CDATA[If by any chance you don\'t see some of your images in the Gallery, add the directories containing those images to the <b>Whitelist</b>.]]></string>
     <string name="settings_whitelist_summary">Select directories to include in Gallery</string>
     <string name="settings_whitelist_title">Whitelist</string>
+    <string name="singleImage_faceTag_hint">Who is this?</string>
+    <string name="singleImage_message_faceNotTagged">Face could not be tagged.</string>
+    <string name="singleImage_message_faceTagged">Face tagged.</string>
     <string name="splash_button_continueInBackground">Continue in background</string>
     <string name="splash_contentDescription_logo">SPOC Logo</string>
     <string name="title_activity_gallery">Gallery</string>
     <string name="yes">Yes</string>
+    <string name="singleImage_confirm_untagFace">Are you sure you want to untag this face?</string>
+    <string name="singleImage_message_faceUntagged">Face untagged.</string>
+    <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
+    <string name="singleImage_message_faceNotUntagged">Face could not be untagged.</string>
 
-    <string name="title_activity_image_pager">ImagePagerActivity</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
-    <string name="singleImage_faceTag_hint">Who is this?</string>
 </resources>

@@ -3,26 +3,31 @@ package hu.mrolcsi.android.spoc.gallery.imagedetails;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
-import android.graphics.*;
+import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.ShareActionProvider;
-import android.view.*;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
-import android.widget.AutoCompleteTextView;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -35,8 +40,10 @@ import hu.mrolcsi.android.spoc.common.loader.ContactsTableLoader;
 import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
 import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.common.utils.GeneralUtils;
 import hu.mrolcsi.android.spoc.database.model.Contact;
 import hu.mrolcsi.android.spoc.database.model.Label;
+import hu.mrolcsi.android.spoc.database.model.LabelType;
 import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
@@ -49,8 +56,10 @@ import uk.co.senab.photoview.PhotoViewAttacher;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created with IntelliJ IDEA.
@@ -65,12 +74,9 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
     public static final String ARG_IMAGE_LOCATION = "SPOC.Gallery.Details.Location";
 
-    private static final AccelerateInterpolator ACC_INTERPOLATOR = new AccelerateInterpolator(2);
-    private static final DecelerateInterpolator DEC_INTERPOLATOR = new DecelerateInterpolator(2);
-
     private PhotoView photoView;
-    private View mFaceTagStatic;
-    private View mFaceTagEditable;
+    private android.view.View mFaceTagStatic;
+    private android.view.View mFaceTagEditable;
     private FaceTagViewHolder mFaceTagViewHolder;
 
     private int mDesiredWidth;
@@ -78,16 +84,19 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
     private String mImagePath;
     private int mImageId;
+    private CursorLoader mImageLoader;
 
     private BitmapDrawable mOverlayDrawable;
     private BitmapDrawable mBitmapDrawable;
     private FaceDetectorTask mDetector;
     private List<Contact2Image> mFacePositions;
     private BitmapImageViewTarget mBitmapTarget;
-    private Bitmap mOverlayBitmap;
+    private android.graphics.Bitmap mOverlayBitmap;
 
     private Bundle mSuggestionArgs = new Bundle();
     private SuggestionAdapter mSuggestionsAdapter;
+    private CursorLoader mSuggestionsLoader;
+    private Contact2Image mSelectedFace;
 
     public static SingleImageFragment newInstance(int imageId, String imagePath, String location) {
         final SingleImageFragment f = new SingleImageFragment();
@@ -106,9 +115,9 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         super.onCreate(savedInstanceState);
 
         mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"_id", Label.COLUMN_NAME, Label.COLUMN_TYPE});
-        //mSuggestionArgs.putString(LabelTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "=" + LabelType.CONTACT.name() + " AND " + Label.COLUMN_NAME + " LIKE ?");
+        mSuggestionArgs.putString(LabelsTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "='" + LabelType.CONTACT.name() + "' AND " + Label.COLUMN_NAME + " LIKE ?");
         //mSuggestionArgs.putString(LabelTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "='" + LabelType.CONTACT.name() + "'");
-        //mSuggestionArgs.putStringArray(LabelTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
+        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
         mSuggestionArgs.putString(LabelsTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
     }
 
@@ -117,10 +126,10 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
-        WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
-        Display display = wm.getDefaultDisplay();
+        android.view.WindowManager wm = (android.view.WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
+        android.view.Display display = wm.getDefaultDisplay();
         if (Build.VERSION.SDK_INT >= 13) {
-            Point size = new Point();
+            android.graphics.Point size = new android.graphics.Point();
             display.getSize(size);
             mDesiredWidth = size.x;
             mDesiredHeight = size.y;
@@ -149,12 +158,11 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 }
             }
         });
-
     }
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public android.view.View onCreateView(android.view.LayoutInflater inflater, android.view.ViewGroup container, Bundle savedInstanceState) {
         if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_singleimage, container, false);
 
@@ -171,42 +179,37 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             photoView = (PhotoView) mRootView.findViewById(R.id.image);
             photoView.setOnPhotoTapListener(new PhotoViewAttacher.OnPhotoTapListener() {
                 @Override
-                public void onPhotoTap(View view, float x, float y) {
+                public void onPhotoTap(android.view.View view, float x, float y) {
                     // x and y are values between 0 and 1,
                     // [0,0] being the top left corner of the photo,
                     // [1,1] being the bottom right corner.
 
+                    int selectedFace = 0;
                     if (mFacePositions != null && !mFacePositions.isEmpty()) {
                         float photoX = x * mOverlayBitmap.getWidth();
                         float photoY = y * mOverlayBitmap.getHeight();
 
-                        int i = 0;
-                        while (i < mFacePositions.size() && !mFacePositions.get(i).contains(photoX, photoY)) i++;
+                        while (selectedFace < mFacePositions.size() && !mFacePositions.get(selectedFace).contains(photoX, photoY)) {
+                            selectedFace++;
+                        }
 
-                        if (i < mFacePositions.size()) {
-                            //awesome!
-                            //Toast.makeText(getActivity(), "Face tap!\n" + mFacePositions.get(i).toString(), Toast.LENGTH_SHORT).show();
-                            showFaceTag(mFacePositions.get(i));
+                        mSelectedFace = null;
+                        if (selectedFace < mFacePositions.size()) {
+                            mSelectedFace = mFacePositions.get(selectedFace);
+                            showFaceTag(mFacePositions.get(selectedFace));
                         } else {
-                            ViewCompat.animate(mFaceTagStatic).alpha(0).setInterpolator(ACC_INTERPOLATOR).withEndAction(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mFaceTagStatic.setVisibility(View.GONE);
-                                }
-                            }).start();
-                            ViewCompat.animate(mFaceTagEditable).alpha(0).setInterpolator(ACC_INTERPOLATOR).withEndAction(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mFaceTagEditable.setVisibility(View.GONE);
-                                }
-                            }).start();
-                            //mFaceTagStatic.setVisibility(View.GONE);
-                            //mFaceTagEditable.setVisibility(View.GONE);
-
-                            ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
+                            if (mFaceTagStatic.getVisibility() == android.view.View.VISIBLE || mFaceTagEditable.getVisibility() == android.view.View.VISIBLE) {
+                                hideFaceTags();
+                            } else {
+                                ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
+                            }
                         }
                     } else {
-                        ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
+                        if (mFaceTagStatic.getVisibility() == android.view.View.VISIBLE || mFaceTagEditable.getVisibility() == android.view.View.VISIBLE) {
+                            hideFaceTags();
+                        } else {
+                            ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
+                        }
                     }
                 }
             });
@@ -215,8 +218,8 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             mFaceTagEditable = mRootView.findViewById(R.id.faceTagEditable);
         }
 
-        mFaceTagStatic.setVisibility(View.GONE);
-        mFaceTagEditable.setVisibility(View.GONE);
+        mFaceTagStatic.setVisibility(android.view.View.GONE);
+        mFaceTagEditable.setVisibility(android.view.View.GONE);
 
         return mRootView;
     }
@@ -239,7 +242,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             }
         };
 
-        getLoaderManager().initLoader(ContactsTableLoader.ID, mSuggestionArgs, new ContactsTableLoader(getActivity(), this));
+        mSuggestionsLoader = (CursorLoader) getLoaderManager().initLoader(ContactsTableLoader.ID, mSuggestionArgs, new ContactsTableLoader(getActivity(), this));
 
         loadImage();
     }
@@ -253,21 +256,21 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         mBitmapTarget = new BitmapImageViewTarget(photoView) {
 
             @Override
-            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+            public void onResourceReady(android.graphics.Bitmap resource, GlideAnimation<? super android.graphics.Bitmap> glideAnimation) {
 
                 Bundle args = new Bundle();
                 args.putString(ImagesTableLoader.ARG_URI_STRING, SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Contact.TABLE_NAME).build().toString());
                 args.putString(ImagesTableLoader.ARG_SELECTION, Contact2Image.COLUMN_IMAGE_ID + "=?");
                 args.putStringArray(ImagesTableLoader.ARG_SELECTION_ARGS, new String[]{String.valueOf(mImageId)});
-                getLoaderManager().initLoader(mImageId * 125, args, new ImagesTableLoader(getActivity(), SingleImageFragment.this));
+                mImageLoader = (CursorLoader) getLoaderManager().initLoader(mImageId + 100, args, new ImagesTableLoader(getActivity(), SingleImageFragment.this));
 
                 super.onResourceReady(resource, glideAnimation);
             }
 
             @Override
-            protected void setResource(Bitmap resource) {
+            protected void setResource(android.graphics.Bitmap resource) {
                 mBitmapDrawable = new BitmapDrawable(getResources(), resource);
-                mOverlayBitmap = Bitmap.createBitmap(resource.getWidth(), resource.getHeight(), Bitmap.Config.ARGB_8888);
+                mOverlayBitmap = android.graphics.Bitmap.createBitmap(resource.getWidth(), resource.getHeight(), android.graphics.Bitmap.Config.ARGB_8888);
                 mOverlayDrawable = new BitmapDrawable(getResources(), mOverlayBitmap);
 
                 if (((ImagePagerActivity) getActivity()).getSystemUiHider().isVisible()) {
@@ -294,11 +297,11 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(android.view.Menu menu, android.view.MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
         // Locate MenuItem with ShareActionProvider
-        MenuItem item = menu.findItem(R.id.menuShare);
+        android.view.MenuItem item = menu.findItem(R.id.menuShare);
 
         // Fetch and store ShareActionProvider
         ShareActionProvider shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
@@ -306,7 +309,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(android.view.MenuItem item) {
         final int id = item.getItemId();
         switch (id) {
             case R.id.menuDetails:
@@ -328,9 +331,9 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                                 try {
                                     final boolean success = FileUtils.deleteFile(mImagePath);
                                     if (success)
-                                        Toast.makeText(getActivity(), R.string.message_pictureDeleted, Toast.LENGTH_SHORT).show();
+                                        android.widget.Toast.makeText(getActivity(), R.string.message_pictureDeleted, android.widget.Toast.LENGTH_SHORT).show();
                                     else
-                                        Toast.makeText(getActivity(), R.string.message_pictureNotDeleted, Toast.LENGTH_SHORT).show();
+                                        android.widget.Toast.makeText(getActivity(), R.string.message_pictureNotDeleted, android.widget.Toast.LENGTH_SHORT).show();
                                 } catch (IOException e) {
                                     String message;
                                     final AlertDialog.Builder errorBuilder = DialogUtils.buildErrorDialog(getActivity());
@@ -371,90 +374,102 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             mOverlayDrawable = null;
         }
 
-        getLoaderManager().destroyLoader(mImageId * 125);
+        getLoaderManager().destroyLoader(mImageId + 100);
     }
 
     private void drawFaces() {
-
+        //TODO: draw faces on separate bitmaps/layers?
         if (mFacePositions == null || mFacePositions.isEmpty()) {
             return;
         }
 
-        Paint paint = new Paint();
+        android.graphics.Paint paint = new android.graphics.Paint();
         paint.setColor(getResources().getColor(R.color.background_material_light));
         paint.setAntiAlias(true);
         paint.setStrokeWidth(getResources().getDimensionPixelSize(R.dimen.margin_xsmall));
-        paint.setStyle(Paint.Style.STROKE);
+        paint.setStyle(android.graphics.Paint.Style.STROKE);
 
         final int cornerRadius = getResources().getDimensionPixelSize(R.dimen.margin_small);
 
-        final Canvas canvas = new Canvas(mOverlayDrawable.getBitmap());
+        final android.graphics.Canvas canvas = new android.graphics.Canvas(mOverlayDrawable.getBitmap());
 
-        for (RectF rect : mFacePositions) {
+        for (android.graphics.RectF rect : mFacePositions) {
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint);
         }
 
         photoView.invalidate();
     }
 
-    private void showFaceTag(Contact2Image contact) {
-
-        if (contact.getContactId() > 0) {
-            //existing contact
-            ViewCompat.animate(mFaceTagStatic).alpha(255).setInterpolator(DEC_INTERPOLATOR).withStartAction(new Runnable() {
-                @Override
-                public void run() {
-                    mFaceTagStatic.setVisibility(View.VISIBLE);
-                }
-            }).start();
-            ViewCompat.animate(mFaceTagEditable).alpha(0).setInterpolator(ACC_INTERPOLATOR).withEndAction(new Runnable() {
-                @Override
-                public void run() {
-                    mFaceTagEditable.setVisibility(View.GONE);
-                }
-            }).start();
-        } else {
-            //unknown contact
-            ViewCompat.animate(mFaceTagStatic).alpha(0).setInterpolator(ACC_INTERPOLATOR).withEndAction(new Runnable() {
-                @Override
-                public void run() {
-                    mFaceTagStatic.setVisibility(View.GONE);
-                }
-            }).start();
-            ViewCompat.animate(mFaceTagEditable).alpha(255).setInterpolator(DEC_INTERPOLATOR).withStartAction(new Runnable() {
-                @Override
-                public void run() {
-                    mFaceTagEditable.setVisibility(View.VISIBLE);
-                }
-            }).start();
+    private void showFaceTag(final Contact2Image contact) {
+        if (contact == null) {
+            hideFaceTags();
+            return;
         }
 
         if (mFaceTagViewHolder == null) {
             mFaceTagViewHolder = new FaceTagViewHolder();
             //find views
-            mFaceTagViewHolder.editableName = (AutoCompleteTextView) mFaceTagEditable.findViewById(R.id.etName);
-            mFaceTagViewHolder.staticImage = (ImageView) mFaceTagStatic.findViewById(R.id.imgProfilePic);
-            mFaceTagViewHolder.staticName = (TextView) mFaceTagStatic.findViewById(R.id.tvName);
+            mFaceTagViewHolder.staticImage = (android.widget.ImageView) mFaceTagStatic.findViewById(R.id.imgProfilePic);
+            mFaceTagViewHolder.staticName = (android.widget.TextView) mFaceTagStatic.findViewById(R.id.tvName);
+            mFaceTagViewHolder.staticRemove = (android.widget.ImageButton) mFaceTagStatic.findViewById(R.id.btnRemove);
+            mFaceTagViewHolder.editableName = (android.widget.AutoCompleteTextView) mFaceTagEditable.findViewById(R.id.etName);
+            mFaceTagViewHolder.editableName.setDropDownWidth(android.view.ViewGroup.LayoutParams.MATCH_PARENT);
+            mFaceTagViewHolder.editableName.setAdapter(mSuggestionsAdapter);
 
             //set listeners
-            mFaceTagViewHolder.editableName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                @Override
-                public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-                    // TODO: save tag
-                    return false;
-                }
-            });
-            mFaceTagViewHolder.editableName.setDropDownWidth(ViewGroup.LayoutParams.MATCH_PARENT);
-            mFaceTagViewHolder.editableName.setAdapter(mSuggestionsAdapter);
+            mFaceTagViewHolder.editableName.setOnEditorActionListener(mFaceTagViewHolder.onEditorActionListener);
+            mFaceTagViewHolder.editableName.addTextChangedListener(mFaceTagViewHolder.textWatcher);
+            mFaceTagViewHolder.editableName.setOnItemClickListener(mFaceTagViewHolder.onItemClickListener);
+            mFaceTagViewHolder.staticRemove.setOnClickListener(mFaceTagViewHolder.onRemoveClickListener);
         }
 
-        //load contact image
-        //set image to imageview
-        //set contact name to textview/edittext
+        if (contact.getContactId() > 0) {
+            //existing contact
+            if (mFaceTagEditable.getVisibility() == android.view.View.VISIBLE) {
+                final Animation fadeOutAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+                fadeOutAnim.setAnimationListener(new FadeOutAnimationListener(new android.view.View[]{mFaceTagEditable}));
+                mFaceTagEditable.startAnimation(fadeOutAnim);
+            }
 
+            final Animation fadeInAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
+            fadeInAnim.setAnimationListener(new FadeInAnimationListener(new android.view.View[]{mFaceTagStatic}));
+            mFaceTagStatic.startAnimation(fadeInAnim);
 
-        //set x,y of view
-        //attach to parent
+            mFaceTagViewHolder.staticName.setText(contact.getContactName());
+            new ContactPhotoLoader(contact.getContactKey()) {
+                @Override
+                protected void onPostExecute(Drawable drawable) {
+                    mFaceTagViewHolder.staticImage.setImageDrawable(drawable);
+                }
+            }.execute();
+        } else {
+            //unknown contact
+            if (mFaceTagStatic.getVisibility() == android.view.View.VISIBLE) {
+                final Animation fadeOutAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+                fadeOutAnim.setAnimationListener(new FadeOutAnimationListener(new android.view.View[]{mFaceTagStatic}));
+                mFaceTagStatic.startAnimation(fadeOutAnim);
+            }
+
+            final Animation fadeInAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
+            fadeInAnim.setAnimationListener(new FadeInAnimationListener(new android.view.View[]{mFaceTagEditable}));
+            mFaceTagEditable.startAnimation(fadeInAnim);
+            mFaceTagViewHolder.editableName.setText(null);
+        }
+    }
+
+    private void hideFaceTags() {
+        GeneralUtils.hideSoftKeyboard(getActivity(), mFaceTagViewHolder.editableName);
+
+        final Animation fadeOutAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+        fadeOutAnim.setAnimationListener(new FadeOutAnimationListener(new android.view.View[]{mFaceTagStatic, mFaceTagEditable}));
+        if (mFaceTagStatic.getVisibility() == android.view.View.VISIBLE) {
+            mFaceTagStatic.startAnimation(fadeOutAnim);
+        }
+        if (mFaceTagEditable.getVisibility() == android.view.View.VISIBLE) {
+            mFaceTagEditable.startAnimation(fadeOutAnim);
+        }
+
+        mSelectedFace = null;
     }
 
     @Override
@@ -466,8 +481,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
-        // TODO
-        if (loader.getId() == mImageId * 125) {
+        if (loader.getId() == mImageId + 100) {
             if (data.getCount() > 0) {
                 //get column indices
                 int iContactId = data.getColumnIndex(Contact2Image.COLUMN_CONTACT_ID);
@@ -475,6 +489,8 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 int x2 = data.getColumnIndex(Contact2Image.COLUMN_X2);
                 int y1 = data.getColumnIndex(Contact2Image.COLUMN_Y1);
                 int y2 = data.getColumnIndex(Contact2Image.COLUMN_Y2);
+                int iName = data.getColumnIndex(Contact.COLUMN_NAME);
+                int iKey = data.getColumnIndex(Contact.COLUMN_CONTACT_KEY);
 
                 mFacePositions = new ArrayList<>();
 
@@ -483,9 +499,12 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 //load faces from cursor
                 while (data.moveToNext()) {
                     c2i = new Contact2Image();
+                    c2i.set_id(data.getInt(0));
                     c2i.setImageId(mImageId);
                     c2i.setContactId(data.getInt(iContactId));
                     c2i.set(data.getFloat(x1), data.getFloat(y1), data.getFloat(x2), data.getFloat(y2));
+                    c2i.setContactName(data.getString(iName));
+                    c2i.setContactKey(data.getString(iKey));
                     mFacePositions.add(c2i);
                 }
                 drawFaces();
@@ -506,8 +525,187 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     }
 
     class FaceTagViewHolder {
-        TextView staticName;
-        AutoCompleteTextView editableName;
-        ImageView staticImage;
+        final TextWatcher textWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                mSuggestionsLoader.reset();
+                mSuggestionsLoader.setSelectionArgs(new String[]{"%" + editable.toString().toLowerCase(Locale.getDefault()) + "%"});
+                mSuggestionsLoader.startLoading();
+            }
+        };
+        final android.widget.AdapterView.OnItemClickListener onItemClickListener = new android.widget.AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(android.widget.AdapterView<?> adapterView, android.view.View view, int i, long l) {
+                if (mSelectedFace != null) {
+                    mSelectedFace.setContactId((int) l);
+                }
+            }
+        };
+        android.widget.ImageButton staticRemove;
+        android.widget.TextView staticName;
+        android.widget.AutoCompleteTextView editableName;
+        android.widget.ImageView staticImage;
+        final android.view.View.OnClickListener onRemoveClickListener = new android.view.View.OnClickListener() {
+            @Override
+            public void onClick(android.view.View view) {
+                if (mSelectedFace != null) {
+                    DialogUtils.buildConfirmDialog(getActivity()).setMessage(R.string.singleImage_confirm_untagFace).setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            final Cursor cursorWithMinId = getActivity().getContentResolver().query(SPOCContentProvider.CONTACTS_2_IMAGES_URI, new String[]{"min(" + Contact2Image.COLUMN_CONTACT_ID + ")"}, "" + Contact2Image.COLUMN_IMAGE_ID + " = ?", new String[]{String.valueOf(mImageId)}, null);
+                            try {
+                                if (cursorWithMinId.moveToFirst()) {
+                                    int lowestId = Math.min(cursorWithMinId.getInt(0) - 1, -1);
+
+                                    ContentValues values = new ContentValues();
+                                    values.put(Contact2Image.COLUMN_CONTACT_ID, lowestId);
+                                    final int update = getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_2_IMAGES_URI, String.valueOf(mSelectedFace.get_id())), values, null, null);
+                                    if (update > 0) {
+                                        Toast.makeText(getActivity(), R.string.singleImage_message_faceUntagged, Toast.LENGTH_SHORT).show();
+
+                                        mSelectedFace.setContactId(lowestId);
+
+                                        mImageLoader.reset();
+                                        mImageLoader.startLoading();
+
+                                        showFaceTag(mSelectedFace);
+                                    } else {
+                                        Toast.makeText(getActivity(), R.string.singleImage_message_faceNotUntagged, Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            } finally {
+                                cursorWithMinId.close();
+                            }
+                        }
+                    }).show();
+                }
+            }
+        };
+        final android.widget.TextView.OnEditorActionListener onEditorActionListener = new android.widget.TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(android.widget.TextView textView, int actionId, android.view.KeyEvent keyEvent) {
+                if (actionId == EditorInfo.IME_ACTION_DONE && mSelectedFace != null) {
+
+                    //validate
+                    if (mSelectedFace.getContactId() == 0) {
+                        //no contact was selected, save new contact? only locally
+                        ContentValues values = new ContentValues();
+                        values.put(Contact.COLUMN_NAME, textView.getText().toString());
+                        values.put(Contact.COLUMN_TYPE, LabelType.CONTACT.name());
+
+                        final Uri insertedUri = getActivity().getContentResolver().insert(SPOCContentProvider.CONTACTS_URI, values);
+                        mSelectedFace.setContactId(Integer.parseInt(insertedUri.getLastPathSegment()));
+                    }
+
+                    GeneralUtils.hideSoftKeyboard(getActivity(), mFaceTagViewHolder.editableName);
+
+                    ContentValues values = new ContentValues();
+                    values.put(Contact2Image.COLUMN_CONTACT_ID, mSelectedFace.getContactId());
+
+                    int updateCount;
+                    try {
+                        updateCount = getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_2_IMAGES_URI, String.valueOf(mSelectedFace.get_id())), values, null, null);
+                    } catch (SQLiteConstraintException e) {
+                        Toast.makeText(getActivity(), R.string.singleImage_message_personAlreadyTagged, Toast.LENGTH_SHORT).show();
+                        mSelectedFace.setContactId(-1);
+                        return true;
+                    }
+
+                    if (updateCount > 0) {
+                        android.widget.Toast.makeText(getActivity(), R.string.singleImage_message_faceTagged, android.widget.Toast.LENGTH_SHORT).show();
+                        mImageLoader.reset();
+                        mImageLoader.startLoading();
+                        showFaceTag(mSelectedFace);
+                    } else {
+                        android.widget.Toast.makeText(getActivity(), R.string.singleImage_message_faceNotTagged, android.widget.Toast.LENGTH_SHORT).show();
+                    }
+
+                    return false;
+                }
+                return false;
+            }
+        };
+    }
+
+    class ContactPhotoLoader extends AsyncTask<Void, Void, Drawable> {
+        private final String lookupKey;
+
+        public ContactPhotoLoader(String lookupKey) {
+            this.lookupKey = lookupKey;
+        }
+
+        @Override
+        protected Drawable doInBackground(Void... voids) {
+            //contact photo
+            final InputStream inputStream = ContactsContract.Contacts.openContactPhotoInputStream(getActivity().getContentResolver(), Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_LOOKUP_URI, lookupKey));
+            RoundedBitmapDrawable roundedBitmapDrawable = null;
+            if (inputStream != null) {
+                roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), inputStream);
+                roundedBitmapDrawable.setCircular(true);
+                return roundedBitmapDrawable;
+            }
+            if (Build.VERSION.SDK_INT < 22) {
+                //noinspection deprecation
+                return getResources().getDrawable(R.drawable.user);
+            } else {
+                return getResources().getDrawable(R.drawable.user, getActivity().getTheme());
+            }
+        }
+    }
+
+    class FadeInAnimationListener implements Animation.AnimationListener {
+
+        private final android.view.View[] views;
+
+        public FadeInAnimationListener(android.view.View[] views) {
+            this.views = views;
+        }
+
+        @Override
+        public void onAnimationStart(Animation animation) {
+            for (android.view.View view : views) {
+                view.setVisibility(android.view.View.VISIBLE);
+            }
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+        }
+    }
+
+    class FadeOutAnimationListener implements Animation.AnimationListener {
+
+        private final android.view.View[] views;
+
+        FadeOutAnimationListener(android.view.View[] views) {
+            this.views = views;
+        }
+
+        @Override
+        public void onAnimationStart(Animation animation) {
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+            for (android.view.View view : views) {
+                view.setVisibility(android.view.View.GONE);
+            }
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+        }
     }
 }

@@ -19,6 +19,7 @@
         android:layout_height="match_parent"
         android:gravity="center_vertical"
         android:hint="@string/singleImage_faceTag_hint"
+        android:inputType="textCapWords|textPersonName"
         android:singleLine="true"
         android:theme="@style/Theme.SPOC"/>
 </LinearLayout>

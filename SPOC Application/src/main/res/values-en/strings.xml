@@ -93,4 +93,11 @@
     <string name="title_activity_gallery">Gallery</string>
     <string name="yes">Yes</string>
     <string name="singleImage_faceTag_hint">Who is this?</string>
+    <string name="message_loading">Loading…</string>
+    <string name="singleImage_message_faceTagged">Face tagged.</string>
+    <string name="singleImage_message_faceNotTagged">Face could not be tagged.</string>
+    <string name="singleImage_confirm_untagFace">Are you sure you want to untag this face?</string>
+    <string name="singleImage_message_faceUntagged">Face untagged.</string>
+    <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
+    <string name="singleImage_message_faceNotUntagged">Face could not be untagged.</string>
 </resources>

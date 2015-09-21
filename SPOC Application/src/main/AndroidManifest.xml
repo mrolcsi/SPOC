@@ -51,7 +51,6 @@
         <activity
             android:name=".imagedetails.ImagePagerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_image_pager"
             android:parentActivityName=".main.GalleryActivity"
             android:theme="@style/Theme.SPOC.Fullscreen">
             <meta-data

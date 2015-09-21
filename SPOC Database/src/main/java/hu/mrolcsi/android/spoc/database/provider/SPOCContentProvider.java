@@ -28,7 +28,7 @@ import java.util.Locale;
 public final class SPOCContentProvider extends ContentProvider {
 
     public static final String AUTHORITY = "hu.mrolcsi.android.spoc.database.provider";
-    private static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
+    public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
     public static final Uri IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Image.TABLE_NAME);
     public static final Uri LABELS_URI = Uri.withAppendedPath(CONTENT_URI, Label.TABLE_NAME);
     public static final Uri LABELS_2_IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Label2Image.TABLE_NAME);
@@ -58,6 +58,7 @@ public final class SPOCContentProvider extends ContentProvider {
     private static final int CONTACT_BY_ID = 32;
     private static final int CONTACT_BY_KEY = 33;
     private static final int CONTACTS_2_IMAGES = 34;
+    private static final int CONTACTS_2_IMAGES_BY_ID = 35;
 
     private static final UriMatcher URI_MATCHER;
 
@@ -87,6 +88,7 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Contact.TABLE_NAME + "/" + Contact.COLUMN_CONTACT_KEY + "/*", CONTACT_BY_KEY);                    // content://authority/contacts/key/*           > SELECT * FROM contacts WHERE key = *
 
         URI_MATCHER.addURI(AUTHORITY, Contact2Image.TABLE_NAME, CONTACTS_2_IMAGES);                                                     // content://authority/contacts2images          > INSERT INTO contacts2images
+        URI_MATCHER.addURI(AUTHORITY, Contact2Image.TABLE_NAME + "/#", CONTACTS_2_IMAGES_BY_ID);                                        // content://authority/contact2image/#          > SELECT * FROM contacts2images WHERE _id = #
     }
 
     private DatabaseHelper dbHelper;
@@ -109,7 +111,7 @@ public final class SPOCContentProvider extends ContentProvider {
         if (firstSegment.equals(Label.TABLE_NAME)) {
             return queryLabels(uri, projection, selection, selectionArgs, sortOrder);
         }
-        if (firstSegment.equals(Contact.TABLE_NAME)) {
+        if (firstSegment.equals(Contact.TABLE_NAME) || firstSegment.equals(Contact2Image.TABLE_NAME)) {
             return queryContacts(uri, projection, selection, selectionArgs, sortOrder);
         }
 
@@ -180,6 +182,7 @@ public final class SPOCContentProvider extends ContentProvider {
                         " LEFT JOIN " + Contact.TABLE_NAME + " ON " + Contact.TABLE_NAME + "._id=" + Contact2Image.TABLE_NAME + "." + Contact2Image.COLUMN_CONTACT_ID);
                 if (projection == null) {
                     projection = new String[]{
+                            Contact2Image.TABLE_NAME + "._id",
                             Image.TABLE_NAME + "._id AS image_id",
                             Image.TABLE_NAME + "." + Image.COLUMN_FILENAME,
                             Contact.TABLE_NAME + "._id AS contact_id",
@@ -258,7 +261,17 @@ public final class SPOCContentProvider extends ContentProvider {
         switch (URI_MATCHER.match(uri)) {
             case CONTACTS_LIST:
                 break;
+            case CONTACTS_2_IMAGES:
+                builder.setTables(Contact2Image.TABLE_NAME);
+                break;
             case CONTACT_BY_ID:
+                if (projection == null) {
+                    projection = new String[]{
+                            "_id",
+                            Contact.COLUMN_CONTACT_KEY,
+                            Contact.COLUMN_NAME
+                    };
+                }
                 builder.appendWhere("_id=" + uri.getLastPathSegment());
                 break;
             case CONTACT_BY_KEY:
@@ -415,6 +428,14 @@ public final class SPOCContentProvider extends ContentProvider {
                     where += " AND " + selection;
                 }
                 updateCount = db.update(Contact.TABLE_NAME, contentValues, where, selectionArgs);
+                break;
+            case CONTACTS_2_IMAGES_BY_ID:
+                idStr = uri.getLastPathSegment();
+                where = "_id" + " = " + idStr;
+                if (!TextUtils.isEmpty(selection)) {
+                    where += " AND " + selection;
+                }
+                updateCount = db.update(Contact2Image.TABLE_NAME, contentValues, where, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);

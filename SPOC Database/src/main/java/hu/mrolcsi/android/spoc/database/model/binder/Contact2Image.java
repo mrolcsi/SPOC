@@ -42,6 +42,9 @@ public class Contact2Image extends RectF {
     @DatabaseField(columnName = COLUMN_DATE, dataType = DataType.DATE_LONG)
     private Date date;
 
+    private String contactName;
+    private String contactKey;
+
     public Contact2Image() {
     }
 
@@ -75,5 +78,21 @@ public class Contact2Image extends RectF {
 
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    public String getContactKey() {
+        return contactKey;
+    }
+
+    public void setContactKey(String contactKey) {
+        this.contactKey = contactKey;
+    }
+
+    public String getContactName() {
+        return contactName;
+    }
+
+    public void setContactName(String contactName) {
+        this.contactName = contactName;
     }
 }

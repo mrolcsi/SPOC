@@ -2,9 +2,7 @@ package hu.mrolcsi.android.spoc.common.service;
 
 import android.annotation.TargetApi;
 import android.app.IntentService;
-import android.content.*;
 import android.database.Cursor;
-import android.location.Address;
 import android.location.Geocoder;
 import android.media.ExifInterface;
 import android.net.ConnectivityManager;
@@ -34,7 +32,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -53,16 +51,16 @@ public class DatabaseBuilderService extends IntentService {
 
     private boolean mInternet;
 
-    private Map<String, Integer> mLabelCache = new TreeMap<>();
-    private ArrayList<ContentProviderOperation> mOps = new ArrayList<>();
+    private java.util.Map<String, Integer> mLabelCache = new java.util.TreeMap<>();
+    private java.util.ArrayList<android.content.ContentProviderOperation> mOps = new java.util.ArrayList<>();
 
     public DatabaseBuilderService() {
         super(TAG);
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    protected void onHandleIntent(android.content.Intent intent) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         mInternet = activeNetworkInfo != null && activeNetworkInfo.isConnected();
 
@@ -70,7 +68,7 @@ public class DatabaseBuilderService extends IntentService {
 
         Log.i(getClass().getSimpleName(), "DatabaseBuilder started.");
 
-        Intent progressIntent;
+        android.content.Intent progressIntent;
 
         DatabaseHelper.init(getApplicationContext());
 
@@ -85,13 +83,13 @@ public class DatabaseBuilderService extends IntentService {
 
         //everything else should be done in the background
 
-        progressIntent = new Intent(BROADCAST_ACTION_IMAGES_READY);
+        progressIntent = new android.content.Intent(BROADCAST_ACTION_IMAGES_READY);
         LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
 
         final boolean isFirstStart = intent.getBooleanExtra(ARG_FIRST_START, false);
 
         if (isFirstStart) {
-            Intent cacheIntent = new Intent(getApplicationContext(), CacheBuilderService.class);
+            android.content.Intent cacheIntent = new android.content.Intent(getApplicationContext(), CacheBuilderService.class);
             startService(cacheIntent);
         }
 
@@ -103,7 +101,7 @@ public class DatabaseBuilderService extends IntentService {
 
         generateLabels();
 
-        progressIntent = new Intent(BROADCAST_ACTION_FINISHED);
+        progressIntent = new android.content.Intent(BROADCAST_ACTION_FINISHED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
 
         endTime = System.currentTimeMillis();
@@ -125,12 +123,12 @@ public class DatabaseBuilderService extends IntentService {
             while (cursor.moveToNext()) {
                 filename = cursor.getString(1);
                 if (!new File(filename).exists() || listHelper.isInBlacklist(filename)) {
-                    mOps.add(ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0)))).build());
+                    mOps.add(android.content.ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0)))).build());
                     //numRowsDeleted += getContentResolver().delete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0))), null, null);
                 }
             }
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (RemoteException | OperationApplicationException e) {
+        } catch (RemoteException | android.content.OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
             cursor.close();
@@ -162,7 +160,7 @@ public class DatabaseBuilderService extends IntentService {
             String filename;
             long dateTaken;
             String location;
-            ContentValues values = new ContentValues();
+            android.content.ContentValues values = new android.content.ContentValues();
             Uri imagesByMediaStoreIdUri = Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, Image.COLUMN_MEDIASTORE_ID);
 
             mOps.clear();
@@ -190,7 +188,7 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
+                        mOps.add(android.content.ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
                         //getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
                     } else {
                         //add new db entry with mediastore values
@@ -200,7 +198,7 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
+                        mOps.add(android.content.ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
                         //getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
                     }
                     imageCursor.close();
@@ -208,7 +206,7 @@ public class DatabaseBuilderService extends IntentService {
             }
 
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (RemoteException | OperationApplicationException e) {
+        } catch (RemoteException | android.content.OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
             if (mediaStoreCursor != null) mediaStoreCursor.close();
@@ -218,7 +216,7 @@ public class DatabaseBuilderService extends IntentService {
 
     private void updateImagesFromWhiteList() {
         Log.v(getClass().getSimpleName(), "Updating images from Whitelist...");
-        final List<String> whitelist = new ListHelper(getApplicationContext()).getWhitelist();
+        final java.util.List<String> whitelist = new ListHelper(getApplicationContext()).getWhitelist();
         final FilenameFilter filter = new FilenameFilter() {
             @Override
             public boolean accept(File parent, String filename) {
@@ -229,12 +227,12 @@ public class DatabaseBuilderService extends IntentService {
             }
         };
 
-        final SimpleDateFormat sdf = new SimpleDateFormat(getString(R.string.spoc_exifParser), Locale.getDefault());
+        final SimpleDateFormat sdf = new SimpleDateFormat(getString(R.string.spoc_exifParser), java.util.Locale.getDefault());
 
         try {
             File dir;
             String location;
-            ContentValues values = new ContentValues();
+            android.content.ContentValues values = new android.content.ContentValues();
 
             mOps.clear();
 
@@ -270,7 +268,7 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
+                        mOps.add(android.content.ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
                         //getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
                     } else {
                         if (mInternet) {
@@ -279,7 +277,7 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
+                        mOps.add(android.content.ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
                         //getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
                     }
 
@@ -288,7 +286,7 @@ public class DatabaseBuilderService extends IntentService {
             }
 
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (IOException | ParseException | RemoteException | OperationApplicationException e) {
+        } catch (IOException | ParseException | RemoteException | android.content.OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         }
         Log.v(getClass().getSimpleName(), "Update from Whitelist done.");
@@ -303,7 +301,7 @@ public class DatabaseBuilderService extends IntentService {
 
             Geocoder geocoder = new Geocoder(this);
 
-            List<Address> addresses = geocoder.getFromLocation(latLong[0], latLong[1], 1);
+            java.util.List<android.location.Address> addresses = geocoder.getFromLocation(latLong[0], latLong[1], 1);
             if (addresses != null && addresses.size() > 0) {
                 String locality = addresses.get(0).getLocality();
                 String countryName = addresses.get(0).getCountryName();
@@ -330,15 +328,19 @@ public class DatabaseBuilderService extends IntentService {
 
             Uri lookupUri;
             Uri contactUri;
-            ContentValues values = new ContentValues();
+            android.content.ContentValues values = new android.content.ContentValues();
 
             while (query.moveToNext()) {
+                if (query.getString(1) == null) {
+                    continue;
+                }
+
                 lookupUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_LOOKUP_URI, query.getString(1));
                 contactUri = ContactsContract.Contacts.lookupContact(getContentResolver(), lookupUri);
 
                 if (contactUri == null) {
                     //contact does not exist
-                    mOps.add(ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).build());
+                    mOps.add(android.content.ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).build());
                 } else {
                     //update contact with info from provider
                     final Cursor cursorWithContact = getContentResolver().query(contactUri,
@@ -353,7 +355,7 @@ public class DatabaseBuilderService extends IntentService {
                         values.put(Contact.COLUMN_CONTACT_KEY, cursorWithContact.getString(1));
                         values.put(Contact.COLUMN_NAME, cursorWithContact.getString(2));
 
-                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).withValues(values).build());
+                        mOps.add(android.content.ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).withValues(values).build());
                     }
 
                     cursorWithContact.close();
@@ -361,7 +363,7 @@ public class DatabaseBuilderService extends IntentService {
             }
 
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (RemoteException | OperationApplicationException e) {
+        } catch (RemoteException | android.content.OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
             if (query != null) {
@@ -388,7 +390,7 @@ public class DatabaseBuilderService extends IntentService {
         try {
             String lookupKey;
             String displayName;
-            ContentValues values = new ContentValues();
+            android.content.ContentValues values = new android.content.ContentValues();
 
             mOps.clear();
 
@@ -406,7 +408,7 @@ public class DatabaseBuilderService extends IntentService {
                 values.put(Contact.COLUMN_NAME, displayName);
 
                 if (!innerCursor.moveToFirst()) {
-                    mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.CONTACTS_URI).withValues(values).build());
+                    mOps.add(android.content.ContentProviderOperation.newInsert(SPOCContentProvider.CONTACTS_URI).withValues(values).build());
                 }
                 /*
                 else {
@@ -419,7 +421,7 @@ public class DatabaseBuilderService extends IntentService {
             }
 
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (RemoteException | OperationApplicationException e) {
+        } catch (RemoteException | android.content.OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
             if (cursorWithContacts != null) cursorWithContacts.close();
@@ -454,17 +456,17 @@ public class DatabaseBuilderService extends IntentService {
                 getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
             } catch (RemoteException e) {
                 Log.w(getClass().getSimpleName(), e);
-            } catch (OperationApplicationException ignored) {
+            } catch (android.content.OperationApplicationException ignored) {
                 //ignore duplicates.
             }
         }
 
         cursor.close();
 
-        ContentValues values = new ContentValues();
+        android.content.ContentValues values = new android.content.ContentValues();
         values.put(Label2Image.COLUMN_IMAGE_ID, 555);
         values.put(Label2Image.COLUMN_LABEL_ID, 555);
-        values.put(Label2Image.COLUMN_DATE, Calendar.getInstance().getTimeInMillis());
+        values.put(Label2Image.COLUMN_DATE, java.util.Calendar.getInstance().getTimeInMillis());
 
         long endTime = System.currentTimeMillis();
         Log.v(getClass().getSimpleName(), String.format("Labels generated in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
@@ -472,15 +474,15 @@ public class DatabaseBuilderService extends IntentService {
 
     private void generateLabelsFromDate(Cursor cursorWithImage) {
 
-        final Calendar calendar = Calendar.getInstance();
+        final java.util.Calendar calendar = java.util.Calendar.getInstance();
         calendar.setTime(new Date(cursorWithImage.getLong(1)));
 
         final long imageId = cursorWithImage.getLong(0);
 
-        final String monthText = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
+        final String monthText = calendar.getDisplayName(java.util.Calendar.MONTH, java.util.Calendar.LONG, java.util.Locale.getDefault());
         createLabel(imageId, monthText, LabelType.DATE_MONTH);
 
-        final String dayOfWeek = calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault());
+        final String dayOfWeek = calendar.getDisplayName(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.LONG, java.util.Locale.getDefault());
         createLabel(imageId, dayOfWeek, LabelType.DATE_DAY);
     }
 
@@ -524,9 +526,9 @@ public class DatabaseBuilderService extends IntentService {
             if (labelCursor.moveToFirst()) {
                 labelId = labelCursor.getInt(0);
             } else {
-                ContentValues values = new ContentValues();
+                android.content.ContentValues values = new android.content.ContentValues();
                 values.put(Label.COLUMN_NAME, labelName);
-                values.put(Label.COLUMN_CREATION_DATE, Calendar.getInstance().getTimeInMillis());
+                values.put(Label.COLUMN_CREATION_DATE, java.util.Calendar.getInstance().getTimeInMillis());
                 values.put(Label.COLUMN_TYPE, type.name());
 
                 final Uri insert = getContentResolver().insert(SPOCContentProvider.LABELS_URI, values);
@@ -537,11 +539,11 @@ public class DatabaseBuilderService extends IntentService {
 
         mLabelCache.put(labelName, labelId);
 
-        ContentValues values = new ContentValues();
-        values.put(Label2Image.COLUMN_DATE, Calendar.getInstance().getTimeInMillis());
+        android.content.ContentValues values = new android.content.ContentValues();
+        values.put(Label2Image.COLUMN_DATE, java.util.Calendar.getInstance().getTimeInMillis());
         values.put(Label2Image.COLUMN_IMAGE_ID, imageId);
         values.put(Label2Image.COLUMN_LABEL_ID, labelId);
 
-        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.LABELS_2_IMAGES_URI).withValues(values).withYieldAllowed(true).build());
+        mOps.add(android.content.ContentProviderOperation.newInsert(SPOCContentProvider.LABELS_2_IMAGES_URI).withValues(values).withYieldAllowed(true).build());
     }
 }

@@ -92,4 +92,8 @@
     <string name="splash_contentDescription_logo">SPOC Embléma</string>
     <string name="title_activity_gallery">Galéria</string>
     <string name="yes">Igen</string>
+    <string name="message_loading">Betöltés…</string>
+    <string name="singleImage_faceTag_hint">Ki ő?</string>
+    <string name="singleImage_message_faceNotTagged">Arc megjelölése nem sikerült.</string>
+    <string name="singleImage_message_faceTagged">Arc megjelölve.</string>
 </resources>
