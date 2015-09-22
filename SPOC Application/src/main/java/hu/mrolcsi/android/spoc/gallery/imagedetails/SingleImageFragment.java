@@ -8,6 +8,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -25,10 +28,24 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.ShareActionProvider;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Display;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AutoCompleteTextView;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.animation.GlideAnimation;
@@ -59,7 +76,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created with IntelliJ IDEA.
@@ -77,8 +93,8 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     public static final String ARG_IMAGE_LOCATION = "SPOC.Gallery.Details.Location";
 
     private PhotoView photoView;
-    private android.view.View mFaceTagStatic;
-    private android.view.View mFaceTagEditable;
+    private View mFaceTagStatic;
+    private View mFaceTagEditable;
     private FaceTagViewHolder mFaceTagViewHolder;
 
     private int mDesiredWidth;
@@ -116,8 +132,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"_id", Label.COLUMN_NAME, Label.COLUMN_TYPE});
-        mSuggestionArgs.putString(LabelsTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "='" + LabelType.CONTACT.name() + "' AND " + Label.COLUMN_NAME + " LIKE ?");
+        mSuggestionArgs.putString(LabelsTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "='" + LabelType.CONTACT.name() + "' AND (" + "upper(" + Label.COLUMN_NAME + ") LIKE ?" + " OR " + "lower(" + Label.COLUMN_NAME + ") LIKE ?)");
         //mSuggestionArgs.putString(LabelTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "='" + LabelType.CONTACT.name() + "'");
         mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
         mSuggestionArgs.putString(LabelsTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
@@ -128,8 +143,8 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
-        android.view.WindowManager wm = (android.view.WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
-        android.view.Display display = wm.getDefaultDisplay();
+        WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
         if (Build.VERSION.SDK_INT >= 13) {
             android.graphics.Point size = new android.graphics.Point();
             display.getSize(size);
@@ -164,7 +179,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
     @Nullable
     @Override
-    public android.view.View onCreateView(android.view.LayoutInflater inflater, android.view.ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_singleimage, container, false);
 
@@ -181,7 +196,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             photoView = (PhotoView) mRootView.findViewById(R.id.image);
             photoView.setOnPhotoTapListener(new PhotoViewAttacher.OnPhotoTapListener() {
                 @Override
-                public void onPhotoTap(android.view.View view, float x, float y) {
+                public void onPhotoTap(View view, float x, float y) {
                     // x and y are values between 0 and 1,
                     // [0,0] being the top left corner of the photo,
                     // [1,1] being the bottom right corner.
@@ -200,14 +215,14 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                             mSelectedFace = mFacePositions.get(selectedFace);
                             showFaceTag(mFacePositions.get(selectedFace));
                         } else {
-                            if (mFaceTagStatic.getVisibility() == android.view.View.VISIBLE || mFaceTagEditable.getVisibility() == android.view.View.VISIBLE) {
+                            if (mFaceTagStatic.getVisibility() == View.VISIBLE || mFaceTagEditable.getVisibility() == View.VISIBLE) {
                                 hideFaceTags();
                             } else {
                                 ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
                             }
                         }
                     } else {
-                        if (mFaceTagStatic.getVisibility() == android.view.View.VISIBLE || mFaceTagEditable.getVisibility() == android.view.View.VISIBLE) {
+                        if (mFaceTagStatic.getVisibility() == View.VISIBLE || mFaceTagEditable.getVisibility() == View.VISIBLE) {
                             hideFaceTags();
                         } else {
                             ((ImagePagerActivity) getActivity()).getSystemUiHider().toggle();
@@ -220,8 +235,8 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             mFaceTagEditable = mRootView.findViewById(R.id.faceTagEditable);
         }
 
-        mFaceTagStatic.setVisibility(android.view.View.GONE);
-        mFaceTagEditable.setVisibility(android.view.View.GONE);
+        mFaceTagStatic.setVisibility(View.GONE);
+        mFaceTagEditable.setVisibility(View.GONE);
 
         return mRootView;
     }
@@ -300,11 +315,11 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     }
 
     @Override
-    public void onCreateOptionsMenu(android.view.Menu menu, android.view.MenuInflater inflater) {
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
         // Locate MenuItem with ShareActionProvider
-        android.view.MenuItem item = menu.findItem(R.id.menuShare);
+        MenuItem item = menu.findItem(R.id.menuShare);
 
         // Fetch and store ShareActionProvider
         ShareActionProvider shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
@@ -312,7 +327,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     }
 
     @Override
-    public boolean onOptionsItemSelected(android.view.MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item) {
         final int id = item.getItemId();
         switch (id) {
             case R.id.menuDetails:
@@ -386,17 +401,17 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             return;
         }
 
-        android.graphics.Paint paint = new android.graphics.Paint();
+        Paint paint = new Paint();
         paint.setColor(getResources().getColor(R.color.background_material_light));
         paint.setAntiAlias(true);
         paint.setStrokeWidth(getResources().getDimensionPixelSize(R.dimen.margin_xsmall));
-        paint.setStyle(android.graphics.Paint.Style.STROKE);
+        paint.setStyle(Paint.Style.STROKE);
 
         final int cornerRadius = getResources().getDimensionPixelSize(R.dimen.margin_small);
 
-        final android.graphics.Canvas canvas = new android.graphics.Canvas(mOverlayDrawable.getBitmap());
+        final Canvas canvas = new Canvas(mOverlayDrawable.getBitmap());
 
-        for (android.graphics.RectF rect : mFacePositions) {
+        for (RectF rect : mFacePositions) {
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint);
         }
 
@@ -412,11 +427,12 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         if (mFaceTagViewHolder == null) {
             mFaceTagViewHolder = new FaceTagViewHolder();
             //find views
-            mFaceTagViewHolder.staticImage = (android.widget.ImageView) mFaceTagStatic.findViewById(R.id.imgProfilePic);
-            mFaceTagViewHolder.staticName = (android.widget.TextView) mFaceTagStatic.findViewById(R.id.tvName);
-            mFaceTagViewHolder.staticRemove = (android.widget.ImageButton) mFaceTagStatic.findViewById(R.id.btnRemove);
-            mFaceTagViewHolder.editableName = (android.widget.AutoCompleteTextView) mFaceTagEditable.findViewById(R.id.etName);
-            mFaceTagViewHolder.editableName.setDropDownWidth(android.view.ViewGroup.LayoutParams.MATCH_PARENT);
+            mFaceTagViewHolder.staticImage = (ImageView) mFaceTagStatic.findViewById(R.id.imgProfilePic);
+            mFaceTagViewHolder.staticName = (TextView) mFaceTagStatic.findViewById(R.id.tvName);
+            mFaceTagViewHolder.staticRemove = (ImageButton) mFaceTagStatic.findViewById(R.id.btnRemove);
+            mFaceTagViewHolder.editableName = (AutoCompleteTextView) mFaceTagEditable.findViewById(R.id.etName);
+            mFaceTagViewHolder.editableName.setDropDownWidth(ViewGroup.LayoutParams.MATCH_PARENT);
+            mFaceTagViewHolder.editableName.setThreshold(1);
             mFaceTagViewHolder.editableName.setAdapter(mSuggestionsAdapter);
 
             //set listeners
@@ -428,14 +444,14 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
         if (contact.getContactId() > 0) {
             //existing contact
-            if (mFaceTagEditable.getVisibility() == android.view.View.VISIBLE) {
+            if (mFaceTagEditable.getVisibility() == View.VISIBLE) {
                 final Animation fadeOutAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
-                fadeOutAnim.setAnimationListener(new FadeOutAnimationListener(new android.view.View[]{mFaceTagEditable}));
+                fadeOutAnim.setAnimationListener(new FadeOutAnimationListener(new View[]{mFaceTagEditable}));
                 mFaceTagEditable.startAnimation(fadeOutAnim);
             }
 
             final Animation fadeInAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
-            fadeInAnim.setAnimationListener(new FadeInAnimationListener(new android.view.View[]{mFaceTagStatic}));
+            fadeInAnim.setAnimationListener(new FadeInAnimationListener(new View[]{mFaceTagStatic}));
             mFaceTagStatic.startAnimation(fadeInAnim);
 
             mFaceTagViewHolder.staticName.setText(contact.getContactName());
@@ -447,28 +463,30 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             }.execute();
         } else {
             //unknown contact
-            if (mFaceTagStatic.getVisibility() == android.view.View.VISIBLE) {
+            if (mFaceTagStatic.getVisibility() == View.VISIBLE) {
                 final Animation fadeOutAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
-                fadeOutAnim.setAnimationListener(new FadeOutAnimationListener(new android.view.View[]{mFaceTagStatic}));
+                fadeOutAnim.setAnimationListener(new FadeOutAnimationListener(new View[]{mFaceTagStatic}));
                 mFaceTagStatic.startAnimation(fadeOutAnim);
             }
 
             final Animation fadeInAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
-            fadeInAnim.setAnimationListener(new FadeInAnimationListener(new android.view.View[]{mFaceTagEditable}));
+            fadeInAnim.setAnimationListener(new FadeInAnimationListener(new View[]{mFaceTagEditable}));
             mFaceTagEditable.startAnimation(fadeInAnim);
             mFaceTagViewHolder.editableName.setText(null);
         }
     }
 
     private void hideFaceTags() {
-        GeneralUtils.hideSoftKeyboard(getActivity(), mFaceTagViewHolder.editableName);
+        if (mFaceTagViewHolder != null && mFaceTagViewHolder.editableName != null) {
+            GeneralUtils.hideSoftKeyboard(getActivity(), mFaceTagViewHolder.editableName);
+        }
 
         final Animation fadeOutAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
-        fadeOutAnim.setAnimationListener(new FadeOutAnimationListener(new android.view.View[]{mFaceTagStatic, mFaceTagEditable}));
-        if (mFaceTagStatic.getVisibility() == android.view.View.VISIBLE) {
+        fadeOutAnim.setAnimationListener(new FadeOutAnimationListener(new View[]{mFaceTagStatic, mFaceTagEditable}));
+        if (mFaceTagStatic.getVisibility() == View.VISIBLE) {
             mFaceTagStatic.startAnimation(fadeOutAnim);
         }
-        if (mFaceTagEditable.getVisibility() == android.view.View.VISIBLE) {
+        if (mFaceTagEditable.getVisibility() == View.VISIBLE) {
             mFaceTagEditable.startAnimation(fadeOutAnim);
         }
 
@@ -511,6 +529,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                     mFacePositions.add(c2i);
                 }
                 drawFaces();
+                showFaceTag(mSelectedFace);
             } else {
                 //detect faces
                 if (mFacePositions == null && mDetector != null) {
@@ -540,13 +559,13 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             @Override
             public void afterTextChanged(Editable editable) {
                 mSuggestionsLoader.reset();
-                mSuggestionsLoader.setSelectionArgs(new String[]{"%" + editable.toString().toLowerCase(Locale.getDefault()) + "%"});
+                mSuggestionsLoader.setSelectionArgs(new String[]{"%" + editable.toString().toUpperCase() + "%", "%" + editable.toString().toLowerCase() + "%"});
                 mSuggestionsLoader.startLoading();
             }
         };
         final android.widget.AdapterView.OnItemClickListener onItemClickListener = new android.widget.AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(android.widget.AdapterView<?> adapterView, android.view.View view, int i, long l) {
+            public void onItemClick(android.widget.AdapterView<?> adapterView, View view, int i, long l) {
                 if (mSelectedFace != null) {
                     mSelectedFace.setContactId((int) l);
                 }
@@ -555,10 +574,9 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         android.widget.ImageButton staticRemove;
         android.widget.TextView staticName;
         android.widget.AutoCompleteTextView editableName;
-        android.widget.ImageView staticImage;
         final android.widget.TextView.OnEditorActionListener onEditorActionListener = new android.widget.TextView.OnEditorActionListener() {
             @Override
-            public boolean onEditorAction(android.widget.TextView textView, int actionId, android.view.KeyEvent keyEvent) {
+            public boolean onEditorAction(android.widget.TextView textView, int actionId, KeyEvent keyEvent) {
                 if (actionId == EditorInfo.IME_ACTION_DONE && mSelectedFace != null) {
 
                     //validate
@@ -590,9 +608,8 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                         android.widget.Toast.makeText(getActivity(), R.string.singleImage_message_faceTagged, android.widget.Toast.LENGTH_SHORT).show();
                         mFacesLoader.reset();
                         mFacesLoader.startLoading();
-                        showFaceTag(mSelectedFace);
                     } else {
-                        android.widget.Toast.makeText(getActivity(), R.string.singleImage_message_faceNotTagged, android.widget.Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), R.string.singleImage_message_faceNotTagged, android.widget.Toast.LENGTH_SHORT).show();
                     }
 
                     return false;
@@ -600,9 +617,10 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 return false;
             }
         };
-        final android.view.View.OnClickListener onRemoveClickListener = new android.view.View.OnClickListener() {
+        android.widget.ImageView staticImage;
+        final View.OnClickListener onRemoveClickListener = new View.OnClickListener() {
             @Override
-            public void onClick(android.view.View view) {
+            public void onClick(View view) {
                 if (mSelectedFace != null) {
                     DialogUtils.buildConfirmDialog(getActivity()).setMessage(R.string.singleImage_confirm_untagFace).setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         @Override
@@ -666,16 +684,16 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
     class FadeInAnimationListener implements Animation.AnimationListener {
 
-        private final android.view.View[] views;
+        private final View[] views;
 
-        public FadeInAnimationListener(android.view.View[] views) {
+        public FadeInAnimationListener(View[] views) {
             this.views = views;
         }
 
         @Override
         public void onAnimationStart(Animation animation) {
-            for (android.view.View view : views) {
-                view.setVisibility(android.view.View.VISIBLE);
+            for (View view : views) {
+                view.setVisibility(View.VISIBLE);
             }
         }
 
@@ -690,9 +708,9 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
     class FadeOutAnimationListener implements Animation.AnimationListener {
 
-        private final android.view.View[] views;
+        private final View[] views;
 
-        FadeOutAnimationListener(android.view.View[] views) {
+        FadeOutAnimationListener(View[] views) {
             this.views = views;
         }
 
@@ -702,8 +720,8 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            for (android.view.View view : views) {
-                view.setVisibility(android.view.View.GONE);
+            for (View view : views) {
+                view.setVisibility(View.GONE);
             }
         }
 
