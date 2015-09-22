@@ -23,7 +23,7 @@ public class Contact {
     private int _id;
     @DatabaseField(columnName = COLUMN_CONTACT_KEY, unique = true, index = true)
     private String contactKey;
-    @DatabaseField(columnName = COLUMN_NAME)
+    @DatabaseField(columnName = COLUMN_NAME, unique = true)
     private String name;
     @DatabaseField(columnName = COLUMN_TYPE, defaultValue = "CONTACT")
     private String type;

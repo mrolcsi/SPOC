@@ -341,7 +341,7 @@ public final class SPOCContentProvider extends ContentProvider {
                 id = db.insertWithOnConflict(Label2Image.TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
                 return getUriForId(id, uri);
             case CONTACTS_LIST:
-                id = db.insert(Contact.TABLE_NAME, null, contentValues);
+                id = db.insertWithOnConflict(Contact.TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
                 return getUriForId(id, uri);
             case CONTACTS_2_IMAGES:
                 id = db.insertWithOnConflict(Contact2Image.TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);

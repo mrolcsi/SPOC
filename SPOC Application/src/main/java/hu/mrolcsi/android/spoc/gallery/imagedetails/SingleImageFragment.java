@@ -40,6 +40,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -55,7 +56,6 @@ import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.helper.FaceDetectorTask;
 import hu.mrolcsi.android.spoc.common.loader.ContactsTableLoader;
 import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
-import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.common.utils.GeneralUtils;
 import hu.mrolcsi.android.spoc.database.model.Contact;
@@ -132,10 +132,10 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mSuggestionArgs.putString(LabelsTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "='" + LabelType.CONTACT.name() + "' AND (" + "upper(" + Label.COLUMN_NAME + ") LIKE ?" + " OR " + "lower(" + Label.COLUMN_NAME + ") LIKE ?)");
-        //mSuggestionArgs.putString(LabelTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "='" + LabelType.CONTACT.name() + "'");
-        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
-        mSuggestionArgs.putString(LabelsTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
+        mSuggestionArgs.putStringArray(ContactsTableLoader.ARG_PROJECTION, new String[]{"_id", Contact.COLUMN_NAME, Contact.COLUMN_TYPE});
+        mSuggestionArgs.putString(ContactsTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + "='" + LabelType.CONTACT.name() + "' AND (" + "upper(" + Label.COLUMN_NAME + ") LIKE ?" + " OR " + "lower(" + Label.COLUMN_NAME + ") LIKE ?)");
+        mSuggestionArgs.putStringArray(ContactsTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
+        mSuggestionArgs.putString(ContactsTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
     }
 
     @TargetApi(13)
@@ -349,9 +349,9 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                                 try {
                                     final boolean success = FileUtils.deleteFile(mImagePath);
                                     if (success)
-                                        android.widget.Toast.makeText(getActivity(), R.string.message_pictureDeleted, android.widget.Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getActivity(), R.string.message_pictureDeleted, Toast.LENGTH_SHORT).show();
                                     else
-                                        android.widget.Toast.makeText(getActivity(), R.string.message_pictureNotDeleted, android.widget.Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getActivity(), R.string.message_pictureNotDeleted, Toast.LENGTH_SHORT).show();
                                 } catch (IOException e) {
                                     String message;
                                     final AlertDialog.Builder errorBuilder = DialogUtils.buildErrorDialog(getActivity());
@@ -563,21 +563,22 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 mSuggestionsLoader.startLoading();
             }
         };
-        final android.widget.AdapterView.OnItemClickListener onItemClickListener = new android.widget.AdapterView.OnItemClickListener() {
+        final AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(android.widget.AdapterView<?> adapterView, View view, int i, long l) {
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if (mSelectedFace != null) {
                     mSelectedFace.setContactId((int) l);
                 }
             }
         };
-        android.widget.ImageButton staticRemove;
-        android.widget.TextView staticName;
-        android.widget.AutoCompleteTextView editableName;
-        final android.widget.TextView.OnEditorActionListener onEditorActionListener = new android.widget.TextView.OnEditorActionListener() {
+        ImageButton staticRemove;
+        TextView staticName;
+        AutoCompleteTextView editableName;
+        final TextView.OnEditorActionListener onEditorActionListener = new TextView.OnEditorActionListener() {
             @Override
-            public boolean onEditorAction(android.widget.TextView textView, int actionId, KeyEvent keyEvent) {
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
                 if (actionId == EditorInfo.IME_ACTION_DONE && mSelectedFace != null) {
+                    mSelectedFace.setContactName(textView.getText().toString());
 
                     //validate
                     if (mSelectedFace.getContactId() == 0) {
@@ -605,11 +606,11 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                     }
 
                     if (updateCount > 0) {
-                        android.widget.Toast.makeText(getActivity(), R.string.singleImage_message_faceTagged, android.widget.Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), R.string.singleImage_message_faceTagged, Toast.LENGTH_SHORT).show();
                         mFacesLoader.reset();
                         mFacesLoader.startLoading();
                     } else {
-                        Toast.makeText(getActivity(), R.string.singleImage_message_faceNotTagged, android.widget.Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), R.string.singleImage_message_faceNotTagged, Toast.LENGTH_SHORT).show();
                     }
 
                     return false;
@@ -617,7 +618,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 return false;
             }
         };
-        android.widget.ImageView staticImage;
+        ImageView staticImage;
         final View.OnClickListener onRemoveClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
