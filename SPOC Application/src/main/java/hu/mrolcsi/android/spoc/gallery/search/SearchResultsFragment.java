@@ -10,9 +10,15 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.SearchView;
 import android.text.Html;
 import android.text.TextUtils;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+
 import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
@@ -46,8 +52,8 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"_id", Label.COLUMN_NAME, Label.COLUMN_TYPE});
-        mSuggestionArgs.putString(LabelsTableLoader.ARG_SELECTION, Label.COLUMN_NAME + " LIKE ?");
+        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"_id", "DISTINCT " + Label.COLUMN_NAME, Label.COLUMN_TYPE});
+        mSuggestionArgs.putString(LabelsTableLoader.ARG_SELECTION, "upper(" + Label.COLUMN_NAME + ") LIKE ?" + " OR " + "lower(" + Label.COLUMN_NAME + ") LIKE ?");
         mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
         mSuggestionArgs.putString(LabelsTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
     }
@@ -86,7 +92,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         super.onResume();
 
         if (mSearchView != null && !TextUtils.isEmpty(mSearchView.getQuery())) {
-            performSearch(mSearchView.getQuery().toString());
+            performNameSearch(mSearchView.getQuery().toString());
         }
     }
 
@@ -122,21 +128,16 @@ public class SearchResultsFragment extends ThumbnailsFragment {
                 mSearchView.clearFocus();
 
                 mImagesLoader.reset();
-                performSearch(query);
+                performNameSearch(query);
 
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                //do query
-
                 mSuggestionsLoader.reset();
-                mSuggestionsLoader.setSelectionArgs(new String[]{newText.toLowerCase(Locale.getDefault()) + "%"});
+                mSuggestionsLoader.setSelectionArgs(new String[]{newText.toUpperCase() + "%", newText.toLowerCase(Locale.getDefault()) + "%"});
                 mSuggestionsLoader.startLoading();
-
-                //mImagesLoader.reset();
-                //performSearch(newText);
 
                 return true;
             }
@@ -151,8 +152,15 @@ public class SearchResultsFragment extends ThumbnailsFragment {
             @Override
             public boolean onSuggestionClick(int position) {
                 final Cursor cursorWithSuggestion = (Cursor) mSuggestionsAdapter.getItem(position);
+                final int id = cursorWithSuggestion.getInt(0);
                 final String name = cursorWithSuggestion.getString(1);
-                mSearchView.setQuery(name, true);
+                final String type = cursorWithSuggestion.getString(2);
+
+                mSearchView.clearFocus();
+                mImagesLoader.reset();
+                performIdSearch(id, type);
+
+                mSearchView.setQuery(name, false);
                 return true;
             }
         });
@@ -167,7 +175,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         return true;
     }
 
-    private void performSearch(String searchText) {
+    private void performNameSearch(String searchText) {
         if (TextUtils.isEmpty(searchText)) {
             tvMessage.setText(R.string.error_noResults);
             if (mAdapter != null) {
@@ -184,6 +192,17 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         mImagesLoader.setProjection(null);
         mImagesLoader.setSelection(null);
         mImagesLoader.setSelectionArgs(null);
+
+        swipeRefreshLayout.setRefreshing(true);
+
+        mImagesLoader.startLoading();
+    }
+
+    private void performIdSearch(int labelId, String labelType) {
+        mImagesLoader.setUri(SPOCContentProvider.SEARCH_URI);
+        mImagesLoader.setProjection(null);
+        mImagesLoader.setSelection(Label.COLUMN_TYPE + " = ?" + " AND " + Label.COLUMN_FOREIGN_ID + " = ? ");
+        mImagesLoader.setSelectionArgs(new String[]{labelType, String.valueOf(labelId)});
 
         swipeRefreshLayout.setRefreshing(true);
 

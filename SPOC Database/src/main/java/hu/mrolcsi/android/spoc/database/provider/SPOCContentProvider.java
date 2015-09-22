@@ -1,12 +1,20 @@
 package hu.mrolcsi.android.spoc.database.provider;
 
-import android.content.*;
+import android.content.ContentProvider;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.OperationApplicationException;
+import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.model.Contact;
 import hu.mrolcsi.android.spoc.database.model.Image;
@@ -39,7 +47,7 @@ public final class SPOCContentProvider extends ContentProvider {
     private static final int IMAGES_LIST = 10;
     private static final int IMAGE_BY_ID = 11;
     private static final int IMAGE_BY_MEDIASTORE_ID = 12;
-    private static final int IMAGE_SEARCH = 13;
+    private static final int IMAGE_SEARCH_BY_NAME = 13;
     private static final int IMAGES_WITH_DAY_TAKEN = 14;
     private static final int IMAGES_BY_DAY_TAKEN = 15;
     private static final int IMAGES_BY_DAY_TAKEN_COUNT = 16;
@@ -72,7 +80,7 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN + "/count", IMAGES_BY_DAY_TAKEN_COUNT);    // content://authority/images/day_taken/count   > SELECT count(_id), day_taken FROM images INNER JOIN images_by_day GROUP BY day_taken
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Image.COLUMN_LOCATION + "/count", IMAGES_WITH_LABELS_COUNT);             // content://authority/images/location/count    > SELECT * FROM images_with_labels GROUP BY location
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search", IMAGES_WITH_LABELS);                                                // content://authority/images/search            > SELECT * FROM images_with_labels
-        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search/*", IMAGE_SEARCH);                                                    // content://authority/images/search/*          > SELECT * FROM images_with_labels WHERE column LIKE '%*%'
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search/*", IMAGE_SEARCH_BY_NAME);                                            // content://authority/images/search/*          > SELECT * FROM images_with_labels WHERE column LIKE '%*%'
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Contact.TABLE_NAME, IMAGES_WITH_CONTACTS);                               // content://authority/images/contacts          > SELECT * FROM images INNER JOIN contacts2images LEFT JOIN contacts [WHERE image_id/contacts_id = ?]
 
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME, LABELS_LIST);                                                                   // content://authority/labels                   > SELECT * FROM labels > INSERT INTO labels
@@ -137,7 +145,7 @@ public final class SPOCContentProvider extends ContentProvider {
             case IMAGE_BY_MEDIASTORE_ID:
                 builder.appendWhere(Image.COLUMN_MEDIASTORE_ID + " = " + uri.getLastPathSegment());
                 break;
-            case IMAGE_SEARCH:
+            case IMAGE_SEARCH_BY_NAME:
                 builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
                 if (projection == null) {
                     projection = new String[]{"DISTINCT _id", Image.COLUMN_FILENAME};
@@ -219,8 +227,9 @@ public final class SPOCContentProvider extends ContentProvider {
             case LABELS_LIST:
                 break;
             case LABELS_WITH_CONTACTS:
+                builder.setTables(Views.LABELS_WITH_CONTACTS_NAME);
                 projection = new String[]{
-                        "_id",
+                        Label.COLUMN_FOREIGN_ID + " AS _id",
                         Label.COLUMN_NAME,
                         Label.COLUMN_TYPE
                 };
@@ -308,7 +317,7 @@ public final class SPOCContentProvider extends ContentProvider {
                 return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Label.TABLE_NAME;
             case LABELS_2_IMAGES:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Label2Image.TABLE_NAME;
-            case IMAGE_SEARCH:
+            case IMAGE_SEARCH_BY_NAME:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd.hu.mrolcsi.android.spoc.database." + Views.IMAGES_WITH_LABELS_NAME;
             default:
                 return null;

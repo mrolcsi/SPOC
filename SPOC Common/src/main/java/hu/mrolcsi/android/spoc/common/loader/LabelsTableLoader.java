@@ -2,9 +2,12 @@ package hu.mrolcsi.android.spoc.common.loader;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+
+import hu.mrolcsi.android.spoc.database.model.Contact;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
 /**
@@ -24,7 +27,7 @@ public class LabelsTableLoader extends LoaderBase {
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         final CursorLoader loader = new CursorLoader(context);
-        loader.setUri(SPOCContentProvider.LABELS_URI);
+        loader.setUri(Uri.withAppendedPath(SPOCContentProvider.LABELS_URI, Contact.TABLE_NAME));
 
         if (args != null) {
             String[] projection = null;
