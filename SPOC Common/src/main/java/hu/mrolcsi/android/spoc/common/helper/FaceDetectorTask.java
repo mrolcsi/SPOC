@@ -5,11 +5,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.media.FaceDetector;
 import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.util.Log;
+
 import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 
@@ -37,10 +39,20 @@ public class FaceDetectorTask extends AsyncTask<Bitmap, Void, List<Contact2Image
     @Override
     protected List<Contact2Image> doInBackground(Bitmap... bitmaps) {
 
+        Bitmap bitmap = bitmaps[0];
+
+        //check if bitmap width is even
+        if (bitmaps[0].getWidth() % 2 == 1) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
+
+            bitmap = Bitmap.createScaledBitmap(bitmaps[0], bitmaps[0].getWidth() + 1, bitmaps[0].getHeight(), false);
+        }
+
         //detect faces
-        FaceDetector detector = new FaceDetector(bitmaps[0].getWidth(), bitmaps[0].getHeight(), 5);
+        FaceDetector detector = new FaceDetector(bitmap.getWidth(), bitmap.getHeight(), 5);
         FaceDetector.Face[] faces = new FaceDetector.Face[5];
-        detector.findFaces(bitmaps[0], faces);
+        detector.findFaces(bitmap, faces);
 
         List<Contact2Image> contact2ImageList = new ArrayList<>();
 
@@ -48,6 +60,10 @@ public class FaceDetectorTask extends AsyncTask<Bitmap, Void, List<Contact2Image
         ContentValues values = new ContentValues();
         values.put(Contact2Image.COLUMN_IMAGE_ID, imageId);
         int fakeContact = -1;
+
+        if (bitmap != bitmaps[0]) {
+            bitmap.recycle();
+        }
 
         for (FaceDetector.Face face : faces) {
             //check for valid face
