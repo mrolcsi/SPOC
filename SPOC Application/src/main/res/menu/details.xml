@@ -23,6 +23,18 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/menuEditDate"
+        android:title="Edit date taken"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/menuEditLocation"
+        android:title="Edit location"
+        app:showAsAction="never"
+        />
+
+    <item
         android:id="@+id/menuDetails"
         android:title="@string/details_menu_showDetails"
         app:showAsAction="never" />

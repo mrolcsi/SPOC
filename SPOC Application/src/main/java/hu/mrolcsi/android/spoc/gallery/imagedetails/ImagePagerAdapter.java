@@ -5,6 +5,7 @@ import android.database.DataSetObserver;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+
 import hu.mrolcsi.android.spoc.database.model.Image;
 
 /**
@@ -19,7 +20,10 @@ public class ImagePagerAdapter extends FragmentStatePagerAdapter {
     private int iID;
     private int iFilename;
     private int iLocation;
+    private int iDateTaken;
+
     private int mCount;
+
     private Cursor mCursor;
     private boolean mDataValid;
     private DataSetObserver mDataSetObserver;
@@ -36,25 +40,21 @@ public class ImagePagerAdapter extends FragmentStatePagerAdapter {
             iID = mCursor.getColumnIndex("_id");
             iFilename = mCursor.getColumnIndex(Image.COLUMN_FILENAME);
             iLocation = mCursor.getColumnIndex(Image.COLUMN_LOCATION);
+            iDateTaken = mCursor.getColumnIndex(Image.COLUMN_DATE_TAKEN);
         }
     }
 
     @Override
     public Fragment getItem(int position) {
-//        if (mFragmentCache.get(position) != null) {
-//            return mFragmentCache.get(position);
-//        } else {
         if (mCursor != null && mDataValid) {
             mCursor.moveToPosition(position);
             final String imagePath = mCursor.getString(iFilename);
             final int imageId = mCursor.getInt(iID);
             final String location = mCursor.getString(iLocation);
+            final long dateTaken = mCursor.getLong(iDateTaken);
 
-            final SingleImageFragment fragment = SingleImageFragment.newInstance(imageId, imagePath, location);
-            //mFragmentCache.put(position, fragment);
-            return fragment;
+            return SingleImageFragment.newInstance(imageId, imagePath, location, dateTaken);
         }
-//        }
         return null;
     }
 

@@ -101,4 +101,7 @@
     <string name="singleImage_message_faceNotUntagged">Megjelölés eltávolítása nem sikerült.</string>
     <string name="singleImage_message_faceUntagged">Megjelölés eltávolítva.</string>
     <string name="singleImage_message_personAlreadyTagged">Ez a személy már szerepel a képen.</string>
+    <string name="save">Mentés</string>
+    <string name="singleImage_message_dateChanged">Dátum megváltoztatva.</string>
+    <string name="singleImage_message_dateNotChanged">Dátum megváltoztatása nem sikerült.</string>
 </resources>

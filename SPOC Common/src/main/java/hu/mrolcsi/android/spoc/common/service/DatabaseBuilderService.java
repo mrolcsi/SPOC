@@ -2,6 +2,11 @@ package hu.mrolcsi.android.spoc.common.service;
 
 import android.annotation.TargetApi;
 import android.app.IntentService;
+import android.content.ContentProviderOperation;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.location.Geocoder;
 import android.media.ExifInterface;
@@ -16,6 +21,7 @@ import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
+
 import hu.mrolcsi.android.spoc.common.R;
 import hu.mrolcsi.android.spoc.common.helper.ListHelper;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
@@ -52,15 +58,15 @@ public class DatabaseBuilderService extends IntentService {
     private boolean mInternet;
 
     private java.util.Map<String, Integer> mLabelCache = new java.util.TreeMap<>();
-    private java.util.ArrayList<android.content.ContentProviderOperation> mOps = new java.util.ArrayList<>();
+    private java.util.ArrayList<ContentProviderOperation> mOps = new java.util.ArrayList<>();
 
     public DatabaseBuilderService() {
         super(TAG);
     }
 
     @Override
-    protected void onHandleIntent(android.content.Intent intent) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+    protected void onHandleIntent(Intent intent) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         mInternet = activeNetworkInfo != null && activeNetworkInfo.isConnected();
 
@@ -68,7 +74,7 @@ public class DatabaseBuilderService extends IntentService {
 
         Log.i(getClass().getSimpleName(), "DatabaseBuilder started.");
 
-        android.content.Intent progressIntent;
+        Intent progressIntent;
 
         DatabaseHelper.init(getApplicationContext());
 
@@ -83,13 +89,13 @@ public class DatabaseBuilderService extends IntentService {
 
         //everything else should be done in the background
 
-        progressIntent = new android.content.Intent(BROADCAST_ACTION_IMAGES_READY);
+        progressIntent = new Intent(BROADCAST_ACTION_IMAGES_READY);
         LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
 
         final boolean isFirstStart = intent.getBooleanExtra(ARG_FIRST_START, false);
 
         if (isFirstStart) {
-            android.content.Intent cacheIntent = new android.content.Intent(getApplicationContext(), CacheBuilderService.class);
+            Intent cacheIntent = new Intent(getApplicationContext(), CacheBuilderService.class);
             startService(cacheIntent);
         }
 
@@ -101,7 +107,7 @@ public class DatabaseBuilderService extends IntentService {
 
         generateLabels();
 
-        progressIntent = new android.content.Intent(BROADCAST_ACTION_FINISHED);
+        progressIntent = new Intent(BROADCAST_ACTION_FINISHED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(progressIntent);
 
         endTime = System.currentTimeMillis();
@@ -123,12 +129,12 @@ public class DatabaseBuilderService extends IntentService {
             while (cursor.moveToNext()) {
                 filename = cursor.getString(1);
                 if (!new File(filename).exists() || listHelper.isInBlacklist(filename)) {
-                    mOps.add(android.content.ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0)))).build());
+                    mOps.add(ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0)))).build());
                     //numRowsDeleted += getContentResolver().delete(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(cursor.getLong(0))), null, null);
                 }
             }
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (RemoteException | android.content.OperationApplicationException e) {
+        } catch (RemoteException | OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
             cursor.close();
@@ -160,7 +166,7 @@ public class DatabaseBuilderService extends IntentService {
             String filename;
             long dateTaken;
             String location;
-            android.content.ContentValues values = new android.content.ContentValues();
+            ContentValues values = new ContentValues();
             Uri imagesByMediaStoreIdUri = Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, Image.COLUMN_MEDIASTORE_ID);
 
             mOps.clear();
@@ -172,41 +178,43 @@ public class DatabaseBuilderService extends IntentService {
 
                 if (new File(filename).exists() && !listHelper.isInBlacklist(filename)) {
                     values.clear();
-                    values.put(Image.COLUMN_MEDIASTORE_ID, mediaStoreId);
-                    values.put(Image.COLUMN_FILENAME, filename);
-                    values.put(Image.COLUMN_DATE_TAKEN, dateTaken);
 
                     final Cursor imageCursor = getContentResolver().query(Uri.withAppendedPath(imagesByMediaStoreIdUri, String.valueOf(mediaStoreId)),
                             new String[]{"_id", Image.COLUMN_LOCATION},
                             null, null, null);
 
                     if (imageCursor.moveToFirst()) {
-                        //update db with mediastore values
+                        // ~update db with mediastore values~
+                        // don't! will revert user made changes
                         if (mInternet && TextUtils.isEmpty(imageCursor.getString(1))) {
                             location = buildLocationString(filename);
                             if (location != null) {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        mOps.add(android.content.ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
-                        //getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
+                        if (values.size() > 0) {
+                            mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
+                        }
                     } else {
                         //add new db entry with mediastore values
+                        values.put(Image.COLUMN_MEDIASTORE_ID, mediaStoreId);
+                        values.put(Image.COLUMN_FILENAME, filename);
+                        values.put(Image.COLUMN_DATE_TAKEN, dateTaken);
+
                         if (mInternet) {
                             location = buildLocationString(filename);
                             if (location != null) {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        mOps.add(android.content.ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
-                        //getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
+                        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
                     }
                     imageCursor.close();
                 }
             }
 
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (RemoteException | android.content.OperationApplicationException e) {
+        } catch (RemoteException | OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
             if (mediaStoreCursor != null) mediaStoreCursor.close();
@@ -232,7 +240,7 @@ public class DatabaseBuilderService extends IntentService {
         try {
             File dir;
             String location;
-            android.content.ContentValues values = new android.content.ContentValues();
+            ContentValues values = new ContentValues();
 
             mOps.clear();
 
@@ -268,7 +276,7 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        mOps.add(android.content.ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
+                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
                         //getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
                     } else {
                         if (mInternet) {
@@ -277,7 +285,7 @@ public class DatabaseBuilderService extends IntentService {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
                         }
-                        mOps.add(android.content.ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
+                        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
                         //getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
                     }
 
@@ -286,7 +294,7 @@ public class DatabaseBuilderService extends IntentService {
             }
 
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (IOException | ParseException | RemoteException | android.content.OperationApplicationException e) {
+        } catch (IOException | ParseException | RemoteException | OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         }
         Log.v(getClass().getSimpleName(), "Update from Whitelist done.");
@@ -328,7 +336,7 @@ public class DatabaseBuilderService extends IntentService {
 
             Uri lookupUri;
             Uri contactUri;
-            android.content.ContentValues values = new android.content.ContentValues();
+            ContentValues values = new ContentValues();
 
             while (query.moveToNext()) {
                 if (query.getString(1) == null) {
@@ -340,7 +348,7 @@ public class DatabaseBuilderService extends IntentService {
 
                 if (contactUri == null) {
                     //contact does not exist
-                    mOps.add(android.content.ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).build());
+                    mOps.add(ContentProviderOperation.newDelete(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).build());
                 } else {
                     //update contact with info from provider
                     final Cursor cursorWithContact = getContentResolver().query(contactUri,
@@ -355,7 +363,7 @@ public class DatabaseBuilderService extends IntentService {
                         values.put(Contact.COLUMN_CONTACT_KEY, cursorWithContact.getString(1));
                         values.put(Contact.COLUMN_NAME, cursorWithContact.getString(2));
 
-                        mOps.add(android.content.ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).withValues(values).build());
+                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_URI, query.getString(0))).withValues(values).build());
                     }
 
                     cursorWithContact.close();
@@ -363,7 +371,7 @@ public class DatabaseBuilderService extends IntentService {
             }
 
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (RemoteException | android.content.OperationApplicationException e) {
+        } catch (RemoteException | OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
             if (query != null) {
@@ -390,7 +398,7 @@ public class DatabaseBuilderService extends IntentService {
         try {
             String lookupKey;
             String displayName;
-            android.content.ContentValues values = new android.content.ContentValues();
+            ContentValues values = new ContentValues();
 
             mOps.clear();
 
@@ -408,7 +416,7 @@ public class DatabaseBuilderService extends IntentService {
                 values.put(Contact.COLUMN_NAME, displayName);
 
                 if (!innerCursor.moveToFirst()) {
-                    mOps.add(android.content.ContentProviderOperation.newInsert(SPOCContentProvider.CONTACTS_URI).withValues(values).build());
+                    mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.CONTACTS_URI).withValues(values).build());
                 }
                 /*
                 else {
@@ -421,7 +429,7 @@ public class DatabaseBuilderService extends IntentService {
             }
 
             getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (RemoteException | android.content.OperationApplicationException e) {
+        } catch (RemoteException | OperationApplicationException e) {
             Log.w(getClass().getSimpleName(), e);
         } finally {
             if (cursorWithContacts != null) cursorWithContacts.close();
@@ -456,14 +464,14 @@ public class DatabaseBuilderService extends IntentService {
                 getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
             } catch (RemoteException e) {
                 Log.w(getClass().getSimpleName(), e);
-            } catch (android.content.OperationApplicationException ignored) {
+            } catch (OperationApplicationException ignored) {
                 //ignore duplicates.
             }
         }
 
         cursor.close();
 
-        android.content.ContentValues values = new android.content.ContentValues();
+        ContentValues values = new ContentValues();
         values.put(Label2Image.COLUMN_IMAGE_ID, 555);
         values.put(Label2Image.COLUMN_LABEL_ID, 555);
         values.put(Label2Image.COLUMN_DATE, java.util.Calendar.getInstance().getTimeInMillis());
@@ -526,7 +534,7 @@ public class DatabaseBuilderService extends IntentService {
             if (labelCursor.moveToFirst()) {
                 labelId = labelCursor.getInt(0);
             } else {
-                android.content.ContentValues values = new android.content.ContentValues();
+                ContentValues values = new ContentValues();
                 values.put(Label.COLUMN_NAME, labelName);
                 values.put(Label.COLUMN_CREATION_DATE, java.util.Calendar.getInstance().getTimeInMillis());
                 values.put(Label.COLUMN_TYPE, type.name());
@@ -539,11 +547,11 @@ public class DatabaseBuilderService extends IntentService {
 
         mLabelCache.put(labelName, labelId);
 
-        android.content.ContentValues values = new android.content.ContentValues();
+        ContentValues values = new ContentValues();
         values.put(Label2Image.COLUMN_DATE, java.util.Calendar.getInstance().getTimeInMillis());
         values.put(Label2Image.COLUMN_IMAGE_ID, imageId);
         values.put(Label2Image.COLUMN_LABEL_ID, labelId);
 
-        mOps.add(android.content.ContentProviderOperation.newInsert(SPOCContentProvider.LABELS_2_IMAGES_URI).withValues(values).withYieldAllowed(true).build());
+        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.LABELS_2_IMAGES_URI).withValues(values).withYieldAllowed(true).build());
     }
 }

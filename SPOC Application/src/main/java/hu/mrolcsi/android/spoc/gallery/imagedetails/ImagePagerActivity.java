@@ -26,6 +26,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.TableRow;
 import android.widget.TextView;
 
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
@@ -41,6 +42,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -87,6 +89,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
     };
 
     private ViewPager vpDetailsPager;
+    private TableRow trDate, trLocation, trPeople, trLabels;
     private TextView tvLocation;
     private TextView tvDateTaken;
 
@@ -177,6 +180,10 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
 
         vpDetailsPager = (ViewPager) findViewById(R.id.fullscreen_content);
 
+        trDate = (TableRow) findViewById(R.id.trDate);
+        trLocation = (TableRow) findViewById(R.id.trLocation);
+        trLabels = (TableRow) findViewById(R.id.trLabels);
+
         tvLocation = (TextView) findViewById(R.id.tvLocation);
         tvDateTaken = (TextView) findViewById(R.id.tvDateTaken);
 
@@ -249,15 +256,6 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. Use NavUtils to allow users
-            // to navigate up one level in the application structure. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            // TODO: If Settings has multiple levels, Up should navigate up
-            // that hierarchy.
             NavUtils.navigateUpFromSameTask(this);
             return true;
         }
@@ -283,67 +281,74 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
 
         try {
             final ExifInterface exif = new ExifInterface(imagePath);
-
             final SimpleDateFormat dateParser = new SimpleDateFormat(getString(hu.mrolcsi.android.spoc.common.R.string.spoc_exifParser), Locale.US);
 
-            final String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
-            if (dateString != null) {
-                final Date date = dateParser.parse(dateString);
-                tvDateTaken.setText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date));
+            //load data from db (fragment args)
+            //if not available, load from exif
+
+            // date taken
+            Calendar.getInstance();
+            final long dateTaken = item.getArguments().getLong(SingleImageFragment.ARG_IMAGE_DATE_TAKEN);
+            if (dateTaken > 0) {
+                tvDateTaken.setText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(dateTaken)));
             } else {
-                final long l = new File(imagePath).lastModified();
-                final String s = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(l));
-                tvDateTaken.setText(s);
+                final String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
+                if (dateString != null) {
+                    final Date date = dateParser.parse(dateString);
+                    tvDateTaken.setText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date));
+                } else {
+                    final long l = new File(imagePath).lastModified();
+                    final String s = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(l));
+                    tvDateTaken.setText(s);
+                }
             }
 
-            String imageLocation = item.getArguments().getString(SingleImageFragment.ARG_IMAGE_LOCATION);
-            if (!TextUtils.isEmpty(imageLocation)) {
-                tvLocation.setText(imageLocation);
+            // location
+            final String location = item.getArguments().getString(SingleImageFragment.ARG_IMAGE_LOCATION);
+            if (!TextUtils.isEmpty(location)) {
+                trLocation.setVisibility(View.VISIBLE);
+                tvLocation.setText(location);
             } else {
-                final Cursor cursorWithImage = getContentResolver().query(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID))), new String[]{Image.COLUMN_LOCATION}, null, null, null);
-                if (cursorWithImage.moveToFirst()) {
-                    if (cursorWithImage.getString(0) != null) {
-                        tvLocation.setText(cursorWithImage.getString(0));
-                    } else {
-                        float latLong[] = new float[2];
-                        if (exif.getLatLong(latLong)) {
-                            mLocationFinderTask = new LocationFinderTask(getApplicationContext()) {
-                                @Override
-                                protected void onPreExecute() {
-                                    super.onPreExecute();
-                                    tvLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
-                                }
-
-                                @Override
-                                protected void onPostExecute(List<Address> addresses) {
-                                    super.onPostExecute(addresses);
-
-                                    if (isCancelled()) return;
-
-                                    if (addresses == null) {
-                                        tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
-                                    } else {
-                                        final String locality = addresses.get(0).getLocality();
-                                        final String countryName = addresses.get(0).getCountryName();
-                                        final String locationText = locality + ", " + countryName;
-
-                                        //update db
-                                        ContentValues values = new ContentValues();
-                                        values.put(Image.COLUMN_LOCATION, locationText);
-
-                                        getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID))), values, null, null);
-
-                                        tvLocation.setText(locationText);
-                                    }
-                                }
-                            };
-                            mLocationFinderTask.execute(latLong[0], latLong[1]);
-                        } else {
-                            tvLocation.setText(getString(R.string.not_available));
+                float latLong[] = new float[2];
+                if (exif.getLatLong(latLong)) {
+                    mLocationFinderTask = new LocationFinderTask(this) {
+                        @Override
+                        protected void onPreExecute() {
+                            super.onPreExecute();
+                            tvLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
                         }
-                    }
+
+                        @Override
+                        protected void onPostExecute(List<Address> addresses) {
+                            super.onPostExecute(addresses);
+
+                            if (isCancelled()) return;
+
+                            if (addresses == null) {
+                                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
+                            } else {
+                                final String locality = addresses.get(0).getLocality();
+                                final String countryName = addresses.get(0).getCountryName();
+                                final String locationText = locality + ", " + countryName;
+
+                                //update db
+                                ContentValues values = new ContentValues();
+                                values.put(Image.COLUMN_LOCATION, locationText);
+
+                                getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID))), values, null, null);
+
+                                tvLocation.setText(locationText);
+                            }
+                        }
+                    };
+                    mLocationFinderTask.execute(latLong[0], latLong[1]);
+                } else {
+                    tvLocation.setText(null);
+                    trLocation.setVisibility(View.GONE);
                 }
-                cursorWithImage.close();
+
+                //labels
+                trLabels.setVisibility(View.GONE);
             }
         } catch (IOException | ParseException e) {
             Log.w(getClass().getName(), e);
@@ -368,6 +373,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
                 mCurrentPageIndex = getIntent().getIntExtra(ARG_SELECTED_POSITION, 0);
                 vpDetailsPager.setCurrentItem(mCurrentPageIndex);
             }
+            updateInfo();
         }
     }
 

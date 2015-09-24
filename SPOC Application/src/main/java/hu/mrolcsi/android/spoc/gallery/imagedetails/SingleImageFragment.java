@@ -65,6 +65,7 @@ import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.ContactPhotoLoader;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 import hu.mrolcsi.android.spoc.gallery.common.utils.SystemUiHider;
+import hu.mrolcsi.android.spoc.gallery.common.widgets.DateTimePickerDialog;
 import hu.mrolcsi.android.spoc.gallery.search.SuggestionAdapter;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
@@ -89,6 +90,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     public static final String ARG_IMAGE_ID = "SPOC.Gallery.Details.ImageId";
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
     public static final String ARG_IMAGE_LOCATION = "SPOC.Gallery.Details.Location";
+    public static final String ARG_IMAGE_DATE_TAKEN = "SPOC.Gallery.Details.DateTaken";
 
     private PhotoView photoView;
     private View mFaceTagStatic;
@@ -114,13 +116,14 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     private CursorLoader mSuggestionsLoader;
     private Contact2Image mSelectedFace;
 
-    public static SingleImageFragment newInstance(int imageId, String imagePath, String location) {
+    public static SingleImageFragment newInstance(int imageId, String imagePath, String location, long dateTaken) {
         final SingleImageFragment f = new SingleImageFragment();
 
         final Bundle args = new Bundle();
         args.putInt(ARG_IMAGE_ID, imageId);
         args.putString(ARG_IMAGE_PATH, imagePath);
         args.putString(ARG_IMAGE_LOCATION, location);
+        args.putLong(ARG_IMAGE_DATE_TAKEN, dateTaken);
         f.setArguments(args);
 
         return f;
@@ -327,10 +330,14 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final int id = item.getItemId();
+
+        final AlertDialog.Builder builder;
+        final Bundle args = new Bundle();
+
         switch (id) {
             case R.id.menuDetails:
 
-                final Bundle args = new Bundle();
+                args.clear();
                 args.putString(ARG_IMAGE_PATH, mImagePath);
 
                 final ImageDetailsDialog dialog = new ImageDetailsDialog();
@@ -339,7 +346,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
                 return true;
             case R.id.menuDelete:
-                final AlertDialog.Builder builder = DialogUtils.buildConfirmDialog(getActivity());
+                builder = DialogUtils.buildConfirmDialog(getActivity());
                 builder.setMessage(R.string.dialog_message_deletePicture)
                         .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
                             @Override
@@ -365,6 +372,13 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                                 }
                             }
                         }).show();
+                return true;
+            case R.id.menuEditDate:
+                DateTimePickerDialog pickerDialog = new DateTimePickerDialog();
+                args.clear();
+                args.putInt(DateTimePickerDialog.ARG_IMAGE_ID, mImageId);
+                pickerDialog.setArguments(args);
+                pickerDialog.show(getChildFragmentManager(), DateTimePickerDialog.TAG);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

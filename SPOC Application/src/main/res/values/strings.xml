@@ -102,5 +102,8 @@
     <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
     <string name="singleImage_message_faceNotUntagged">Face could not be untagged.</string>
     <string name="navigation_people_other">Everyone else…</string>
+    <string name="save">Save</string>
+    <string name="singleImage_message_dateChanged">Date changed.</string>
+    <string name="singleImage_message_dateNotChanged">Date could not be changed.</string>
 
 </resources>
