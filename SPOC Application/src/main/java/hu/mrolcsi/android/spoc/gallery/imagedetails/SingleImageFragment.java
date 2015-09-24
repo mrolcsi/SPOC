@@ -18,12 +18,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.ShareActionProvider;
 import android.text.Editable;
@@ -65,6 +62,7 @@ import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.ContactPhotoLoader;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 import hu.mrolcsi.android.spoc.gallery.common.utils.SystemUiHider;
 import hu.mrolcsi.android.spoc.gallery.search.SuggestionAdapter;
@@ -73,7 +71,6 @@ import uk.co.senab.photoview.PhotoViewAttacher;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -167,7 +164,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                         photoView.invalidate();
                         photoView.setScale(scale);
                     } else {
-                        mOverlayDrawable.setAlpha(200);
+                        mOverlayDrawable.setAlpha(128);
                         final float scale = photoView.getScale();
                         photoView.invalidate();
                         photoView.setScale(scale);
@@ -292,7 +289,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 mOverlayDrawable = new BitmapDrawable(getResources(), mOverlayBitmap);
 
                 if (((ImagePagerActivity) getActivity()).getSystemUiHider().isVisible()) {
-                    mOverlayDrawable.setAlpha(200);
+                    mOverlayDrawable.setAlpha(128);
                 } else {
                     mOverlayDrawable.setAlpha(0);
                 }
@@ -455,7 +452,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             mFaceTagStatic.startAnimation(fadeInAnim);
 
             mFaceTagViewHolder.staticName.setText(contact.getContactName());
-            new ContactPhotoLoader(contact.getContactKey()) {
+            new ContactPhotoLoader(getActivity(), contact.getContactKey()) {
                 @Override
                 protected void onPostExecute(Drawable drawable) {
                     mFaceTagViewHolder.staticImage.setImageDrawable(drawable);
@@ -532,7 +529,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 showFaceTag(mSelectedFace);
             } else {
                 //detect faces
-                if (mFacePositions == null && mDetector != null) {
+                if (mFacePositions == null && mDetector != null && mDetector.getStatus() != AsyncTask.Status.RUNNING) {
                     mDetector.execute(mBitmapDrawable.getBitmap());
                 }
             }
@@ -655,32 +652,6 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 }
             }
         };
-    }
-
-    class ContactPhotoLoader extends AsyncTask<Void, Void, Drawable> {
-        private final String lookupKey;
-
-        public ContactPhotoLoader(String lookupKey) {
-            this.lookupKey = lookupKey;
-        }
-
-        @Override
-        protected Drawable doInBackground(Void... voids) {
-            //contact photo
-            final InputStream inputStream = ContactsContract.Contacts.openContactPhotoInputStream(getActivity().getContentResolver(), Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_LOOKUP_URI, lookupKey));
-            RoundedBitmapDrawable roundedBitmapDrawable = null;
-            if (inputStream != null) {
-                roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), inputStream);
-                roundedBitmapDrawable.setCircular(true);
-                return roundedBitmapDrawable;
-            }
-            if (Build.VERSION.SDK_INT < 22) {
-                //noinspection deprecation
-                return getResources().getDrawable(R.drawable.user);
-            } else {
-                return getResources().getDrawable(R.drawable.user, getActivity().getTheme());
-            }
-        }
     }
 
     class FadeInAnimationListener implements Animation.AnimationListener {

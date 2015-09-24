@@ -52,21 +52,22 @@ public final class SPOCContentProvider extends ContentProvider {
     private static final int IMAGES_BY_DAY_TAKEN = 15;
     private static final int IMAGES_BY_DAY_TAKEN_COUNT = 16;
     private static final int IMAGES_WITH_LABELS = 17;
-    private static final int IMAGES_WITH_LABELS_COUNT = 18;
+    private static final int IMAGES_BY_LABEL_COUNT = 18;
     private static final int IMAGES_WITH_CONTACTS = 19;
+    private static final int IMAGES_WITH_CONTACTS_COUNT = 20;
 
-    private static final int LABELS_LIST = 20;
-    private static final int LABEL_BY_ID = 21;
-    private static final int LABEL_BY_NAME = 22;
-    private static final int LABELS_BY_IMAGE_ID = 23;
-    private static final int LABELS_2_IMAGES = 24;
-    private static final int LABELS_WITH_CONTACTS = 25;
+    private static final int LABELS_LIST = 30;
+    private static final int LABEL_BY_ID = 31;
+    private static final int LABEL_BY_NAME = 32;
+    private static final int LABELS_BY_IMAGE_ID = 33;
+    private static final int LABELS_2_IMAGES = 34;
+    private static final int LABELS_WITH_CONTACTS = 35;
 
-    private static final int CONTACTS_LIST = 31;
-    private static final int CONTACT_BY_ID = 32;
-    private static final int CONTACT_BY_KEY = 33;
-    private static final int CONTACTS_2_IMAGES = 34;
-    private static final int CONTACTS_2_IMAGES_BY_ID = 35;
+    private static final int CONTACTS_LIST = 40;
+    private static final int CONTACT_BY_ID = 41;
+    private static final int CONTACT_BY_KEY = 42;
+    private static final int CONTACTS_2_IMAGES = 43;
+    private static final int CONTACTS_2_IMAGES_BY_ID = 44;
 
     private static final UriMatcher URI_MATCHER;
 
@@ -78,10 +79,11 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN, IMAGES_WITH_DAY_TAKEN);                   // content://authority/images/day_taken         > SELECT * FROM images INNER JOIN images_by_day
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN + "/#", IMAGES_BY_DAY_TAKEN);              // content://authority/images/day_taken/#       > SELECT * FROM images INNER JOIN images_by_day WHERE day_taken = #
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN + "/count", IMAGES_BY_DAY_TAKEN_COUNT);    // content://authority/images/day_taken/count   > SELECT count(_id), day_taken FROM images INNER JOIN images_by_day GROUP BY day_taken
-        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Image.COLUMN_LOCATION + "/count", IMAGES_WITH_LABELS_COUNT);             // content://authority/images/location/count    > SELECT * FROM images_with_labels GROUP BY location
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Label.TABLE_NAME + "/count", IMAGES_BY_LABEL_COUNT);                     // content://authority/images/labels/count      > SELECT * FROM images_with_labels GROUP BY label_id
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search", IMAGES_WITH_LABELS);                                                // content://authority/images/search            > SELECT * FROM images_with_labels
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search/*", IMAGE_SEARCH_BY_NAME);                                            // content://authority/images/search/*          > SELECT * FROM images_with_labels WHERE column LIKE '%*%'
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Contact.TABLE_NAME, IMAGES_WITH_CONTACTS);                               // content://authority/images/contacts          > SELECT * FROM images INNER JOIN contacts2images LEFT JOIN contacts [WHERE image_id/contacts_id = ?]
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Contact.TABLE_NAME + "/count", IMAGES_WITH_CONTACTS_COUNT);              // content://authority/images/contacts/count    > SELECT * FROM images_with_labels WHERE type='CONTACT' GROUP BY label_id ORDER BY date_taken DESC
 
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME, LABELS_LIST);                                                                   // content://authority/labels                   > SELECT * FROM labels > INSERT INTO labels
         URI_MATCHER.addURI(AUTHORITY, Label.TABLE_NAME + "/#", LABEL_BY_ID);                                                            // content://authority/labels/#                 > SELECT * FROM labels WHERE _id = #
@@ -133,6 +135,8 @@ public final class SPOCContentProvider extends ContentProvider {
         builder.setTables(Image.TABLE_NAME);
         boolean useAuthority = false;
 
+        Cursor cursor;
+
         switch (URI_MATCHER.match(uri)) {
             case IMAGES_LIST:
                 if (TextUtils.isEmpty(sortOrder)) {
@@ -178,13 +182,23 @@ public final class SPOCContentProvider extends ContentProvider {
                     projection = new String[]{"count(" + Image.TABLE_NAME + "._id)", Views.IMAGES_BY_DAY_DAY_TAKEN};
                 }
                 sortOrder = Views.IMAGES_BY_DAY_DAY_TAKEN + " DESC";
-                return builder.query(db, projection, selection, selectionArgs, Views.IMAGES_BY_DAY_DAY_TAKEN, null, sortOrder);
-            case IMAGES_WITH_LABELS_COUNT:
+
+                cursor = builder.query(db, projection, selection, selectionArgs, Views.IMAGES_BY_DAY_DAY_TAKEN, null, sortOrder);
+                //noinspection ConstantConditions
+                if (useAuthority) cursor.setNotificationUri(getContext().getContentResolver(), CONTENT_URI);
+                else cursor.setNotificationUri(getContext().getContentResolver(), uri);
+                return cursor;
+            case IMAGES_BY_LABEL_COUNT:
                 builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
                 }
-                return builder.query(db, projection, selection, selectionArgs, Label.COLUMN_NAME, null, sortOrder);
+
+                cursor = builder.query(db, projection, selection, selectionArgs, Label.COLUMN_NAME, null, sortOrder);
+                //noinspection ConstantConditions
+                if (useAuthority) cursor.setNotificationUri(getContext().getContentResolver(), CONTENT_URI);
+                else cursor.setNotificationUri(getContext().getContentResolver(), uri);
+                return cursor;
             case IMAGES_WITH_CONTACTS:
                 builder.setTables(Image.TABLE_NAME + " INNER JOIN " + Contact2Image.TABLE_NAME + " ON " + Image.TABLE_NAME + "._id=" + Contact2Image.TABLE_NAME + "." + Contact2Image.COLUMN_IMAGE_ID +
                         " LEFT JOIN " + Contact.TABLE_NAME + " ON " + Contact.TABLE_NAME + "._id=" + Contact2Image.TABLE_NAME + "." + Contact2Image.COLUMN_CONTACT_ID);
@@ -202,12 +216,28 @@ public final class SPOCContentProvider extends ContentProvider {
                             Contact2Image.COLUMN_Y2
                     };
                 }
-                return builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+
+                break;
+            case IMAGES_WITH_CONTACTS_COUNT:
+                builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
+                builder.appendWhere("type = 'CONTACT'");
+                if (projection == null) {
+                    projection = new String[]{"count(_id)", Label.COLUMN_NAME, Label2Image.COLUMN_LABEL_ID};
+                }
+                if (TextUtils.isEmpty(sortOrder)) {
+                    sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
+                }
+
+                cursor = builder.query(db, projection, selection, selectionArgs, Label.COLUMN_NAME, null, sortOrder);
+                //noinspection ConstantConditions
+                if (useAuthority) cursor.setNotificationUri(getContext().getContentResolver(), CONTENT_URI);
+                else cursor.setNotificationUri(getContext().getContentResolver(), uri);
+                return cursor;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
         }
 
-        Cursor cursor = builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+        cursor = builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
 
         //noinspection ConstantConditions
         if (useAuthority) cursor.setNotificationUri(getContext().getContentResolver(), CONTENT_URI);
@@ -267,6 +297,8 @@ public final class SPOCContentProvider extends ContentProvider {
         builder.setTables(Contact.TABLE_NAME);
         boolean useAuthority = false;
 
+        Cursor cursor;
+
         switch (URI_MATCHER.match(uri)) {
             case CONTACTS_LIST:
                 break;
@@ -290,7 +322,7 @@ public final class SPOCContentProvider extends ContentProvider {
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
         }
 
-        Cursor cursor = builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+        cursor = builder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
 
         //noinspection ConstantConditions
         if (useAuthority) cursor.setNotificationUri(getContext().getContentResolver(), CONTENT_URI);

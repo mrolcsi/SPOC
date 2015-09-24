@@ -100,4 +100,5 @@
     <string name="singleImage_message_faceUntagged">Face untagged.</string>
     <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
     <string name="singleImage_message_faceNotUntagged">Face could not be untagged.</string>
+    <string name="navigation_people_other">Everyone else…</string>
 </resources>

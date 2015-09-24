@@ -96,4 +96,9 @@
     <string name="singleImage_faceTag_hint">Ki ő?</string>
     <string name="singleImage_message_faceNotTagged">Arc megjelölése nem sikerült.</string>
     <string name="singleImage_message_faceTagged">Arc megjelölve.</string>
+    <string name="navigation_people_other">Mindenki más…</string>
+    <string name="singleImage_confirm_untagFace">Biztosan eltávolítod a megjelölést?</string>
+    <string name="singleImage_message_faceNotUntagged">Megjelölés eltávolítása nem sikerült.</string>
+    <string name="singleImage_message_faceUntagged">Megjelölés eltávolítva.</string>
+    <string name="singleImage_message_personAlreadyTagged">Ez a személy már szerepel a képen.</string>
 </resources>

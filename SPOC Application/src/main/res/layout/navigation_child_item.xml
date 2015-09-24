@@ -6,6 +6,17 @@
                 android:paddingEnd="@dimen/navigation_iconMargin"
                 android:paddingRight="@dimen/navigation_iconMargin">
 
+    <ImageView
+        android:id="@android:id/icon"
+        android:layout_width="@dimen/navigation_icon_size"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="@dimen/navigation_iconMargin"
+        android:layout_marginStart="@dimen/navigation_iconMargin"
+        />
+
     <TextView
         android:id="@android:id/title"
         android:layout_width="wrap_content"

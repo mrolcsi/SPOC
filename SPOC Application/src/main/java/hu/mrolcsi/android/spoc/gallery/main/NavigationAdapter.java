@@ -14,17 +14,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import hu.mrolcsi.android.spoc.database.model.Image;
+
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.model.LabelType;
 import hu.mrolcsi.android.spoc.database.model.Views;
 import hu.mrolcsi.android.spoc.database.model.binder.Label2Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.ContactPhotoLoader;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
 
+import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -39,6 +42,15 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
 
     private static final int DATE_LOADER_ID = 40;
     private static final int PLACES_LOADER_ID = 41;
+    private static final int PEOPLE_LOADER_ID = 42;
+
+    private static final int HOME_SCREEN_POSITION = 0;
+    private static final int DATES_POSITION = 1;
+    private static final int PLACES_POSITION = 2;
+    private static final int PEOPLE_POSITION = 3;
+    private static final int TAGS_POSITION = 4;
+    private static final int FOLDERS_POSITION = 5;
+    private static final int SETTINGS_POSITION = 6;
 
     private final Context mContext;
     private final LayoutInflater mInflater;
@@ -61,6 +73,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
 
         loaderManager.initLoader(DATE_LOADER_ID, null, this);
         loaderManager.initLoader(PLACES_LOADER_ID, null, this);
+        loaderManager.initLoader(PEOPLE_LOADER_ID, null, this);
     }
 
     @SuppressWarnings("deprecation")
@@ -69,7 +82,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
         NavigationItem item = new NavigationItem();
 
         switch (i) {
-            case 0:
+            case HOME_SCREEN_POSITION:
                 item.title = mContext.getString(R.string.navigation_home);
                 if (Build.VERSION.SDK_INT < 22) {
                     item.icon = mContext.getResources().getDrawable(R.drawable.ic_dashboard);
@@ -78,7 +91,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 }
                 item.isExpandable = false;
                 break;
-            case 1:
+            case DATES_POSITION:
                 item.title = mContext.getString(R.string.navigation_date);
                 if (Build.VERSION.SDK_INT < 22) {
                     item.icon = mContext.getResources().getDrawable(R.drawable.calendar);
@@ -87,7 +100,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 }
                 item.isExpandable = true;
                 break;
-            case 2:
+            case PLACES_POSITION:
                 item.title = mContext.getString(R.string.navigation_places);
                 if (Build.VERSION.SDK_INT < 22) {
                     item.icon = mContext.getResources().getDrawable(R.drawable.map_marker);
@@ -96,7 +109,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 }
                 item.isExpandable = true;
                 break;
-            case 3:
+            case PEOPLE_POSITION:
                 item.title = mContext.getString(R.string.navigation_people);
                 if (Build.VERSION.SDK_INT < 22) {
                     item.icon = mContext.getResources().getDrawable(R.drawable.group);
@@ -105,7 +118,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 }
                 item.isExpandable = true;
                 break;
-            case 4:
+            case TAGS_POSITION:
                 item.title = mContext.getString(R.string.navigation_tags);
                 if (Build.VERSION.SDK_INT < 22) {
                     item.icon = mContext.getResources().getDrawable(R.drawable.tag);
@@ -114,7 +127,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 }
                 item.isExpandable = true;
                 break;
-            case 5:
+            case FOLDERS_POSITION:
                 item.title = mContext.getString(R.string.navigation_folders);
                 if (Build.VERSION.SDK_INT < 22) {
                     item.icon = mContext.getResources().getDrawable(R.drawable.folder);
@@ -123,7 +136,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 }
                 item.isExpandable = true;
                 break;
-            case 6:
+            case SETTINGS_POSITION:
                 item.title = mContext.getString(R.string.navigation_settings);
                 if (Build.VERSION.SDK_INT < 22) {
                     item.icon = mContext.getResources().getDrawable(R.drawable.settings);
@@ -158,19 +171,19 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     @Override
     public long getGroupId(int i) {
         switch (i) {
-            case 0:
+            case HOME_SCREEN_POSITION:
                 return R.id.navigation_home;
-            case 1:
+            case DATES_POSITION:
                 return R.id.navigation_date;
-            case 2:
+            case PLACES_POSITION:
                 return R.id.navigation_places;
-            case 3:
+            case PEOPLE_POSITION:
                 return R.id.navigation_people;
-            case 4:
+            case TAGS_POSITION:
                 return R.id.navigation_tags;
-            case 5:
+            case FOLDERS_POSITION:
                 return R.id.navigation_folders;
-            case 6:
+            case SETTINGS_POSITION:
                 return R.id.navigation_settings;
             default:
                 return -1;
@@ -178,8 +191,12 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     }
 
     @Override
-    public long getChildId(int i, int i1) {
-        // TODO
+    public long getChildId(int group, int child) {
+        if (mChildren[group] != null) {
+            if (mChildren[group][child] != null) {
+                return mChildren[group][child].id;
+            }
+        }
         return 0;
     }
 
@@ -225,7 +242,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
 
     @Override
     public View getRealChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-        NavigationItemHolder holder;
+        final NavigationItemHolder holder;
         if (convertView == null) {
             holder = new NavigationItemHolder();
 
@@ -233,6 +250,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
 
             holder.tvTitle = (TextView) convertView.findViewById(android.R.id.title);
             holder.tvCount = (TextView) convertView.findViewById(R.id.count);
+            holder.imgIcon = (ImageView) convertView.findViewById(android.R.id.icon);
 
             convertView.setTag(holder);
         } else {
@@ -253,12 +271,38 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
             holder.tvCount.setVisibility(View.INVISIBLE);
         }
 
+        if (childPosition != mChildren[groupPosition].length - 1) { //last child
+            switch (groupPosition) {
+                case DATES_POSITION:
+                    try {
+                        Class res = R.drawable.class;
+                        Field field = res.getField("calendar_" + childItem.day);
+                        int drawableId = field.getInt(null);
+                        holder.imgIcon.setImageResource(drawableId);
+                    } catch (IllegalAccessException | NoSuchFieldException e) {
+                        holder.imgIcon.setImageResource(R.drawable.calendar);
+                    }
+                    break;
+                case PLACES_POSITION:
+                    holder.imgIcon.setImageResource(R.drawable.marker);
+                    break;
+                case PEOPLE_POSITION:
+                    holder.imgIcon.setImageDrawable(childItem.contactPhoto);
+                    break;
+                default:
+                    holder.imgIcon.setImageDrawable(null);
+                    break;
+            }
+        } else {
+            holder.imgIcon.setImageDrawable(null);
+        }
+
         return convertView;
     }
 
     @Override
     public int getRealChildrenCount(int groupPosition) {
-        if (groupPosition == 0 || groupPosition == getGroupCount() - 1) return 0;
+        if (groupPosition == HOME_SCREEN_POSITION || groupPosition == SETTINGS_POSITION) return 0;
         if (mChildren[groupPosition] == null) return 0;
         return mChildren[groupPosition].length;
     }
@@ -279,14 +323,21 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
             SELECT count(image_id), label_id, name
             FROM images_with_labels
             WHERE type = 'LOCATION_LOCALITY'
-            GROUP BY name
+            GROUP BY label_id
             ORDER BY date_taken DESC
              */
             // content://authority/images/location/count
-            loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Image.COLUMN_LOCATION).appendPath("count").build());
+            loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Label.TABLE_NAME).appendPath("count").build());
             loader.setProjection(new String[]{"count(_id)", Label.COLUMN_NAME, Label2Image.COLUMN_LABEL_ID});
             loader.setSelection(Label.COLUMN_TYPE + " = ?");
             loader.setSelectionArgs(new String[]{LabelType.LOCATION_LOCALITY.name()});
+
+            return loader;
+        } else if (id == PEOPLE_LOADER_ID) {
+            loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Label.TABLE_NAME).appendPath("count").build());
+            loader.setProjection(new String[]{"count(_id)", Label.COLUMN_NAME, Label2Image.COLUMN_LABEL_ID});
+            loader.setSelection(Label.COLUMN_TYPE + " = ?");
+            loader.setSelectionArgs(new String[]{LabelType.CONTACT.name()});
 
             return loader;
         }
@@ -299,34 +350,70 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
         if (loader.getId() == DATE_LOADER_ID) {
             int size = Math.min(3, data.getCount() - 1);
 
-            if (size < 0) return;
+            if (size < 0) {
+                size = 1;
+            }
 
-            mChildren[1] = new NavigationItem[size + 1];
+            mChildren[DATES_POSITION] = new NavigationItem[size + 1];
 
             for (int i = 0; i < size; i++) {
                 data.moveToPosition(i);
-                mChildren[1][i] = new NavigationItem();
-                mChildren[1][i].count = data.getInt(0);
+                mChildren[DATES_POSITION][i] = new NavigationItem();
+                mChildren[DATES_POSITION][i].count = data.getInt(0);
+
                 final long dayLong = data.getLong(1);
-                mChildren[1][i].title = dateFormat.format(new Date(dayLong));
+                final Calendar calendar = Calendar.getInstance();
+                calendar.setTime(new Date(dayLong));
+                mChildren[DATES_POSITION][i].title = dateFormat.format(calendar.getTime());
+                mChildren[DATES_POSITION][i].day = calendar.get(Calendar.DAY_OF_MONTH);
             }
-            mChildren[1][size] = new NavigationItem(mContext.getString(R.string.navigation_date_older));
+            mChildren[DATES_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_date_older));
         }
 
         if (loader.getId() == PLACES_LOADER_ID) {
             int size = Math.min(3, data.getCount() - 1);
 
-            if (size < 0) return;
+            if (size < 0) {
+                size = 1;
+            }
 
-            mChildren[2] = new NavigationItem[size + 1];
+            mChildren[PLACES_POSITION] = new NavigationItem[size + 1];
 
             for (int i = 0; i < size; i++) {
                 data.moveToPosition(i);
-                mChildren[2][i] = new NavigationItem();
-                mChildren[2][i].count = data.getInt(0);
-                mChildren[2][i].title = data.getString(1);
+                mChildren[PLACES_POSITION][i] = new NavigationItem();
+                mChildren[PLACES_POSITION][i].count = data.getInt(0);
+                mChildren[PLACES_POSITION][i].title = data.getString(1);
+                mChildren[PLACES_POSITION][i].id = data.getInt(2);
             }
-            mChildren[2][size] = new NavigationItem(mContext.getString(R.string.navigation_places_other));
+            mChildren[PLACES_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_places_other));
+        }
+
+        if (loader.getId() == PEOPLE_LOADER_ID) {
+            int size = Math.min(3, data.getCount() - 1);
+
+            if (size < 0) {
+                size = 1;
+            }
+
+            mChildren[PEOPLE_POSITION] = new NavigationItem[size + 1];
+
+            for (int i = 0; i < size; i++) {
+                data.moveToPosition(i);
+                mChildren[PEOPLE_POSITION][i] = new NavigationItem();
+                mChildren[PEOPLE_POSITION][i].count = data.getInt(0);
+                mChildren[PEOPLE_POSITION][i].title = data.getString(1);
+                mChildren[PEOPLE_POSITION][i].id = data.getInt(2);
+
+                final int finalI = i;
+                new ContactPhotoLoader(mContext, mChildren[PEOPLE_POSITION][i].id) {
+                    @Override
+                    protected void onPostExecute(Drawable drawable) {
+                        mChildren[PEOPLE_POSITION][finalI].contactPhoto = drawable;
+                    }
+                }.execute();
+            }
+            mChildren[PEOPLE_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_people_other));
         }
 
         notifyDataSetChanged();
@@ -345,11 +432,14 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     }
 
     class NavigationItem {
+        int id = 0;
         CharSequence title = "Navigation Item";
         Drawable icon = null;
         int count = 0;
+        int day = 0;
         boolean isExpandable = false;
         boolean isExpanded = false;
+        Drawable contactPhoto;
 
         public NavigationItem() {
         }
