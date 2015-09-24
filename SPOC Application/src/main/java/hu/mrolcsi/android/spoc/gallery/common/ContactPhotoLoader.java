@@ -1,5 +1,6 @@
 package hu.mrolcsi.android.spoc.gallery.common;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
@@ -41,6 +42,7 @@ public class ContactPhotoLoader extends AsyncTask<Void, Void, Drawable> {
     }
 
     @Override
+    @TargetApi(21)
     protected Drawable doInBackground(Void... voids) {
         //contact photo
         Uri contactUri = null;
@@ -67,11 +69,11 @@ public class ContactPhotoLoader extends AsyncTask<Void, Void, Drawable> {
             return roundedBitmapDrawable;
         }
 
-        if (Build.VERSION.SDK_INT < 22) {
+        if (Build.VERSION.SDK_INT >= 21) {
+            return context.getResources().getDrawable(R.drawable.user, context.getTheme());
+        } else {
             //noinspection deprecation
             return context.getResources().getDrawable(R.drawable.user);
-        } else {
-            return context.getResources().getDrawable(R.drawable.user, context.getTheme());
         }
     }
 }

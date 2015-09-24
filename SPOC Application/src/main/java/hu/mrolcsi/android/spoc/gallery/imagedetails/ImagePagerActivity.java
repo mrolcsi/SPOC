@@ -27,6 +27,7 @@ import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.TextView;
+
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
 import hu.mrolcsi.android.spoc.database.model.Image;
@@ -95,6 +96,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
     private int mLoaderId;
 
     @Override
+    @TargetApi(18)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 

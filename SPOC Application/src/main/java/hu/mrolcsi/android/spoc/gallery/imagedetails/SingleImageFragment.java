@@ -73,6 +73,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created with IntelliJ IDEA.
@@ -556,7 +557,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             @Override
             public void afterTextChanged(Editable editable) {
                 mSuggestionsLoader.reset();
-                mSuggestionsLoader.setSelectionArgs(new String[]{"%" + editable.toString().toUpperCase() + "%", "%" + editable.toString().toLowerCase() + "%"});
+                mSuggestionsLoader.setSelectionArgs(new String[]{"%" + editable.toString().toUpperCase(Locale.getDefault()) + "%", "%" + editable.toString().toLowerCase(Locale.getDefault()) + "%"});
                 mSuggestionsLoader.startLoading();
             }
         };

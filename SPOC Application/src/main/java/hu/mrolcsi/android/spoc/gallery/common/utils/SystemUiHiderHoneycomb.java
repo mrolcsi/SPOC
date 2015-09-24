@@ -84,6 +84,7 @@ public class SystemUiHiderHoneycomb extends SystemUiHiderBase {
      * Constructor not intended to be called by clients. Use
      * {@link SystemUiHider#getInstance} to obtain an instance.
      */
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     protected SystemUiHiderHoneycomb(Activity activity, View anchorView, int flags) {
         super(activity, anchorView, flags);
 
