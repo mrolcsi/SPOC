@@ -60,6 +60,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.createTable(connectionSource, Label2Image.class);
             TableUtils.createTable(connectionSource, Contact.class);
             TableUtils.createTable(connectionSource, Contact2Image.class);
+            database.execSQL(Views.LABELS_WITH_CONTACTS_CREATE);
             database.execSQL(Views.IMAGES_WITH_LABELS_CREATE);
             database.execSQL(Views.IMAGES_BY_DAY_CREATE);
         } catch (SQLException e) {

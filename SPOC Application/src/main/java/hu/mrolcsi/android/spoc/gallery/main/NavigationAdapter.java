@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.model.LabelType;
 import hu.mrolcsi.android.spoc.database.model.Views;
@@ -259,10 +258,6 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
 
         NavigationItem childItem = (NavigationItem) getChild(groupPosition, childPosition);
 
-        if (childItem == null) {
-            childItem = new NavigationItem();
-        }
-
         holder.tvTitle.setText(childItem.title);
         if (childItem.count > 0) {
             holder.tvCount.setVisibility(View.VISIBLE);
@@ -348,70 +343,61 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == DATE_LOADER_ID) {
-            int size = Math.min(3, data.getCount() - 1);
-
-            if (size < 0) {
-                size = 1;
-            }
+            int size = Math.min(3, data.getCount());
 
             mChildren[DATES_POSITION] = new NavigationItem[size + 1];
 
             for (int i = 0; i < size; i++) {
-                data.moveToPosition(i);
-                mChildren[DATES_POSITION][i] = new NavigationItem();
-                mChildren[DATES_POSITION][i].count = data.getInt(0);
+                if (data.moveToPosition(i)) {
+                    mChildren[DATES_POSITION][i] = new NavigationItem();
+                    mChildren[DATES_POSITION][i].count = data.getInt(0);
 
-                final long dayLong = data.getLong(1);
-                final Calendar calendar = Calendar.getInstance();
-                calendar.setTime(new Date(dayLong));
-                mChildren[DATES_POSITION][i].title = dateFormat.format(calendar.getTime());
-                mChildren[DATES_POSITION][i].day = calendar.get(Calendar.DAY_OF_MONTH);
+                    final long dayLong = data.getLong(1);
+                    final Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(new Date(dayLong));
+                    mChildren[DATES_POSITION][i].title = dateFormat.format(calendar.getTime());
+                    mChildren[DATES_POSITION][i].day = calendar.get(Calendar.DAY_OF_MONTH);
+                }
             }
             mChildren[DATES_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_date_older));
         }
 
         if (loader.getId() == PLACES_LOADER_ID) {
-            int size = Math.min(3, data.getCount() - 1);
-
-            if (size < 0) {
-                size = 1;
-            }
+            int size = Math.min(3, data.getCount());
 
             mChildren[PLACES_POSITION] = new NavigationItem[size + 1];
 
             for (int i = 0; i < size; i++) {
-                data.moveToPosition(i);
-                mChildren[PLACES_POSITION][i] = new NavigationItem();
-                mChildren[PLACES_POSITION][i].count = data.getInt(0);
-                mChildren[PLACES_POSITION][i].title = data.getString(1);
-                mChildren[PLACES_POSITION][i].id = data.getInt(2);
+                if (data.moveToPosition(i)) {
+                    mChildren[PLACES_POSITION][i] = new NavigationItem();
+                    mChildren[PLACES_POSITION][i].count = data.getInt(0);
+                    mChildren[PLACES_POSITION][i].title = data.getString(1);
+                    mChildren[PLACES_POSITION][i].id = data.getInt(2);
+                }
             }
             mChildren[PLACES_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_places_other));
         }
 
         if (loader.getId() == PEOPLE_LOADER_ID) {
-            int size = Math.min(3, data.getCount() - 1);
-
-            if (size < 0) {
-                size = 1;
-            }
+            int size = Math.min(3, data.getCount());
 
             mChildren[PEOPLE_POSITION] = new NavigationItem[size + 1];
 
             for (int i = 0; i < size; i++) {
-                data.moveToPosition(i);
-                mChildren[PEOPLE_POSITION][i] = new NavigationItem();
-                mChildren[PEOPLE_POSITION][i].count = data.getInt(0);
-                mChildren[PEOPLE_POSITION][i].title = data.getString(1);
-                mChildren[PEOPLE_POSITION][i].id = data.getInt(2);
+                if (data.moveToPosition(i)) {
+                    mChildren[PEOPLE_POSITION][i] = new NavigationItem();
+                    mChildren[PEOPLE_POSITION][i].count = data.getInt(0);
+                    mChildren[PEOPLE_POSITION][i].title = data.getString(1);
+                    mChildren[PEOPLE_POSITION][i].id = data.getInt(2);
 
-                final int finalI = i;
-                new ContactPhotoLoader(mContext, mChildren[PEOPLE_POSITION][i].id) {
-                    @Override
-                    protected void onPostExecute(Drawable drawable) {
-                        mChildren[PEOPLE_POSITION][finalI].contactPhoto = drawable;
-                    }
-                }.execute();
+                    final int finalI = i;
+                    new ContactPhotoLoader(mContext, mChildren[PEOPLE_POSITION][i].id) {
+                        @Override
+                        protected void onPostExecute(Drawable drawable) {
+                            mChildren[PEOPLE_POSITION][finalI].contactPhoto = drawable;
+                        }
+                    }.execute();
+                }
             }
             mChildren[PEOPLE_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_people_other));
         }
