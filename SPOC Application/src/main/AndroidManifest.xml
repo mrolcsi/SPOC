@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:name="hu.mrolcsi.android.spoc.SPOCApplication"
@@ -19,19 +20,31 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.SPOC"
         tools:ignore="UnusedAttribute">
+
         <activity
             android:name=".main.GalleryActivity"
             android:label="@string/title_activity_gallery"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.SPOC">
         </activity>
         <activity
             android:name=".main.SplashScreenActivity"
-            android:label="@string/title_activity_gallery">
+            android:label="@string/title_activity_gallery"
+            android:theme="@style/Theme.SPOC">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".imagedetails.ImagePagerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:parentActivityName=".main.GalleryActivity"
+            android:theme="@style/Theme.SPOC.Fullscreen">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="hu.mrolcsi.android.spoc.gallery.main.GalleryActivity" />
         </activity>
 
         <service
@@ -47,16 +60,9 @@
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="ed56220fdb5988cc5c8783bba5ebbf57313f06c0" />
-
-        <activity
-            android:name=".imagedetails.ImagePagerActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:parentActivityName=".main.GalleryActivity"
-            android:theme="@style/Theme.SPOC.Fullscreen">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="hu.mrolcsi.android.spoc.gallery.main.GalleryActivity"/>
-        </activity>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/GOOGLE_API_KEY" />
     </application>
 
 </manifest>

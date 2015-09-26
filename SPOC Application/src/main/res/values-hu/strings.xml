@@ -104,4 +104,6 @@
     <string name="save">Mentés</string>
     <string name="singleImage_message_dateChanged">Dátum megváltoztatva.</string>
     <string name="singleImage_message_dateNotChanged">Dátum megváltoztatása nem sikerült.</string>
+    <string name="singleImage_editLocation_byMap">Kiválasztás térképről</string>
+    <string name="singleImage_editLocation_byText">Megadás szövegesen</string>
 </resources>

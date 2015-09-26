@@ -2,16 +2,17 @@ package hu.mrolcsi.android.spoc.gallery.settings;
 
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.TextView;
+
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;

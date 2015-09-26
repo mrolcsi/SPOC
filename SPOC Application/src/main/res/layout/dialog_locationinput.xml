@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+    <include
+        layout="@layout/dialog_locationinput_searchfield"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center_horizontal|top" />
+
+    <CheckBox
+        android:id="@+id/cbSaveToExif"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_gravity="right|end|bottom"
+        android:layout_marginBottom="4dp"
+        android:layout_marginRight="4dp"
+        android:background="#64000000"
+        android:paddingEnd="@dimen/margin_small"
+        android:paddingRight="@dimen/margin_small"
+        android:text="Save to image file"
+        android:theme="@style/Theme.SPOC" />
+
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignTop="@+id/cbSaveToExif"
+        android:layout_gravity="left|bottom"
+        android:layout_marginBottom="4dp"
+        android:layout_marginLeft="4dp"
+        android:background="#64000000">
+
+        <TextView
+            android:id="@+id/tvCurrentLocation"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="Current location"
+            android:padding="@dimen/margin_small"
+            android:text="Nothing selected." />
+    </android.support.design.widget.TextInputLayout>
+</RelativeLayout>

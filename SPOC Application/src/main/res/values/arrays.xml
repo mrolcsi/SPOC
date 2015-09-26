@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="editLocations_options">
+        <item>@string/singleImage_editLocation_byText</item>
+        <item>@string/singleImage_editLocation_byMap</item>
+    </array>
+</resources>

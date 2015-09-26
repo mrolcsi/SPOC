@@ -2,7 +2,6 @@ package hu.mrolcsi.android.spoc.gallery.common.widgets;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -11,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,11 +18,11 @@ import android.widget.DatePicker;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.util.Calendar;
+
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
-
-import java.util.Calendar;
 
 /**
  * Created with IntelliJ IDEA.
@@ -43,7 +43,6 @@ public class DateTimePickerDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
 
         @SuppressLint("InflateParams") final View view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_datetimepicker, null);
         builder.setView(view);

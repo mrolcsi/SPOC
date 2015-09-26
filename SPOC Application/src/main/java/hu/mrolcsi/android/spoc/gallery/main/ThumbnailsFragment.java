@@ -1,9 +1,12 @@
 package hu.mrolcsi.android.spoc.gallery.main;
 
 import android.app.ActivityManager;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -18,14 +21,21 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Toast;
+
 import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
 import hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService;

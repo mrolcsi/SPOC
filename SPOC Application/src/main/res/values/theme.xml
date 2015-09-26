@@ -21,6 +21,7 @@
 
         <item name="windowActionBar">false</item>
 
+        <item name="alertDialogTheme">@style/Theme.SPOC.AlertDialog</item>
     </style>
 
     <style name="Theme.SPOC.Fullscreen"
@@ -28,5 +29,13 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="metaButtonBarStyle">@style/ButtonBar</item>
         <item name="metaButtonBarButtonStyle">@style/ButtonBarButton</item>
+        <item name="alertDialogTheme">@style/Theme.SPOC.AlertDialog</item>
+    </style>
+
+    <style name="Theme.SPOC.AlertDialog" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/background_material_light</item>
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@android:color/white</item>
     </style>
 </resources>

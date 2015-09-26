@@ -2,7 +2,6 @@ package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.location.Address;
@@ -12,14 +11,12 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
-import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
-import hu.mrolcsi.android.spoc.common.utils.FileUtils;
-import hu.mrolcsi.android.spoc.gallery.R;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +26,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
+import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.gallery.R;
 
 /**
  * Created with IntelliJ IDEA.

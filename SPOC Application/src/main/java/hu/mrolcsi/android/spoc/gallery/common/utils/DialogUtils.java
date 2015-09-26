@@ -1,8 +1,9 @@
 package hu.mrolcsi.android.spoc.gallery.common.utils;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog;
+
 import hu.mrolcsi.android.spoc.gallery.R;
 
 /**

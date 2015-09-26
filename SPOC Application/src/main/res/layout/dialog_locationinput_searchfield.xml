@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:showIn="@layout/dialog_locationinput">
+
+    <ImageView
+        android:id="@android:id/background"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:alpha="0.7"
+        android:background="@drawable/popup_above" />
+
+    <LinearLayout
+        android:id="@android:id/content"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingBottom="@dimen/margin_small"
+        android:paddingLeft="@dimen/margin_medium"
+        android:paddingRight="@dimen/margin_medium"
+        android:paddingTop="@dimen/margin_small"
+        tools:showIn="@layout/dialog_locationinput">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/margin_xsmall"
+            android:layout_marginRight="@dimen/margin_xsmall"
+            android:src="@drawable/search"
+            />
+
+        <AutoCompleteTextView
+            android:id="@+id/etSearch"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:hint="Search for a place, or tap on map"
+            android:inputType="textCapWords|textPersonName"
+            android:singleLine="true"
+            android:theme="@style/Theme.SPOC" />
+    </LinearLayout>
+
+</RelativeLayout>

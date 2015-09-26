@@ -104,4 +104,6 @@
     <string name="save">Save</string>
     <string name="singleImage_message_dateChanged">Date changed.</string>
     <string name="singleImage_message_dateNotChanged">Date could not be changed.</string>
+    <string name="singleImage_editLocation_byMap">Pick location on map</string>
+    <string name="singleImage_editLocation_byText">Enter by text</string>
 </resources>

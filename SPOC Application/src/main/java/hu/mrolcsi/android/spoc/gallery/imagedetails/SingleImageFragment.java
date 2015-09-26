@@ -2,7 +2,6 @@ package hu.mrolcsi.android.spoc.gallery.imagedetails;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -22,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.ShareActionProvider;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -43,6 +43,12 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -66,15 +72,10 @@ import hu.mrolcsi.android.spoc.gallery.common.ContactPhotoLoader;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 import hu.mrolcsi.android.spoc.gallery.common.utils.SystemUiHider;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.DateTimePickerDialog;
+import hu.mrolcsi.android.spoc.gallery.common.widgets.LocationInputDialog;
 import hu.mrolcsi.android.spoc.gallery.search.SuggestionAdapter;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 /**
  * Created with IntelliJ IDEA.
@@ -91,6 +92,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     public static final String ARG_IMAGE_PATH = "SPOC.Gallery.Details.ImagePath";
     public static final String ARG_IMAGE_LOCATION = "SPOC.Gallery.Details.Location";
     public static final String ARG_IMAGE_DATE_TAKEN = "SPOC.Gallery.Details.DateTaken";
+    private static final int PLACE_PICKER_REQUEST = 65;
 
     private PhotoView photoView;
     private View mFaceTagStatic;
@@ -379,6 +381,24 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 args.putInt(DateTimePickerDialog.ARG_IMAGE_ID, mImageId);
                 pickerDialog.setArguments(args);
                 pickerDialog.show(getChildFragmentManager(), DateTimePickerDialog.TAG);
+                return true;
+            case R.id.menuEditLocation:
+//                builder = new AlertDialog.Builder(getActivity());
+//                builder.setItems(R.array.editLocations_options, new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        if (which == 0) {
+//                            //show input dialog
+//
+//                        } else if (which == 1) {
+//                            //pick from map
+//                        }
+//                    }
+//                });
+//                builder.setNeutralButton(android.R.string.cancel, null);
+//                builder.show();
+                LocationInputDialog locationInputDialog = new LocationInputDialog();
+                locationInputDialog.setArguments(getArguments());
+                locationInputDialog.show(getChildFragmentManager(), LocationInputDialog.TAG);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
