@@ -4,12 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.location.Address;
-import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
@@ -17,15 +16,15 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.util.List;
-
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.gallery.R;
+
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -43,8 +42,6 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
     private AutoCompleteTextView etSearch;
     private CheckBox cbSaveToExif;
     private TextView tvCurrentLocation;
-
-    private Geocoder mGeocoder;
 
     @NonNull
     @Override
@@ -116,12 +113,11 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
     //endregion
 
     private void save() {
-        Toast.makeText(getActivity(), "Something something saved.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), "Nothing saved.", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onMapReady(final GoogleMap map) {
-        mGeocoder = new Geocoder(getActivity());
 
         //TODO: getArguments();
 
@@ -131,17 +127,31 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
                 map.clear();
                 map.addMarker(new MarkerOptions().position(latLng));
 
-                try {
-                    //TODO: async
-                    final List<Address> addresses = mGeocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-                    if (!addresses.isEmpty()) {
-                        tvCurrentLocation.setText(addresses.get(0).getLocality() + ", " + addresses.get(0).getCountryName());
-                    } else {
-                        tvCurrentLocation.setText("Unknown location.");
+                new LocationFinderTask(getActivity()) {
+                    @Override
+                    protected void onPreExecute() {
+                        tvCurrentLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
                     }
-                } catch (IOException e) {
-                    Log.w(getClass().getSimpleName(), e);
-                }
+
+                    @Override
+                    protected void onPostExecute(List<Address> addresses) {
+                        if (addresses == null) {
+                            tvCurrentLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation_noInternet)));
+                        } else if (addresses.isEmpty()) {
+                            tvCurrentLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
+                        } else {
+                            final Address address = addresses.get(0);
+                            String locality = address.getLocality();
+                            if (locality == null) {
+                                locality = address.getFeatureName();
+                            }
+                            if (locality == null) {
+                                locality = address.getAdminArea();
+                            }
+                            tvCurrentLocation.setText(locality + ", " + address.getCountryName());
+                        }
+                    }
+                }.execute((float) latLng.latitude, (float) latLng.longitude);
             }
         });
     }

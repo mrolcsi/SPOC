@@ -44,12 +44,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.animation.GlideAnimation;
@@ -76,6 +70,12 @@ import hu.mrolcsi.android.spoc.gallery.common.widgets.LocationInputDialog;
 import hu.mrolcsi.android.spoc.gallery.search.SuggestionAdapter;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Created with IntelliJ IDEA.
@@ -160,24 +160,27 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             mDesiredHeight = display.getHeight();
         }
 
-        ((ImagePagerActivity) getActivity()).getSystemUiHider().addOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-            @Override
-            public void onVisibilityChange(boolean visible) {
-                if (mOverlayDrawable != null) {
-                    if (!visible) {
-                        mOverlayDrawable.setAlpha(0);
-                        final float scale = photoView.getScale();
-                        photoView.invalidate();
-                        photoView.setScale(scale);
-                    } else {
-                        mOverlayDrawable.setAlpha(128);
-                        final float scale = photoView.getScale();
-                        photoView.invalidate();
-                        photoView.setScale(scale);
+        final SystemUiHider systemUiHider = ((ImagePagerActivity) getActivity()).getSystemUiHider();
+        if (systemUiHider != null) {
+            systemUiHider.addOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
+                @Override
+                public void onVisibilityChange(boolean visible) {
+                    if (mOverlayDrawable != null) {
+                        if (!visible) {
+                            mOverlayDrawable.setAlpha(0);
+                            final float scale = photoView.getScale();
+                            photoView.invalidate();
+                            photoView.setScale(scale);
+                        } else {
+                            mOverlayDrawable.setAlpha(128);
+                            final float scale = photoView.getScale();
+                            photoView.invalidate();
+                            photoView.setScale(scale);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     @Nullable

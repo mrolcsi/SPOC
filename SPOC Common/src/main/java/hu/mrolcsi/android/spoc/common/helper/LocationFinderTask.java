@@ -41,20 +41,4 @@ public class LocationFinderTask extends AsyncTask<Float, Void, List<Address>> {
         }
         return addresses;
     }
-
-    @Override
-    protected void onPostExecute(List<Address> addresses) {
-        super.onPostExecute(addresses);
-
-        if (isCancelled()) return;
-
-//        if (addresses == null) {
-//            //TODO: use cached value from db
-//            tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
-//        } else {
-//            final String locality = addresses.get(0).getLocality();
-//            final String countryName = addresses.get(0).getCountryName();
-//            tvLocation.setText(locality + ", " + countryName);
-//        }
-    }
 }

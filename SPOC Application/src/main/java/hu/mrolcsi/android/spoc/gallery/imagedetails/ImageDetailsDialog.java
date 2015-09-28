@@ -18,6 +18,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
+import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
+import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.gallery.R;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -26,10 +30,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-
-import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
-import hu.mrolcsi.android.spoc.common.utils.FileUtils;
-import hu.mrolcsi.android.spoc.gallery.R;
 
 /**
  * Created with IntelliJ IDEA.
@@ -131,7 +131,6 @@ public class ImageDetailsDialog extends DialogFragment {
                     mLocationFinderTask = new LocationFinderTask(getActivity()) {
                         @Override
                         protected void onPreExecute() {
-                            super.onPreExecute();
                             tvLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
                         }
 
@@ -142,9 +141,18 @@ public class ImageDetailsDialog extends DialogFragment {
                             if (isCancelled()) return;
 
                             if (addresses == null) {
+                                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation_noInternet)));
+                            } else if (addresses.isEmpty()) {
                                 tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
                             } else {
-                                final String locality = addresses.get(0).getLocality();
+                                final Address address = addresses.get(0);
+                                String locality = address.getLocality();
+                                if (locality == null) {
+                                    locality = address.getFeatureName();
+                                }
+                                if (locality == null) {
+                                    locality = address.getAdminArea();
+                                }
                                 final String countryName = addresses.get(0).getCountryName();
                                 tvLocation.setText(locality + ", " + countryName);
                             }

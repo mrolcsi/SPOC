@@ -325,9 +325,18 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
                             if (isCancelled()) return;
 
                             if (addresses == null) {
+                                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation_noInternet)));
+                            } else if (addresses.isEmpty()) {
                                 tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
                             } else {
-                                final String locality = addresses.get(0).getLocality();
+                                final Address address = addresses.get(0);
+                                String locality = address.getLocality();
+                                if (locality == null) {
+                                    locality = address.getFeatureName();
+                                }
+                                if (locality == null) {
+                                    locality = address.getAdminArea();
+                                }
                                 final String countryName = addresses.get(0).getCountryName();
                                 final String locationText = locality + ", " + countryName;
 

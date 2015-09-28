@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.location.Address;
 import android.location.Geocoder;
 import android.media.ExifInterface;
 import android.net.ConnectivityManager;
@@ -311,7 +312,14 @@ public class DatabaseBuilderService extends IntentService {
 
             java.util.List<android.location.Address> addresses = geocoder.getFromLocation(latLong[0], latLong[1], 1);
             if (addresses != null && addresses.size() > 0) {
-                String locality = addresses.get(0).getLocality();
+                final Address address = addresses.get(0);
+                String locality = address.getLocality();
+                if (locality == null) {
+                    locality = address.getFeatureName();
+                }
+                if (locality == null) {
+                    locality = address.getAdminArea();
+                }
                 String countryName = addresses.get(0).getCountryName();
 
                 return locality + ", " + countryName;

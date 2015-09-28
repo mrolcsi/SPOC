@@ -31,7 +31,7 @@
     <string name="details_message_flashOn">On</string>
     <string name="details_message_lookingUpLocation"><![CDATA[<i>Looking up location…</i>]]></string>
     <string name="details_message_unknownBrand"><![CDATA[<i>Unknown Brand</i>]]></string>
-    <string name="details_message_unknownLocation"><![CDATA[<i>Unknown (No internet?)</i>]]></string>
+    <string name="details_message_unknownLocation"><![CDATA[<i>Unknown</i>]]></string>
     <string name="details_message_unknownModel"><![CDATA[<i>Unknown Model</i>]]></string>
     <string name="details_title">Details</string>
     <string name="dialog_message_deleteMultiplePictures">Are you sure you want to delete %d pictures?</string>
@@ -106,4 +106,5 @@
     <string name="singleImage_message_dateNotChanged">Date could not be changed.</string>
     <string name="singleImage_editLocation_byMap">Pick location on map</string>
     <string name="singleImage_editLocation_byText">Enter by text</string>
+    <string name="details_message_unknownLocation_noInternet"><![CDATA[<i>Unknown (No internet?)</i>]]></string>
 </resources>
