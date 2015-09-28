@@ -258,11 +258,13 @@ public final class SPOCContentProvider extends ContentProvider {
                 break;
             case LABELS_WITH_CONTACTS:
                 builder.setTables(Views.LABELS_WITH_CONTACTS_NAME);
-                projection = new String[]{
-                        Label.COLUMN_FOREIGN_ID + " AS _id",
-                        Label.COLUMN_NAME,
-                        Label.COLUMN_TYPE
-                };
+                if (projection == null) {
+                    projection = new String[]{
+                            Label.COLUMN_FOREIGN_ID + " AS _id",
+                            Label.COLUMN_NAME,
+                            Label.COLUMN_TYPE
+                    };
+                }
                 break;
             case LABEL_BY_ID:
                 builder.appendWhere("_id = " + uri.getLastPathSegment());

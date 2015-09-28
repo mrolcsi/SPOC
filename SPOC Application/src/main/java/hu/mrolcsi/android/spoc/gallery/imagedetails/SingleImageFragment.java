@@ -593,9 +593,8 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
             @Override
             public void afterTextChanged(Editable editable) {
-                mSuggestionsLoader.reset();
                 mSuggestionsLoader.setSelectionArgs(new String[]{"%" + editable.toString().toUpperCase(Locale.getDefault()) + "%", "%" + editable.toString().toLowerCase(Locale.getDefault()) + "%"});
-                mSuggestionsLoader.startLoading();
+                mSuggestionsLoader.forceLoad();
             }
         };
         final AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {

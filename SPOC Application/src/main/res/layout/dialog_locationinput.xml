@@ -41,19 +41,22 @@
         android:layout_toLeftOf="@+id/cbSaveToExif"
         android:layout_toStartOf="@+id/cbSaveToExif"
         android:background="#64000000"
-        android:paddingTop="@dimen/margin_xsmall">
+        android:paddingTop="@dimen/margin_small">
 
         <EditText
             android:id="@+id/tvCurrentLocation"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@null"
-            android:editable="false"
             android:focusable="false"
             android:focusableInTouchMode="false"
             android:hint="Selected location:"
-            android:padding="@dimen/margin_small"
+            android:inputType="none"
+            android:paddingBottom="@dimen/margin_small"
+            android:paddingLeft="@dimen/margin_small"
+            android:paddingRight="@dimen/margin_small"
             android:text="Nothing selected."
             android:textAppearance="@android:style/TextAppearance.Widget.TextView"/>
     </android.support.design.widget.TextInputLayout>
+
 </RelativeLayout>

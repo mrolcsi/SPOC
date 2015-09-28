@@ -52,7 +52,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"_id", "DISTINCT " + Label.COLUMN_NAME, Label.COLUMN_TYPE});
+        mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"DISTINCT " + Label.COLUMN_FOREIGN_ID + " AS _id", Label.COLUMN_NAME, Label.COLUMN_TYPE});
         mSuggestionArgs.putString(LabelsTableLoader.ARG_SELECTION, "upper(" + Label.COLUMN_NAME + ") LIKE ?" + " OR " + "lower(" + Label.COLUMN_NAME + ") LIKE ?");
         mSuggestionArgs.putStringArray(LabelsTableLoader.ARG_SELECTION_ARGS, new String[]{"%"});
         mSuggestionArgs.putString(LabelsTableLoader.ARG_SORT_ORDER, Label.COLUMN_NAME + " ASC");
@@ -135,9 +135,8 @@ public class SearchResultsFragment extends ThumbnailsFragment {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                mSuggestionsLoader.reset();
                 mSuggestionsLoader.setSelectionArgs(new String[]{newText.toUpperCase(Locale.getDefault()) + "%", newText.toLowerCase(Locale.getDefault()) + "%"});
-                mSuggestionsLoader.startLoading();
+                mSuggestionsLoader.forceLoad();
 
                 return true;
             }
@@ -157,7 +156,6 @@ public class SearchResultsFragment extends ThumbnailsFragment {
                 final String type = cursorWithSuggestion.getString(2);
 
                 mSearchView.clearFocus();
-                mImagesLoader.reset();
                 performIdSearch(id, type);
 
                 mSearchView.setQuery(name, false);
