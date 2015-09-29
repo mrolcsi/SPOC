@@ -108,4 +108,10 @@
     <string name="singleImage_message_dateNotChanged">Date could not be changed.</string>
     <string name="singleImage_editLocation_byText">Enter by text</string>
     <string name="singleImage_editLocation_byMap">Pick location on map</string>
+    <string name="locationInput_saveToFile">Save to image file</string>
+    <string name="locationInput_selectedLocation">Selected location:</string>
+    <string name="locationInput_nothingSelected">Nothing selected.</string>
+    <string name="locationInput_message_searchDoesNotWorkWithoutInternet">Location search does not work without internet.</string>
+    <string name="locationInput_message_noLocationFound">No location found.</string>
+    <string name="locationInput_message_saveToFileFailed">Location could not be saved to file.</string>
 </resources>

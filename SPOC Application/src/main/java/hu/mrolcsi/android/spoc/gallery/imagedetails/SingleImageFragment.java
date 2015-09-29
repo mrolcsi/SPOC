@@ -386,19 +386,6 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 pickerDialog.show(getChildFragmentManager(), DateTimePickerDialog.TAG);
                 return true;
             case R.id.menuEditLocation:
-//                builder = new AlertDialog.Builder(getActivity());
-//                builder.setItems(R.array.editLocations_options, new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        if (which == 0) {
-//                            //show input dialog
-//
-//                        } else if (which == 1) {
-//                            //pick from map
-//                        }
-//                    }
-//                });
-//                builder.setNeutralButton(android.R.string.cancel, null);
-//                builder.show();
                 LocationInputDialog locationInputDialog = new LocationInputDialog();
                 locationInputDialog.setArguments(getArguments());
                 locationInputDialog.show(getChildFragmentManager(), LocationInputDialog.TAG);

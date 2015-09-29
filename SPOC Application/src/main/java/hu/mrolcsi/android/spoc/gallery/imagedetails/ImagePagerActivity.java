@@ -31,6 +31,7 @@ import android.widget.TextView;
 
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
+import hu.mrolcsi.android.spoc.common.utils.LocationUtils;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -330,15 +331,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
                                 tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
                             } else {
                                 final Address address = addresses.get(0);
-                                String locality = address.getLocality();
-                                if (locality == null) {
-                                    locality = address.getFeatureName();
-                                }
-                                if (locality == null) {
-                                    locality = address.getAdminArea();
-                                }
-                                final String countryName = addresses.get(0).getCountryName();
-                                final String locationText = locality + ", " + countryName;
+                                String locationText = LocationUtils.getLocationText(address);
 
                                 //update db
                                 ContentValues values = new ContentValues();

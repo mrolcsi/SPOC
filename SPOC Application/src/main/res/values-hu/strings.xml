@@ -22,7 +22,7 @@
     <string name="details_label_flash">Vaku:</string>
     <string name="details_label_focalLength">Fókusztávolság:</string>
     <string name="details_label_isoValue">ISO érték:</string>
-    <string name="details_label_location">Helyszín:</string>
+    <string name="details_label_location">Helycímke:</string>
     <string name="details_label_resolution">Felbontás:</string>
     <string name="details_label_savedTo">Mentés helye:</string>
     <string name="details_menu_showDetails">Részletek</string>
@@ -107,4 +107,10 @@
     <string name="singleImage_editLocation_byMap">Kiválasztás térképről</string>
     <string name="singleImage_editLocation_byText">Megadás szövegesen</string>
     <string name="details_message_unknownLocation_noInternet"><![CDATA[<i>Ismeretlen (Nincs internet?)</i>]]></string>
+    <string name="locationInput_message_noLocationFound">Nincs találat.</string>
+    <string name="locationInput_message_saveToFileFailed">Helycímke fájlba mentése nem sikerült.</string>
+    <string name="locationInput_message_searchDoesNotWorkWithoutInternet">Helyszín keresés nem működik internet nélkül.</string>
+    <string name="locationInput_nothingSelected">Nincs kiválasztva.</string>
+    <string name="locationInput_saveToFile">Mentés képfájlba</string>
+    <string name="locationInput_selectedLocation">Kiválasztott helycímke:</string>
 </resources>

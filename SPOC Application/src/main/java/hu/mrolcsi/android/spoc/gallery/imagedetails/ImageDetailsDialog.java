@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.common.utils.LocationUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
 
 import java.io.File;
@@ -145,16 +146,7 @@ public class ImageDetailsDialog extends DialogFragment {
                             } else if (addresses.isEmpty()) {
                                 tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
                             } else {
-                                final Address address = addresses.get(0);
-                                String locality = address.getLocality();
-                                if (locality == null) {
-                                    locality = address.getFeatureName();
-                                }
-                                if (locality == null) {
-                                    locality = address.getAdminArea();
-                                }
-                                final String countryName = addresses.get(0).getCountryName();
-                                tvLocation.setText(locality + ", " + countryName);
+                                tvLocation.setText(LocationUtils.getLocationText(addresses.get(0)));
                             }
                         }
                     };

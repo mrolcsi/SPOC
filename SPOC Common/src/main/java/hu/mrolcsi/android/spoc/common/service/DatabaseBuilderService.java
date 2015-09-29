@@ -26,6 +26,7 @@ import android.util.Log;
 import hu.mrolcsi.android.spoc.common.R;
 import hu.mrolcsi.android.spoc.common.helper.ListHelper;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
+import hu.mrolcsi.android.spoc.common.utils.LocationUtils;
 import hu.mrolcsi.android.spoc.database.DatabaseHelper;
 import hu.mrolcsi.android.spoc.database.model.Contact;
 import hu.mrolcsi.android.spoc.database.model.Image;
@@ -313,16 +314,7 @@ public class DatabaseBuilderService extends IntentService {
             java.util.List<android.location.Address> addresses = geocoder.getFromLocation(latLong[0], latLong[1], 1);
             if (addresses != null && addresses.size() > 0) {
                 final Address address = addresses.get(0);
-                String locality = address.getLocality();
-                if (locality == null) {
-                    locality = address.getFeatureName();
-                }
-                if (locality == null) {
-                    locality = address.getAdminArea();
-                }
-                String countryName = addresses.get(0).getCountryName();
-
-                return locality + ", " + countryName;
+                return LocationUtils.getLocationText(address);
             }
         } catch (IOException e) {
             Log.w(getClass().getSimpleName(), e.toString());

@@ -29,4 +29,5 @@ public abstract class GeneralUtils {
             imm.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
         }
     }
+
 }

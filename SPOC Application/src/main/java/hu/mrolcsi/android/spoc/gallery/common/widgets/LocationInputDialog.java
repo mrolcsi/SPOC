@@ -2,11 +2,15 @@ package hu.mrolcsi.android.spoc.gallery.common.widgets;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.location.Address;
 import android.location.Geocoder;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -39,9 +43,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
+import hu.mrolcsi.android.spoc.common.utils.GeneralUtils;
+import hu.mrolcsi.android.spoc.common.utils.LocationUtils;
+import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.model.LabelType;
+import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.imagedetails.SingleImageFragment;
 import hu.mrolcsi.android.spoc.gallery.search.SuggestionAdapter;
 
 import java.io.IOException;
@@ -73,6 +82,8 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
     private GoogleMap mMap;
 
     private List<String> mLabelsCache = new ArrayList<>();
+    private ProgressDialog mProgressDialog;
+    private Address mSelectedAddress;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -140,6 +151,7 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 etSearch.clearFocus();
+                GeneralUtils.hideSoftKeyboard(getActivity(), etSearch);
                 searchLocation(mLabelsCache.get(i));
             }
         });
@@ -152,6 +164,11 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
                 return false;
             }
         });
+
+        mProgressDialog = new ProgressDialog(getActivity());
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mProgressDialog.setMessage(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
     }
 
     //region Lifecycle
@@ -177,6 +194,8 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
     public void onDestroy() {
         super.onDestroy();
         mMapView.onDestroy();
+
+        mProgressDialog.dismiss();
     }
 
     @Override
@@ -188,6 +207,11 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
 
     private void searchLocation(String locationText) {
         new AsyncTask<String, Void, List<Address>>() {
+
+            @Override
+            protected void onPreExecute() {
+                mProgressDialog.show();
+            }
 
             @Override
             protected List<Address> doInBackground(String... strings) {
@@ -203,10 +227,11 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
 
             @Override
             protected void onPostExecute(final List<Address> addresses) {
+                mProgressDialog.hide();
                 if (addresses == null) {
-                    Toast.makeText(getActivity(), "Location search does not work without internet.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), R.string.locationInput_message_searchDoesNotWorkWithoutInternet, Toast.LENGTH_SHORT).show();
                 } else if (addresses.isEmpty()) {
-                    Toast.makeText(getActivity(), "Nothing found.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), R.string.locationInput_message_noLocationFound, Toast.LENGTH_SHORT).show();
                 } else {
                     if (addresses.size() == 1) {
                         //jump to latLong
@@ -229,19 +254,71 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
     }
 
     private void moveMap(Address address) {
-        final CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(address.getLatitude(), address.getLongitude()), 13);
+        final LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+        final CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 13);
+        mMap.clear();
         mMap.animateCamera(cameraUpdate);
+        mMap.addMarker(new MarkerOptions().position(latLng));
+
+        mSelectedAddress = address;
+
+        tvCurrentLocation.setText(LocationUtils.getLocationText(address));
     }
 
     private void save() {
-        Toast.makeText(getActivity(), "Nothing saved.", Toast.LENGTH_SHORT).show();
+        ContentValues values = new ContentValues();
+        values.put(Image.COLUMN_LOCATION, LocationUtils.getLocationText(mSelectedAddress));
+
+        final int imageId = getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID);
+        Uri imageUri = Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageId));
+
+        getActivity().getContentResolver().update(imageUri, values, null, null);
+
+        if (cbSaveToExif.isChecked()) {
+            try {
+                final String path = getArguments().getString(SingleImageFragment.ARG_IMAGE_PATH);
+                ExifInterface exif = new ExifInterface(path);
+
+                exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mSelectedAddress.getLatitude()));
+                exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mSelectedAddress.getLatitude()));
+                exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mSelectedAddress.getLongitude()));
+                exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mSelectedAddress.getLongitude()));
+
+                Log.d(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mSelectedAddress.getLatitude()));
+                Log.d(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mSelectedAddress.getLatitude()));
+                Log.d(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mSelectedAddress.getLongitude()));
+                Log.d(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mSelectedAddress.getLongitude()));
+
+                exif.saveAttributes();
+            } catch (IOException e) {
+                Log.w(getClass().getSimpleName(), e);
+                Toast.makeText(getActivity(), R.string.locationInput_message_saveToFileFailed, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
     public void onMapReady(final GoogleMap map) {
         mMap = map;
 
-        //TODO: getArguments();
+        final String path = getArguments().getString(SingleImageFragment.ARG_IMAGE_PATH);
+        try {
+            ExifInterface exif = new ExifInterface(path);
+            float[] latLng = new float[2];
+            exif.getLatLong(latLng);
+
+            if (latLng[0] != 0 && latLng[1] != 0) {
+                new FindSelectedLocation(getActivity()) {
+                    @Override
+                    protected void onPostExecute(List<Address> addresses) {
+                        super.onPostExecute(addresses);
+                        moveMap(addresses.get(0));
+                    }
+                }.execute(latLng[0], latLng[1]);
+            }
+        } catch (IOException e) {
+            Log.w(getClass().getSimpleName(), e);
+        }
 
         map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -249,31 +326,7 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
                 map.clear();
                 map.addMarker(new MarkerOptions().position(latLng));
 
-                new LocationFinderTask(getActivity()) {
-                    @Override
-                    protected void onPreExecute() {
-                        tvCurrentLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
-                    }
-
-                    @Override
-                    protected void onPostExecute(List<Address> addresses) {
-                        if (addresses == null) {
-                            tvCurrentLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation_noInternet)));
-                        } else if (addresses.isEmpty()) {
-                            tvCurrentLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
-                        } else {
-                            final Address address = addresses.get(0);
-                            String locality = address.getLocality();
-                            if (locality == null) {
-                                locality = address.getFeatureName();
-                            }
-                            if (locality == null) {
-                                locality = address.getAdminArea();
-                            }
-                            tvCurrentLocation.setText(locality + ", " + address.getCountryName());
-                        }
-                    }
-                }.execute((float) latLng.latitude, (float) latLng.longitude);
+                new FindSelectedLocation(getActivity()).execute((float) latLng.latitude, (float) latLng.longitude);
             }
         });
 
@@ -315,17 +368,36 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             final View view = super.getView(position, convertView, parent);
-
-            final Address address = getItem(position);
-            String locality = address.getLocality();
-            if (locality == null) {
-                locality = address.getFeatureName();
-            }
-            if (locality == null) {
-                locality = address.getAdminArea();
-            }
-            ((TextView) view).setText(locality + ", " + address.getCountryName());
+            ((TextView) view).setText(LocationUtils.getLocationText(getItem(position)));
             return view;
+        }
+    }
+
+    class FindSelectedLocation extends LocationFinderTask {
+
+        public FindSelectedLocation(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog.show();
+
+            tvCurrentLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
+        }
+
+        @Override
+        protected void onPostExecute(List<Address> addresses) {
+            if (addresses == null) {
+                tvCurrentLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation_noInternet)));
+            } else if (addresses.isEmpty()) {
+                tvCurrentLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
+            } else {
+                mSelectedAddress = addresses.get(0);
+                tvCurrentLocation.setText(LocationUtils.getLocationText(mSelectedAddress));
+            }
+
+            mProgressDialog.hide();
         }
     }
 }

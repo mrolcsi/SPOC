@@ -5,7 +5,6 @@
 
     <com.google.android.gms.maps.MapView
         android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center" />
@@ -22,13 +21,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/map"
+        android:layout_alignEnd="@+id/map"
         android:layout_alignRight="@+id/map"
-        android:layout_gravity="right|end|bottom"
+        android:layout_gravity="end|bottom"
         android:layout_margin="@dimen/abc_action_bar_default_padding_material"
-        android:background="#64000000"
+        android:background="@color/black_overlay"
         android:paddingEnd="@dimen/margin_small"
         android:paddingRight="@dimen/margin_small"
-        android:text="Save to image file"
+        android:text="@string/locationInput_saveToFile"
         android:theme="@style/Theme.SPOC"/>
 
     <android.support.design.widget.TextInputLayout
@@ -36,11 +36,12 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/map"
         android:layout_alignLeft="@+id/map"
-        android:layout_gravity="start|left|bottom"
+        android:layout_alignStart="@+id/map"
+        android:layout_gravity="start|bottom"
         android:layout_margin="@dimen/abc_action_bar_default_padding_material"
         android:layout_toLeftOf="@+id/cbSaveToExif"
         android:layout_toStartOf="@+id/cbSaveToExif"
-        android:background="#64000000"
+        android:background="@color/black_overlay"
         android:paddingTop="@dimen/margin_small">
 
         <EditText
@@ -50,12 +51,12 @@
             android:background="@null"
             android:focusable="false"
             android:focusableInTouchMode="false"
-            android:hint="Selected location:"
+            android:hint="@string/locationInput_selectedLocation"
             android:inputType="none"
             android:paddingBottom="@dimen/margin_small"
             android:paddingLeft="@dimen/margin_small"
             android:paddingRight="@dimen/margin_small"
-            android:text="Nothing selected."
+            android:text="@string/locationInput_nothingSelected"
             android:textAppearance="@android:style/TextAppearance.Widget.TextView"/>
     </android.support.design.widget.TextInputLayout>
 
