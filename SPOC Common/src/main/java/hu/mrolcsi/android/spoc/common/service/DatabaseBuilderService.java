@@ -15,7 +15,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
@@ -507,15 +506,19 @@ public class DatabaseBuilderService extends IntentService {
 
     private void generateLabelsFromFilename(Cursor cursorWithImage) {
         final String filename = cursorWithImage.getString(3);
-        final String externalStorage = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File file = new File(filename);
 
-        final String[] filenameSplit = filename.replace(externalStorage, "").split(File.separator);
         final long imageId = cursorWithImage.getLong(0);
+        createLabel(imageId, file.getParentFile().getName(), LabelType.FOLDER);
 
-        //skip first (empty) and last (filename)
-        for (int i = 1; i < filenameSplit.length - 1; i++) {
-            createLabel(imageId, filenameSplit[i], LabelType.FOLDER);
-        }
+//        final String externalStorage = Environment.getExternalStorageDirectory().getAbsolutePath();
+//
+//        final String[] filenameSplit = filename.replace(externalStorage, "").split(File.separator);
+//
+//        //skip first (empty) and last (filename)
+//        for (int i = 1; i < filenameSplit.length - 1; i++) {
+//            createLabel(imageId, filenameSplit[i], LabelType.FOLDER);
+//        }
     }
 
     private void generateLabelsFromPeople(Cursor cursorWithImage) {

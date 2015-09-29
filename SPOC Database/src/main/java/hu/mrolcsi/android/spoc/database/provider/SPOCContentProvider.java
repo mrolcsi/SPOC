@@ -191,7 +191,7 @@ public final class SPOCContentProvider extends ContentProvider {
             case IMAGES_BY_LABEL_COUNT:
                 builder.setTables(Views.IMAGES_WITH_LABELS_NAME);
                 if (TextUtils.isEmpty(sortOrder)) {
-                    sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
+                    sortOrder = "max(" + Image.COLUMN_DATE_TAKEN + ") DESC";
                 }
 
                 cursor = builder.query(db, projection, selection, selectionArgs, Label.COLUMN_NAME, null, sortOrder);
@@ -225,7 +225,7 @@ public final class SPOCContentProvider extends ContentProvider {
                     projection = new String[]{"count(_id)", Label.COLUMN_NAME, Label2Image.COLUMN_LABEL_ID};
                 }
                 if (TextUtils.isEmpty(sortOrder)) {
-                    sortOrder = Image.COLUMN_DATE_TAKEN + " DESC";
+                    sortOrder = "max(" + Image.COLUMN_DATE_TAKEN + ") DESC";
                 }
 
                 cursor = builder.query(db, projection, selection, selectionArgs, Label.COLUMN_NAME, null, sortOrder);

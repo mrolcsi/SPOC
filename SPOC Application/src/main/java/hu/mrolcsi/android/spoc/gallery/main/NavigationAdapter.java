@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.model.LabelType;
 import hu.mrolcsi.android.spoc.database.model.Views;
@@ -42,6 +43,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     private static final int DATE_LOADER_ID = 40;
     private static final int PLACES_LOADER_ID = 41;
     private static final int PEOPLE_LOADER_ID = 42;
+    private static final int FOLDERS_LOADER_ID = 43;
 
     private static final int HOME_SCREEN_POSITION = 0;
     private static final int DATES_POSITION = 1;
@@ -73,6 +75,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
         loaderManager.initLoader(DATE_LOADER_ID, null, this);
         loaderManager.initLoader(PLACES_LOADER_ID, null, this);
         loaderManager.initLoader(PEOPLE_LOADER_ID, null, this);
+        loaderManager.initLoader(FOLDERS_LOADER_ID, null, this);
     }
 
     @SuppressWarnings("deprecation")
@@ -284,6 +287,9 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 case PEOPLE_POSITION:
                     holder.imgIcon.setImageDrawable(childItem.contactPhoto);
                     break;
+                case FOLDERS_POSITION:
+                    holder.imgIcon.setImageResource(R.drawable.open_folder);
+                    break;
                 default:
                     holder.imgIcon.setImageDrawable(null);
                     break;
@@ -313,28 +319,33 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
         if (id == DATE_LOADER_ID) {
             loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Views.IMAGES_BY_DAY_DAY_TAKEN).appendPath("count").build());
             return loader;
-        } else if (id == PLACES_LOADER_ID) {
-            /*
-            SELECT count(image_id), label_id, name
-            FROM images_with_labels
-            WHERE type = 'LOCATION_LOCALITY'
-            GROUP BY label_id
-            ORDER BY date_taken DESC
-             */
-            // content://authority/images/location/count
+        } else {
             loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Label.TABLE_NAME).appendPath("count").build());
             loader.setProjection(new String[]{"count(_id)", Label.COLUMN_NAME, Label2Image.COLUMN_LABEL_ID});
             loader.setSelection(Label.COLUMN_TYPE + " = ?");
-            loader.setSelectionArgs(new String[]{LabelType.LOCATION_LOCALITY.name()});
 
-            return loader;
-        } else if (id == PEOPLE_LOADER_ID) {
-            loader.setUri(SPOCContentProvider.IMAGES_URI.buildUpon().appendPath(Label.TABLE_NAME).appendPath("count").build());
-            loader.setProjection(new String[]{"count(_id)", Label.COLUMN_NAME, Label2Image.COLUMN_LABEL_ID});
-            loader.setSelection(Label.COLUMN_TYPE + " = ?");
-            loader.setSelectionArgs(new String[]{LabelType.CONTACT.name()});
+            if (id == PLACES_LOADER_ID) {
+                /*
+                SELECT count(image_id), label_id, name
+                FROM images_with_labels
+                WHERE type = 'LOCATION_LOCALITY'
+                GROUP BY label_id
+                ORDER BY date_taken DESC
+                 */
+                // content://authority/images/location/count
 
-            return loader;
+                loader.setSelectionArgs(new String[]{LabelType.LOCATION_LOCALITY.name()});
+
+                return loader;
+            } else if (id == PEOPLE_LOADER_ID) {
+                loader.setSelectionArgs(new String[]{LabelType.CONTACT.name()});
+
+                return loader;
+            } else if (id == FOLDERS_LOADER_ID) {
+                loader.setSelectionArgs(new String[]{LabelType.FOLDER.name()});
+
+                return loader;
+            }
         }
 
         return null;
@@ -400,6 +411,22 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 }
             }
             mChildren[PEOPLE_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_people_other));
+        }
+
+        if (loader.getId() == FOLDERS_LOADER_ID) {
+            int size = Math.min(3, data.getCount());
+
+            mChildren[FOLDERS_POSITION] = new NavigationItem[size + 1];
+
+            for (int i = 0; i < size; i++) {
+                if (data.moveToPosition(i)) {
+                    mChildren[FOLDERS_POSITION][i] = new NavigationItem();
+                    mChildren[FOLDERS_POSITION][i].count = data.getInt(0);
+                    mChildren[FOLDERS_POSITION][i].title = data.getString(1);
+                    mChildren[FOLDERS_POSITION][i].id = data.getInt(2);
+                }
+            }
+            mChildren[FOLDERS_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_folder_other));
         }
 
         notifyDataSetChanged();

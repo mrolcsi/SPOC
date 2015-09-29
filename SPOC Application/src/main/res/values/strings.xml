@@ -114,4 +114,5 @@
     <string name="locationInput_message_searchDoesNotWorkWithoutInternet">Location search does not work without internet.</string>
     <string name="locationInput_message_noLocationFound">No location found.</string>
     <string name="locationInput_message_saveToFileFailed">Location could not be saved to file.</string>
+    <string name="navigation_folder_other">Every folder...</string>
 </resources>
