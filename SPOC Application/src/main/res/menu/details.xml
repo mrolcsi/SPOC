@@ -24,13 +24,13 @@
 
     <item
         android:id="@+id/menuEditDate"
-        android:title="Edit date taken"
+        android:title="@string/details_action_editDateTaken"
         app:showAsAction="never"
         />
 
     <item
         android:id="@+id/menuEditLocation"
-        android:title="Edit location"
+        android:title="@string/details_action_editLocation"
         app:showAsAction="never"
         />
 

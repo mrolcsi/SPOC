@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name" translatable="false">SPOC</string>
     <string name="cab_deselectAll">Deselect All</string>
     <string name="cab_itemsSelectedFormat">%1$d selected</string>
     <string name="cab_selectAll">Select All</string>
@@ -7,6 +6,8 @@
     <string name="close">Close</string>
     <string name="contentDescription_thumbnail">Thumbnail</string>
     <string name="details_action_delete">Delete</string>
+    <string name="details_action_editDateTaken">Edit date taken</string>
+    <string name="details_action_editLocation">Edit location</string>
     <string name="details_action_rotate">Rotate</string>
     <string name="details_action_share">Share…</string>
     <string name="details_label_aperture">Aperture:</string>
@@ -41,6 +42,12 @@
     <string name="dialog_title_somethingWentWrong">Something went wrong :/</string>
     <string name="error_noPictures">No pictures found.</string>
     <string name="error_noResults">No pictures found.</string>
+    <string name="locationInput_message_noLocationFound">No location found.</string>
+    <string name="locationInput_message_saveToFileFailed">Location could not be saved to file.</string>
+    <string name="locationInput_message_searchDoesNotWorkWithoutInternet">Location search does not work without internet.</string>
+    <string name="locationInput_nothingSelected">Nothing selected.</string>
+    <string name="locationInput_saveToFile">Save to image file</string>
+    <string name="locationInput_selectedLocation">Selected location:</string>
     <string name="message_deletingPictures">Deleting…</string>
     <string name="message_loading">Loading…</string>
     <string name="message_multiplePicturesDeleted">%d pictures deleted.</string>
@@ -54,9 +61,11 @@
     <string name="navigation_date_older">Older…</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_folder_other">Every folder…</string>
     <string name="navigation_folders">Folders</string>
     <string name="navigation_home">Home</string>
     <string name="navigation_people">People</string>
+    <string name="navigation_people_other">Everyone…</string>
     <string name="navigation_places">Places</string>
     <string name="navigation_places_other">All places…</string>
     <string name="navigation_settings">Settings</string>
@@ -68,6 +77,7 @@
     <string name="preferences_webPage_summary" translatable="false">http://github.com/mrolcsi/SPOC</string>
     <string name="preferences_webPage_title">Visit webpage</string>
     <string name="refresh_title">Refresh</string>
+    <string name="save">Save</string>
     <string name="search_hint">Search…</string>
     <string name="search_message_helpText"><![CDATA[Search in filenames,<br>directories, like <i>Pictures</i> or <i>Download</i>,<br>dates, like <i>2015</i> or <i>august</i>,<br>locations, like <i>Paris</i> or <i>France</i>.]]></string>
     <string name="search_title">Search</string>
@@ -91,28 +101,19 @@
     <string name="settings_whitelist_help"><![CDATA[If by any chance you don\'t see some of your images in the Gallery, add the directories containing those images to the <b>Whitelist</b>.]]></string>
     <string name="settings_whitelist_summary">Select directories to include in Gallery</string>
     <string name="settings_whitelist_title">Whitelist</string>
+    <string name="singleImage_confirm_untagFace">Are you sure you want to untag this face?</string>
+    <string name="singleImage_editLocation_byMap">Pick location on map</string>
+    <string name="singleImage_editLocation_byText">Enter by text</string>
     <string name="singleImage_faceTag_hint">Who is this?</string>
+    <string name="singleImage_message_dateChanged">Date changed.</string>
+    <string name="singleImage_message_dateNotChanged">Date could not be changed.</string>
     <string name="singleImage_message_faceNotTagged">Face could not be tagged.</string>
+    <string name="singleImage_message_faceNotUntagged">Face could not be untagged.</string>
     <string name="singleImage_message_faceTagged">Face tagged.</string>
+    <string name="singleImage_message_faceUntagged">Face untagged.</string>
+    <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
     <string name="splash_button_continueInBackground">Continue in background</string>
     <string name="splash_contentDescription_logo">SPOC Logo</string>
     <string name="title_activity_gallery">Gallery</string>
     <string name="yes">Yes</string>
-    <string name="singleImage_confirm_untagFace">Are you sure you want to untag this face?</string>
-    <string name="singleImage_message_faceUntagged">Face untagged.</string>
-    <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
-    <string name="singleImage_message_faceNotUntagged">Face could not be untagged.</string>
-    <string name="navigation_people_other">Everyone…</string>
-    <string name="save">Save</string>
-    <string name="singleImage_message_dateChanged">Date changed.</string>
-    <string name="singleImage_message_dateNotChanged">Date could not be changed.</string>
-    <string name="singleImage_editLocation_byText">Enter by text</string>
-    <string name="singleImage_editLocation_byMap">Pick location on map</string>
-    <string name="locationInput_saveToFile">Save to image file</string>
-    <string name="locationInput_selectedLocation">Selected location:</string>
-    <string name="locationInput_nothingSelected">Nothing selected.</string>
-    <string name="locationInput_message_searchDoesNotWorkWithoutInternet">Location search does not work without internet.</string>
-    <string name="locationInput_message_noLocationFound">No location found.</string>
-    <string name="locationInput_message_saveToFileFailed">Location could not be saved to file.</string>
-    <string name="navigation_folder_other">Every folder...</string>
 </resources>

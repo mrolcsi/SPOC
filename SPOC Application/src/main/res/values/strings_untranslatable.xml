@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="settings_key_showCameraButton" translatable="false">prefShowCameraButton</string>
-    <string name="settings_key_about" translatable="false">prefAbout</string>
+    <string name="app_name"
+            translatable="false">SPOC</string>
     <string name="settings_about_visitWebPage" translatable="false">prefWebPage</string>
-    <string name="settings_key_whiteList" translatable="false">prefWhitelist</string>
+    <string name="settings_key_about"
+            translatable="false">prefAbout</string>
     <string name="settings_key_blackList" translatable="false">prefBlacklist</string>
+    <string name="settings_key_showCameraButton"
+            translatable="false">prefShowCameraButton</string>
+    <string name="settings_key_whiteList"
+            translatable="false">prefWhitelist</string>
 </resources>
