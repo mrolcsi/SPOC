@@ -17,7 +17,7 @@ import java.util.Date;
 @DatabaseTable(tableName = "images")
 public class Image {
     public static final String TABLE_NAME = "images";
-    public static final String COLUMN_FOREIGN_ID = "images_id";
+    public static final String COLUMN_FOREIGN_ID = "image_id";
     public static final String COLUMN_FILENAME = "filename";
     public static final String COLUMN_MEDIASTORE_ID = "MediaStore_id";
     public static final String COLUMN_DATE_TAKEN = "date_taken";

@@ -116,4 +116,9 @@
     <string name="splash_contentDescription_logo">SPOC Logo</string>
     <string name="title_activity_gallery">Gallery</string>
     <string name="yes">Yes</string>
+    <string name="details_action_editTags">Edit tags</string>
+    <string name="editLabels_enterNewTag">Enter new tag…</string>
+    <string name="editLabels_confirm_removeTag">Are you sure you want to remove this tag?</string>
+    <string name="editLabels_message_tagRemoved">Tag removed.</string>
+    <string name="editLabels_message_tagNotRemoved">Tag could not be removed.</string>
 </resources>

@@ -135,7 +135,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                mSuggestionsLoader.setSelectionArgs(new String[]{newText.toUpperCase(Locale.getDefault()) + "%", newText.toLowerCase(Locale.getDefault()) + "%"});
+                mSuggestionsLoader.setSelectionArgs(new String[]{newText.trim().toUpperCase(Locale.getDefault()) + "%", newText.trim().toLowerCase(Locale.getDefault()) + "%"});
                 mSuggestionsLoader.forceLoad();
 
                 return true;

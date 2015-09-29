@@ -116,4 +116,9 @@
     <string name="splash_contentDescription_logo">SPOC Embléma</string>
     <string name="title_activity_gallery">Galéria</string>
     <string name="yes">Igen</string>
+    <string name="details_action_editTags">Címkék szerkesztése</string>
+    <string name="editLabels_confirm_removeTag">Biztosan eltávolítod ezt a címkét?</string>
+    <string name="editLabels_enterNewTag">Új címke hozzáadása…</string>
+    <string name="editLabels_message_tagNotRemoved">Címke nem lett eltávolítva.</string>
+    <string name="editLabels_message_tagRemoved">Címke eltávolítva.</string>
 </resources>

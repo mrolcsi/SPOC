@@ -40,7 +40,7 @@
 
             <TextView
                 android:id="@+id/tvDateTaken"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignBottom="@+id/imgDate"
                 android:layout_alignParentLeft="false"
@@ -72,7 +72,7 @@
 
             <TextView
                 android:id="@+id/tvLocation"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignBottom="@+id/imgLocation"
                 android:layout_alignParentLeft="false"
@@ -104,17 +104,19 @@
 
             <TextView
                 android:id="@+id/tvLabels"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignBottom="@+id/imgLabels"
                 android:layout_alignTop="@+id/imgLabels"
                 android:layout_gravity="center_vertical"
                 android:layout_toEndOf="@+id/imgLabels"
                 android:layout_toRightOf="@+id/imgLabels"
+                android:ellipsize="marquee"
                 android:shadowColor="@android:color/black"
                 android:shadowDx="1"
                 android:shadowDy="1"
                 android:shadowRadius="1"
+                android:singleLine="true"
                 android:text=""/>
         </TableRow>
     </TableLayout>

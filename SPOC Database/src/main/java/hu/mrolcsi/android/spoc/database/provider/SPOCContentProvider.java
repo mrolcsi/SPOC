@@ -273,7 +273,7 @@ public final class SPOCContentProvider extends ContentProvider {
                 builder.appendWhere(Label.COLUMN_NAME + " = '" + uri.getLastPathSegment() + "'");
                 break;
             case LABELS_BY_IMAGE_ID:
-                builder.setTables(Label.TABLE_NAME + "INNER JOIN " + Label2Image.TABLE_NAME + " ON " + Label.TABLE_NAME + "._id" + " = " + Label2Image.COLUMN_LABEL_ID);
+                builder.setTables(Label.TABLE_NAME + " INNER JOIN " + Label2Image.TABLE_NAME + " ON " + Label.TABLE_NAME + "._id" + " = " + Label2Image.COLUMN_LABEL_ID);
                 if (projection == null) {
                     projection = new String[]{Label.TABLE_NAME + ".*"};
                 }
@@ -369,7 +369,7 @@ public final class SPOCContentProvider extends ContentProvider {
                 id = db.insert(Image.TABLE_NAME, null, contentValues);
                 return getUriForId(id, uri);
             case LABELS_LIST:
-                id = db.insert(Label.TABLE_NAME, null, contentValues);
+                id = db.insertWithOnConflict(Label.TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
                 return getUriForId(id, uri);
             case LABELS_2_IMAGES:
                 id = db.insertWithOnConflict(Label2Image.TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
@@ -420,6 +420,12 @@ public final class SPOCContentProvider extends ContentProvider {
                 where = "_id" + " = " + idStr;
                 if (!TextUtils.isEmpty(selection)) where += " AND " + selection;
                 delCount = db.delete(Contact.TABLE_NAME, where, selectionArgs);
+                break;
+            case LABELS_2_IMAGES:
+                delCount = db.delete(Label2Image.TABLE_NAME, selection, selectionArgs);
+                break;
+            case CONTACTS_2_IMAGES:
+                delCount = db.delete(Contact2Image.TABLE_NAME, selection, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
@@ -498,6 +504,7 @@ public final class SPOCContentProvider extends ContentProvider {
             return itemUri;
         }
         // s.th. went wrong:
+        getContext().getContentResolver().notifyChange(uri, null);
         return uri;
     }
 

@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery.common.widgets;
+package hu.mrolcsi.android.spoc.gallery.imagedetails.editor;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -18,11 +18,11 @@ import android.widget.DatePicker;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import java.util.Calendar;
-
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
+
+import java.util.Calendar;
 
 /**
  * Created with IntelliJ IDEA.

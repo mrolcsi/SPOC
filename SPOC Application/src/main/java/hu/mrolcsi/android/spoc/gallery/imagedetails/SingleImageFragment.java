@@ -65,8 +65,9 @@ import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.ContactPhotoLoader;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 import hu.mrolcsi.android.spoc.gallery.common.utils.SystemUiHider;
-import hu.mrolcsi.android.spoc.gallery.common.widgets.DateTimePickerDialog;
-import hu.mrolcsi.android.spoc.gallery.common.widgets.LocationInputDialog;
+import hu.mrolcsi.android.spoc.gallery.imagedetails.editor.DateTimePickerDialog;
+import hu.mrolcsi.android.spoc.gallery.imagedetails.editor.EditLabelsDialog;
+import hu.mrolcsi.android.spoc.gallery.imagedetails.editor.LocationInputDialog;
 import hu.mrolcsi.android.spoc.gallery.search.SuggestionAdapter;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
@@ -390,6 +391,11 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                 locationInputDialog.setArguments(getArguments());
                 locationInputDialog.show(getChildFragmentManager(), LocationInputDialog.TAG);
                 return true;
+            case R.id.menuEditTags:
+                EditLabelsDialog editLabelsDialog = new EditLabelsDialog();
+                editLabelsDialog.setArguments(getArguments());
+                editLabelsDialog.show(getChildFragmentManager(), EditLabelsDialog.TAG);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -400,7 +406,9 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         super.onDestroyView();
 
         Glide.clear(photoView);
-        Glide.clear(mBitmapTarget);
+        if (mBitmapTarget != null) {
+            Glide.clear(mBitmapTarget);
+        }
         Glide.get(getActivity()).clearMemory();
 
         if (mDetector != null) {
@@ -580,7 +588,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
             @Override
             public void afterTextChanged(Editable editable) {
-                mSuggestionsLoader.setSelectionArgs(new String[]{"%" + editable.toString().toUpperCase(Locale.getDefault()) + "%", "%" + editable.toString().toLowerCase(Locale.getDefault()) + "%"});
+                mSuggestionsLoader.setSelectionArgs(new String[]{"%" + editable.toString().trim().toUpperCase(Locale.getDefault()) + "%", "%" + editable.toString().trim().toLowerCase(Locale.getDefault()) + "%"});
                 mSuggestionsLoader.forceLoad();
             }
         };
@@ -599,13 +607,13 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             @Override
             public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
                 if (actionId == EditorInfo.IME_ACTION_DONE && mSelectedFace != null) {
-                    mSelectedFace.setContactName(textView.getText().toString());
+                    mSelectedFace.setContactName(textView.getText().toString().trim());
 
                     //validate
                     if (mSelectedFace.getContactId() == 0) {
                         //no contact was selected, save new contact? only locally
                         ContentValues values = new ContentValues();
-                        values.put(Contact.COLUMN_NAME, textView.getText().toString());
+                        values.put(Contact.COLUMN_NAME, textView.getText().toString().trim());
                         values.put(Contact.COLUMN_TYPE, LabelType.CONTACT.name());
 
                         final Uri insertedUri = getActivity().getContentResolver().insert(SPOCContentProvider.CONTACTS_URI, values);

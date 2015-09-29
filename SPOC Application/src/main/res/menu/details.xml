@@ -2,37 +2,47 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
+
     <item
-        android:id="@+id/menuDelete"
-        android:icon="@drawable/delete"
-        android:title="@string/details_action_delete"
-        app:showAsAction="ifRoom" />
+        android:id="@+id/menuEditDate"
+        android:icon="@drawable/overtime"
+        android:title="@string/details_action_editDateTaken"
+        app:showAsAction="always"
+        />
+
+    <item
+        android:id="@+id/menuEditLocation"
+        android:icon="@drawable/map_editing"
+        android:title="@string/details_action_editLocation"
+        app:showAsAction="always"
+        />
+
+    <item
+        android:id="@+id/menuEditTags"
+        android:icon="@drawable/label"
+        android:title="@string/details_action_editTags"
+        app:showAsAction="always"
+        />
 
     <item
         android:id="@+id/menuRotate"
         android:icon="@drawable/rotate"
         android:title="@string/details_action_rotate"
         android:visible="false"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom"/>
 
     <item
         android:id="@+id/menuShare"
         android:icon="@drawable/share"
         android:title="@string/details_action_share"
         app:actionProviderClass="android.support.v7.widget.ShareActionProvider"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom"/>
 
     <item
-        android:id="@+id/menuEditDate"
-        android:title="@string/details_action_editDateTaken"
-        app:showAsAction="never"
-        />
-
-    <item
-        android:id="@+id/menuEditLocation"
-        android:title="@string/details_action_editLocation"
-        app:showAsAction="never"
-        />
+        android:id="@+id/menuDelete"
+        android:icon="@drawable/delete"
+        android:title="@string/details_action_delete"
+        app:showAsAction="ifRoom"/>
 
     <item
         android:id="@+id/menuDetails"

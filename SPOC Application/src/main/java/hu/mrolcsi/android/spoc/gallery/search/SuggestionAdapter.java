@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import hu.mrolcsi.android.spoc.database.model.LabelType;
 import hu.mrolcsi.android.spoc.gallery.R;
 
@@ -56,7 +57,7 @@ public class SuggestionAdapter extends CursorAdapter {
                 ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.folder, 0, 0, 0);
                 break;
             case CUSTOM:
-                ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.tag, 0, 0, 0);
+                ((TextView) view).setCompoundDrawablesWithIntrinsicBounds(R.drawable.label_white, 0, 0, 0);
                 break;
             default:
                 break;

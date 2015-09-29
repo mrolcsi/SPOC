@@ -1,4 +1,4 @@
-package hu.mrolcsi.android.spoc.gallery.common.widgets;
+package hu.mrolcsi.android.spoc.gallery.imagedetails.editor;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
@@ -79,8 +79,8 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
     private Bundle mSuggestionArgs = new Bundle();
     private SuggestionAdapter mSuggestionsAdapter;
     private CursorLoader mSuggestionsLoader;
-    private GoogleMap mMap;
 
+    private GoogleMap mMap;
     private List<String> mLabelsCache = new ArrayList<>();
     private ProgressDialog mProgressDialog;
     private Address mSelectedAddress;
@@ -218,7 +218,7 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
                 Geocoder geocoder = new Geocoder(getActivity());
                 List<Address> addresses = null;
                 try {
-                    addresses = geocoder.getFromLocationName(strings[0], 5);
+                    addresses = geocoder.getFromLocationName(strings[0].trim(), 5);
                 } catch (IOException e) {
                     Log.w(getClass().getName(), "Location lookup failed. Cause:\n" + e.toString());
                 }

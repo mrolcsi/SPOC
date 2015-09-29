@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
@@ -31,8 +32,11 @@ import android.widget.TextView;
 
 import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
 import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
+import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
 import hu.mrolcsi.android.spoc.common.utils.LocationUtils;
 import hu.mrolcsi.android.spoc.database.model.Image;
+import hu.mrolcsi.android.spoc.database.model.Label;
+import hu.mrolcsi.android.spoc.database.model.LabelType;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.utils.SystemUiHider;
@@ -77,6 +81,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
      * The flags to pass to {@link SystemUiHider#getInstance}.
      */
     private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
+    private static final int LABELS_LOADER_ID = 88;
     Handler mHideHandler = new Handler();
     /**
      * The instance of the {@link SystemUiHider} for this activity.
@@ -90,14 +95,19 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
     };
 
     private ViewPager vpDetailsPager;
-    private TableRow trDate, trLocation, trPeople, trLabels;
+    private TableRow trLocation;
+    private TableRow trLabels;
     private TextView tvLocation;
     private TextView tvDateTaken;
+    private TextView tvLabels;
 
     private ImagePagerAdapter mAdapter;
     private int mCurrentPageIndex = -1;
     private LocationFinderTask mLocationFinderTask;
-    private int mLoaderId;
+    private int mImageLoaderId;
+
+    private Bundle mLabelsLoaderArgs;
+    private CursorLoader mLabelsLoader;
 
     @Override
     @TargetApi(18)
@@ -173,6 +183,11 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
             params.rotationAnimation = WindowManager.LayoutParams.ROTATION_ANIMATION_ROTATE;
             getWindow().setAttributes(params);
         }
+
+        mLabelsLoaderArgs = new Bundle();
+        mLabelsLoaderArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"DISTINCT " + Label.COLUMN_FOREIGN_ID + " AS _id", Label.COLUMN_NAME});
+        mLabelsLoaderArgs.putString(LabelsTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + " = '" + LabelType.CUSTOM.name() + "' AND " + Image.COLUMN_FOREIGN_ID + " = ?");
+        mLabelsLoaderArgs.putStringArray(LabelsTableLoader.ARG_SELECTION_ARGS, new String[]{"0"});
     }
 
     @Override
@@ -181,12 +196,12 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
 
         vpDetailsPager = (ViewPager) findViewById(R.id.fullscreen_content);
 
-        trDate = (TableRow) findViewById(R.id.trDate);
         trLocation = (TableRow) findViewById(R.id.trLocation);
         trLabels = (TableRow) findViewById(R.id.trLabels);
 
         tvLocation = (TextView) findViewById(R.id.tvLocation);
         tvDateTaken = (TextView) findViewById(R.id.tvDateTaken);
+        tvLabels = (TextView) findViewById(R.id.tvLabels);
 
         vpDetailsPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
@@ -229,14 +244,16 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
         Bundle loaderArgs = null;
         if (getIntent() != null) {
             if (getIntent().hasExtra(ARG_LOADER_ID)) {
-                mLoaderId = getIntent().getIntExtra(ARG_LOADER_ID, 0);
+                mImageLoaderId = getIntent().getIntExtra(ARG_LOADER_ID, 0);
             }
             loaderArgs = getIntent().getBundleExtra(ThumbnailsFragment.ARG_QUERY_BUNDLE);
 
             final String[] projection = new String[]{"DISTINCT _id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION};
             loaderArgs.putStringArray(ImagesTableLoader.ARG_PROJECTION, projection);
         }
-        getSupportLoaderManager().restartLoader(mLoaderId, loaderArgs, new ImagesTableLoader(this, this));
+        getSupportLoaderManager().restartLoader(mImageLoaderId, loaderArgs, new ImagesTableLoader(this, this));
+
+        mLabelsLoader = (CursorLoader) getSupportLoaderManager().initLoader(LABELS_LOADER_ID, mLabelsLoaderArgs, new LabelsTableLoader(this, this));
     }
 
     @Override
@@ -348,10 +365,12 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
                     tvLocation.setText(null);
                     trLocation.setVisibility(View.GONE);
                 }
-
-                //labels
-                trLabels.setVisibility(View.GONE);
             }
+
+            //labels
+            mLabelsLoader.setSelectionArgs(new String[]{String.valueOf(item.getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID))});
+            mLabelsLoader.forceLoad();
+
         } catch (IOException | ParseException e) {
             Log.w(getClass().getName(), e);
         }
@@ -359,7 +378,7 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
-        if (loader.getId() == mLoaderId) {
+        if (loader.getId() == mImageLoaderId) {
             if (mAdapter == null) {
                 try {
                     mAdapter = new ImagePagerAdapter(getSupportFragmentManager(), data);
@@ -376,13 +395,31 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
                 vpDetailsPager.setCurrentItem(mCurrentPageIndex);
             }
             updateInfo();
+        } else if (loader.getId() == LABELS_LOADER_ID) {
+            //labels
+            if (data.getCount() > 0) {
+                trLabels.setVisibility(View.VISIBLE);
+
+                StringBuilder sb = new StringBuilder();
+                while (data.moveToNext()) {
+                    sb.append(data.getString(1)).append(", ");
+                }
+                tvLabels.setText(sb.substring(0, sb.length() - 2));
+            } else {
+                trLabels.setVisibility(View.GONE);
+            }
         }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        if (mAdapter != null) {
-            mAdapter.changeCursor(null);
+        if (loader.getId() == mImageLoaderId) {
+            if (mAdapter != null) {
+                mAdapter.changeCursor(null);
+            }
+        } else if (loader.getId() == LABELS_LOADER_ID) {
+            tvLabels.setText(null);
+            trLabels.setVisibility(View.GONE);
         }
     }
 
