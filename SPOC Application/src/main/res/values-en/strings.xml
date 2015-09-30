@@ -121,4 +121,5 @@
     <string name="editLabels_confirm_removeTag">Are you sure you want to remove this tag?</string>
     <string name="editLabels_message_tagRemoved">Tag removed.</string>
     <string name="editLabels_message_tagNotRemoved">Tag could not be removed.</string>
+    <string name="navigation_tags_other">Every tag...</string>
 </resources>
