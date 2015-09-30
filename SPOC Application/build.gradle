@@ -152,6 +152,7 @@ dependencies {
     compile 'com.google.android.gms:play-services:8.1.0'
     compile 'com.github.chrisbanes.photoview:library:1.2.3'
     compile 'com.github.machinarius:preferencefragment:0.1.2'
+    compile 'com.tonicartos:superslim:0.4.13'
     compile('com.crashlytics.sdk.android:crashlytics:2.5.0@aar') {
         transitive = true;
     }

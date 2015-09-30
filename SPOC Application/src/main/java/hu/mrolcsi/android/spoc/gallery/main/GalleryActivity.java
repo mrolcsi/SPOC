@@ -24,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ExpandableListView;
+
 import com.bumptech.glide.Glide;
 import hu.mrolcsi.android.spoc.common.fragment.ISPOCFragment;
 import hu.mrolcsi.android.spoc.common.fragment.RetainedFragment;
@@ -31,6 +32,7 @@ import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
+import hu.mrolcsi.android.spoc.gallery.main.categories.CategoriesFragment;
 import hu.mrolcsi.android.spoc.gallery.search.SearchResultsFragment;
 import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderReceiver;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
@@ -105,7 +107,8 @@ public final class GalleryActivity extends AppCompatActivity {
             Bundle args = new Bundle();
             args.putInt(SPOCFragment.ARG_NAVIGATION_POSITION, 0);
 
-            final ThumbnailsFragment newFragment = new ThumbnailsFragment();
+            //final ThumbnailsFragment newFragment = new ThumbnailsFragment();
+            CategoriesFragment newFragment = new CategoriesFragment();
             newFragment.setArguments(args);
 
             swapFragment(newFragment);

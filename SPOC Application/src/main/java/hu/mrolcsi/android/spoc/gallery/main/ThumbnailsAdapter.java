@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
 import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
 import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -21,7 +22,7 @@ import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
  * Time: 21:48
  */
 
-public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapter.ImageViewHolder> {
+public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapter.ThumbnailHolder> {
 
     private final int columnSpan;
     private final Context context;
@@ -46,18 +47,18 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
     }
 
     @Override
-    public ImageViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.gallery_thumbnail, viewGroup, false);
-        return new ImageViewHolder(v);
+    public ThumbnailHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+        View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.fragment_thumbnails_item, viewGroup, false);
+        return new ThumbnailHolder(v);
     }
 
     @Override
-    public void onViewDetachedFromWindow(ImageViewHolder holder) {
+    public void onViewDetachedFromWindow(ThumbnailHolder holder) {
         holder.img.clearAnimation();
     }
 
     @Override
-    public void onBindViewHolder(ImageViewHolder viewHolder, int position) {
+    public void onBindViewHolder(ThumbnailHolder viewHolder, int position) {
         if (getCursor() == null || getCursor().isClosed()) {
             return;
         }
@@ -65,12 +66,14 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
     }
 
     @Override
-    public void onBindViewHolder(ImageViewHolder holder, Cursor cursor) {
+    public void onBindViewHolder(ThumbnailHolder holder, Cursor cursor) {
         if (cursor == null || !isDataValid()) {
             return;
         }
 
-        iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
+        if (iData < 0) {
+            iData = cursor.getColumnIndex(Image.COLUMN_FILENAME);
+        }
 
         String filename = cursor.getString(iData);
 
@@ -102,10 +105,10 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
         this.mUseColumnSpan = useColumnSpan;
     }
 
-    class ImageViewHolder extends RecyclerView.ViewHolder {
+    class ThumbnailHolder extends RecyclerView.ViewHolder {
         private ImageView img;
 
-        public ImageViewHolder(View itemView) {
+        public ThumbnailHolder(View itemView) {
             super(itemView);
             img = (ImageView) itemView.findViewById(R.id.img);
         }
