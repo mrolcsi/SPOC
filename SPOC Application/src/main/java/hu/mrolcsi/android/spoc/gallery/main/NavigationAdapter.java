@@ -44,6 +44,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
     private static final int PLACES_LOADER_ID = 41;
     private static final int PEOPLE_LOADER_ID = 42;
     private static final int FOLDERS_LOADER_ID = 43;
+    private static final int TAGS_LOADER_ID = 44;
 
     private static final int HOME_SCREEN_POSITION = 0;
     private static final int DATES_POSITION = 1;
@@ -76,6 +77,7 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
         loaderManager.initLoader(PLACES_LOADER_ID, null, this);
         loaderManager.initLoader(PEOPLE_LOADER_ID, null, this);
         loaderManager.initLoader(FOLDERS_LOADER_ID, null, this);
+        loaderManager.initLoader(TAGS_LOADER_ID, null, this);
     }
 
     @SuppressWarnings("deprecation")
@@ -290,6 +292,9 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 case FOLDERS_POSITION:
                     holder.imgIcon.setImageResource(R.drawable.open_folder);
                     break;
+                case TAGS_POSITION:
+                    holder.imgIcon.setImageResource(R.drawable.label_white);
+                    break;
                 default:
                     holder.imgIcon.setImageDrawable(null);
                     break;
@@ -335,15 +340,15 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 // content://authority/images/location/count
 
                 loader.setSelectionArgs(new String[]{LabelType.LOCATION_LOCALITY.name()});
-
                 return loader;
             } else if (id == PEOPLE_LOADER_ID) {
                 loader.setSelectionArgs(new String[]{LabelType.CONTACT.name()});
-
                 return loader;
             } else if (id == FOLDERS_LOADER_ID) {
                 loader.setSelectionArgs(new String[]{LabelType.FOLDER.name()});
-
+                return loader;
+            } else if (id == TAGS_LOADER_ID) {
+                loader.setSelectionArgs(new String[]{LabelType.CUSTOM.name()});
                 return loader;
             }
         }
@@ -427,6 +432,22 @@ public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpand
                 }
             }
             mChildren[FOLDERS_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_folder_other));
+        }
+
+        if (loader.getId() == TAGS_LOADER_ID) {
+            int size = Math.min(3, data.getCount());
+
+            mChildren[TAGS_POSITION] = new NavigationItem[size + 1];
+
+            for (int i = 0; i < size; i++) {
+                if (data.moveToPosition(i)) {
+                    mChildren[TAGS_POSITION][i] = new NavigationItem();
+                    mChildren[TAGS_POSITION][i].count = data.getInt(0);
+                    mChildren[TAGS_POSITION][i].title = data.getString(1);
+                    mChildren[TAGS_POSITION][i].id = data.getInt(2);
+                }
+            }
+            mChildren[TAGS_POSITION][size] = new NavigationItem(mContext.getString(R.string.navigation_tags_other));
         }
 
         notifyDataSetChanged();
