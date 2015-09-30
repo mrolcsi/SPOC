@@ -9,6 +9,7 @@
     <string name="details_action_delete">Törlés</string>
     <string name="details_action_editDateTaken">Dátum szerkesztése</string>
     <string name="details_action_editLocation">Helycímke szerkesztése</string>
+    <string name="details_action_editTags">Címkék szerkesztése</string>
     <string name="details_action_rotate">Forgatás</string>
     <string name="details_action_share">Megosztás…</string>
     <string name="details_label_aperture">Rekesznyílás:</string>
@@ -41,6 +42,11 @@
     <string name="dialog_message_deletePicture">Biztosan törölni akarod ezt a képet?</string>
     <string name="dialog_title_areYouSure">Biztos?</string>
     <string name="dialog_title_somethingWentWrong">Valami nem sikerült :/</string>
+    <string name="editLabels_confirm_removeTag">Biztosan eltávolítod ezt a címkét?</string>
+    <string name="editLabels_enterNewTag">Új címke hozzáadása…</string>
+    <string name="editLabels_error_emptyTagName">Nem adtál meg címkét.</string>
+    <string name="editLabels_message_tagNotRemoved">Címke nem lett eltávolítva.</string>
+    <string name="editLabels_message_tagRemoved">Címke eltávolítva.</string>
     <string name="error_noPictures">Nincsenek képek.</string>
     <string name="error_noResults">Nincs találat.</string>
     <string name="locationInput_message_noLocationFound">Nincs találat.</string>
@@ -48,6 +54,7 @@
     <string name="locationInput_message_searchDoesNotWorkWithoutInternet">Helyszín keresés nem működik internet nélkül.</string>
     <string name="locationInput_nothingSelected">Nincs kiválasztva.</string>
     <string name="locationInput_saveToFile">Mentés képfájlba</string>
+    <string name="locationInput_searchHint">Keresés helyre, vagy válaszd ki a térképen</string>
     <string name="locationInput_selectedLocation">Kiválasztott helycímke:</string>
     <string name="message_deletingPictures">Törlés folyamatban…</string>
     <string name="message_loading">Betöltés…</string>
@@ -71,6 +78,7 @@
     <string name="navigation_places_other">Minden hely…</string>
     <string name="navigation_settings">Beállítások</string>
     <string name="navigation_tags">Címkék</string>
+    <string name="navigation_tags_other">Minden címke…</string>
     <string name="no">Nem</string>
     <string name="not_available">--</string>
     <string name="preferences_about_summary">Információ az alkalmazásról és a felhasznált szoftverekről.</string>
@@ -116,9 +124,4 @@
     <string name="splash_contentDescription_logo">SPOC Embléma</string>
     <string name="title_activity_gallery">Galéria</string>
     <string name="yes">Igen</string>
-    <string name="details_action_editTags">Címkék szerkesztése</string>
-    <string name="editLabels_confirm_removeTag">Biztosan eltávolítod ezt a címkét?</string>
-    <string name="editLabels_enterNewTag">Új címke hozzáadása…</string>
-    <string name="editLabels_message_tagNotRemoved">Címke nem lett eltávolítva.</string>
-    <string name="editLabels_message_tagRemoved">Címke eltávolítva.</string>
 </resources>
