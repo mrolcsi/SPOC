@@ -1,6 +1,5 @@
 package hu.mrolcsi.android.spoc.gallery.main;
 
-import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
 
 import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
@@ -13,7 +12,7 @@ import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
  */
 
 public final class HomeFragment extends ThumbnailsFragment {
-    public static final int LOADER_ID = 10;
+    public static final int HOMESCREEN_LOADER_ID = 10;
 
     @Override
     protected void setupImagesAdapter() {
@@ -23,14 +22,11 @@ public final class HomeFragment extends ThumbnailsFragment {
 
     @Override
     protected CursorLoader setupLoader() {
-        mLoaderId = IMAGES_LOADER_ID;
-        Bundle loaderArgs = null;
-        if (getArguments() != null) {
-            if (getArguments().containsKey(ARG_LOADER_ID)) {
-                mLoaderId = getArguments().getInt(ARG_LOADER_ID);
-            }
-            loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
-        }
-        return (CursorLoader) getLoaderManager().restartLoader(mLoaderId, loaderArgs, new ImagesTableLoader(getActivity(), this));
+        return (CursorLoader) getLoaderManager().restartLoader(HOMESCREEN_LOADER_ID, null, new ImagesTableLoader(getActivity(), this));
+    }
+
+    @Override
+    public int getLoaderId() {
+        return HOMESCREEN_LOADER_ID;
     }
 }

@@ -260,6 +260,10 @@ public abstract class ThumbnailsFragment extends SPOCFragment implements ImagesT
         return IMAGES_LOADER_ID;
     }
 
+    public CursorLoader getImagesLoader() {
+        return mImagesLoader;
+    }
+
     @Override
     public void onLoadComplete(Loader<Cursor> loader, final Cursor data) {
         if (loader.getId() != getLoaderId()) return;

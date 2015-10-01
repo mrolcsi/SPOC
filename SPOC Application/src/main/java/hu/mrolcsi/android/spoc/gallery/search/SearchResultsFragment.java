@@ -39,7 +39,7 @@ import java.util.Locale;
 
 public final class SearchResultsFragment extends ThumbnailsFragment {
 
-    public static final int IMAGES_LOADER_ID = 30;
+    public static final int SEARCHRESULTS_LOADER_ID = 30;
     public static final int SUGGESTIONS_LOADER_ID = 31;
 
     private TextView tvMessage;
@@ -84,7 +84,7 @@ public final class SearchResultsFragment extends ThumbnailsFragment {
     @Override
     public void onStart() {
         super.onStart();
-        mImagesLoader.reset();
+        getImagesLoader().reset();
 
         mSuggestionsLoader = (CursorLoader) getLoaderManager().initLoader(SUGGESTIONS_LOADER_ID, mSuggestionArgs, new LabelsTableLoader(getActivity(), this));
     }
@@ -98,16 +98,13 @@ public final class SearchResultsFragment extends ThumbnailsFragment {
 
     @Override
     protected Loader<Cursor> setupLoader() {
-        mLoaderId = IMAGES_LOADER_ID;
-        Bundle loaderArgs = null;
-        if (getArguments() != null) {
-            if (getArguments().containsKey(ARG_LOADER_ID)) {
-                mLoaderId = getArguments().getInt(ARG_LOADER_ID);
-            }
-            loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
-        }
-        mImagesLoader = (CursorLoader) getLoaderManager().restartLoader(mLoaderId, loaderArgs, new ImagesTableLoader(getActivity(), this));
-        return null;
+        Bundle loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
+        return getLoaderManager().restartLoader(SEARCHRESULTS_LOADER_ID, loaderArgs, new ImagesTableLoader(getActivity(), this));
+    }
+
+    @Override
+    public int getLoaderId() {
+        return SEARCHRESULTS_LOADER_ID;
     }
 
     @Override
@@ -150,7 +147,7 @@ public final class SearchResultsFragment extends ThumbnailsFragment {
             public boolean onQueryTextSubmit(String query) {
                 mSearchView.clearFocus();
 
-                mImagesLoader.reset();
+                getImagesLoader().reset();
                 performNameSearch(query);
 
                 return true;
@@ -209,25 +206,25 @@ public final class SearchResultsFragment extends ThumbnailsFragment {
 
         mQuery = searchText;
 
-        mImagesLoader.setUri(Uri.withAppendedPath(SPOCContentProvider.SEARCH_URI, searchText));
-        mImagesLoader.setProjection(null);
-        mImagesLoader.setSelection(null);
-        mImagesLoader.setSelectionArgs(null);
+        getImagesLoader().setUri(Uri.withAppendedPath(SPOCContentProvider.SEARCH_URI, searchText));
+        getImagesLoader().setProjection(null);
+        getImagesLoader().setSelection(null);
+        getImagesLoader().setSelectionArgs(null);
 
         swipeRefreshLayout.setRefreshing(true);
 
-        mImagesLoader.startLoading();
+        getImagesLoader().startLoading();
     }
 
     private void performIdSearch(int labelId, String labelType) {
-        mImagesLoader.setUri(SPOCContentProvider.SEARCH_URI);
-        mImagesLoader.setProjection(null);
-        mImagesLoader.setSelection(Label.COLUMN_TYPE + " = ?" + " AND " + Label.COLUMN_FOREIGN_ID + " = ? ");
-        mImagesLoader.setSelectionArgs(new String[]{labelType, String.valueOf(labelId)});
+        getImagesLoader().setUri(SPOCContentProvider.SEARCH_URI);
+        getImagesLoader().setProjection(null);
+        getImagesLoader().setSelection(Label.COLUMN_TYPE + " = ?" + " AND " + Label.COLUMN_FOREIGN_ID + " = ? ");
+        getImagesLoader().setSelectionArgs(new String[]{labelType, String.valueOf(labelId)});
 
         swipeRefreshLayout.setRefreshing(true);
 
-        mImagesLoader.startLoading();
+        getImagesLoader().startLoading();
     }
 
     @Override
@@ -239,7 +236,7 @@ public final class SearchResultsFragment extends ThumbnailsFragment {
             mSuggestionsAdapter.changeCursor(data);
         }
 
-        if (loader.getId() == mLoaderId) {
+        if (loader.getId() == SEARCHRESULTS_LOADER_ID) {
             if (twList.getAdapter() == null) {
                 twList.setAdapter(mAdapter);
             }
