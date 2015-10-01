@@ -146,11 +146,11 @@ dependencies {
     compile project(':core')
     compile project(':layouts')
     compile project(':FileBrowser')
-    compile 'com.android.support:design:22.2.0'
+    compile 'com.android.support:design:23.0.1'
     compile 'com.android.support:support-v4:23.0.1'
-    compile 'com.android.support:recyclerview-v7:21.0.3'
+    compile 'com.android.support:recyclerview-v7:23.0.1'
     compile 'com.google.android.gms:play-services:8.1.0'
-    compile 'com.github.chrisbanes.photoview:library:1.2.3'
+    compile 'com.github.chrisbanes.photoview:library:1.2.4'
     compile 'com.github.machinarius:preferencefragment:0.1.2'
     compile 'com.tonicartos:superslim:0.4.13'
     compile('com.crashlytics.sdk.android:crashlytics:2.5.0@aar') {
