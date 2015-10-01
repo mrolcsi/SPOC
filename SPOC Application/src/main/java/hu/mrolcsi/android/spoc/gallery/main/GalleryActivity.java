@@ -32,7 +32,8 @@ import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
-import hu.mrolcsi.android.spoc.gallery.main.categories.CategoriesFragment;
+import hu.mrolcsi.android.spoc.gallery.main.categories.DatesFragment;
+import hu.mrolcsi.android.spoc.gallery.main.categories.PlacesFragment;
 import hu.mrolcsi.android.spoc.gallery.search.SearchResultsFragment;
 import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderReceiver;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
@@ -107,8 +108,7 @@ public final class GalleryActivity extends AppCompatActivity {
             Bundle args = new Bundle();
             args.putInt(SPOCFragment.ARG_NAVIGATION_POSITION, 0);
 
-            //final ThumbnailsFragment newFragment = new ThumbnailsFragment();
-            CategoriesFragment newFragment = new CategoriesFragment();
+            final ThumbnailsFragment newFragment = new HomeFragment();
             newFragment.setArguments(args);
 
             swapFragment(newFragment);
@@ -203,15 +203,15 @@ public final class GalleryActivity extends AppCompatActivity {
 
                 //replace fragment
                 switch (groupPosition) {
-                    case 0:
+                    case NavigationAdapter.HOME_SCREEN_POSITION:
                         if (listView.getCheckedItemPosition() != index) {
-                            final ThumbnailsFragment newFragment = new ThumbnailsFragment();
+                            final ThumbnailsFragment newFragment = new HomeFragment();
                             newFragment.setArguments(args);
                             swapFragment(newFragment);
                         }
                         mDrawerLayout.closeDrawers();
                         return true;
-                    case 6:
+                    case NavigationAdapter.SETTINGS_POSITION:
                         if (listView.getCheckedItemPosition() != index) {
                             final SettingsFragment newFragment = new SettingsFragment();
                             newFragment.setArguments(args);
@@ -236,6 +236,28 @@ public final class GalleryActivity extends AppCompatActivity {
 
                 int index = listView.getFlatListPosition(ExpandableListView.getPackedPositionForChild(groupPosition, childPosition));
                 listView.setItemChecked(index, true);
+
+                ISPOCFragment categoryFragment;
+                Bundle args = new Bundle();
+                args.putInt(SPOCFragment.ARG_NAVIGATION_POSITION, index);
+
+                switch (groupPosition) {
+                    case NavigationAdapter.DATES_POSITION:
+                        categoryFragment = new DatesFragment();
+                        break;
+                    case NavigationAdapter.PLACES_POSITION:
+                        categoryFragment = new PlacesFragment();
+                        break;
+                    default:
+                        categoryFragment = null;
+                        break;
+                }
+
+                if (categoryFragment != null) {
+                    ((Fragment) categoryFragment).setArguments(args);
+                    swapFragment(categoryFragment);
+                    mDrawerLayout.closeDrawers();
+                }
 
                 return true;
             }
@@ -336,6 +358,11 @@ public final class GalleryActivity extends AppCompatActivity {
 
     public void swapFragment(ISPOCFragment newFragment) {
         if (mCurrentFragment != null && mCurrentFragment != newFragment) { //avoid storing the same fragment more than once
+            //TODO:
+            /*
+            java.lang.NullPointerException
+            at hu.mrolcsi.android.spoc.gallery.main.GalleryActivity.swapFragment(GalleryActivity.java:361)
+             */
             mFragmentStack.push(mCurrentFragment);
         }
 

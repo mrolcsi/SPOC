@@ -13,4 +13,23 @@
         android:padding="@dimen/margin_xsmall"
         android:scaleType="centerCrop" />
 
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/design_navigation_icon_size"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_gravity="left|bottom"
+        android:layout_margin="@dimen/margin_xsmall"
+        android:background="@drawable/navigation_count_background"
+        android:gravity="center"
+        android:minWidth="@dimen/design_navigation_icon_size"
+        android:paddingLeft="@dimen/margin_small"
+        android:paddingRight="@dimen/margin_small"
+        android:singleLine="true"
+        android:textColor="@color/secondary_text_default_material_light"
+        android:textStyle="bold"
+        android:visibility="gone"/>
+
 </FrameLayout>

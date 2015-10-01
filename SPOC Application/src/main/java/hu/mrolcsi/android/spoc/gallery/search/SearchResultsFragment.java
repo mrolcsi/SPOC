@@ -19,11 +19,13 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
 import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.main.GalleryActivity;
+import hu.mrolcsi.android.spoc.gallery.main.ThumbnailsAdapter;
 import hu.mrolcsi.android.spoc.gallery.main.ThumbnailsFragment;
 
 import java.util.Locale;
@@ -35,7 +37,7 @@ import java.util.Locale;
  * Time: 9:37
  */
 
-public class SearchResultsFragment extends ThumbnailsFragment {
+public final class SearchResultsFragment extends ThumbnailsFragment {
 
     public static final int IMAGES_LOADER_ID = 30;
     public static final int SUGGESTIONS_LOADER_ID = 31;
@@ -85,6 +87,27 @@ public class SearchResultsFragment extends ThumbnailsFragment {
         mImagesLoader.reset();
 
         mSuggestionsLoader = (CursorLoader) getLoaderManager().initLoader(SUGGESTIONS_LOADER_ID, mSuggestionArgs, new LabelsTableLoader(getActivity(), this));
+    }
+
+    @Override
+    protected void setupImagesAdapter() {
+        mAdapter = new ThumbnailsAdapter(getActivity());
+        ((ThumbnailsAdapter) mAdapter).setUseColumnSpan(false);
+        twList.setAdapter(mAdapter);
+    }
+
+    @Override
+    protected Loader<Cursor> setupLoader() {
+        mLoaderId = IMAGES_LOADER_ID;
+        Bundle loaderArgs = null;
+        if (getArguments() != null) {
+            if (getArguments().containsKey(ARG_LOADER_ID)) {
+                mLoaderId = getArguments().getInt(ARG_LOADER_ID);
+            }
+            loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
+        }
+        mImagesLoader = (CursorLoader) getLoaderManager().restartLoader(mLoaderId, loaderArgs, new ImagesTableLoader(getActivity(), this));
+        return null;
     }
 
     @Override
@@ -220,7 +243,7 @@ public class SearchResultsFragment extends ThumbnailsFragment {
             if (twList.getAdapter() == null) {
                 twList.setAdapter(mAdapter);
             }
-            mAdapter.setUseColumnSpan(false);
+            ((ThumbnailsAdapter) mAdapter).setUseColumnSpan(false);
             final String quantityString = getResources().getQuantityString(R.plurals.message_numberOfResults, data.getCount(), data.getCount());
             tvMessage.setText(quantityString);
             swipeRefreshLayout.setRefreshing(false);

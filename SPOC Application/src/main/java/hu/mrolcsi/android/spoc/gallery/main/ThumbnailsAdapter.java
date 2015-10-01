@@ -8,9 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
 import hu.mrolcsi.android.spoc.database.model.Image;
+import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.CursorRecyclerViewAdapter;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
@@ -23,6 +25,9 @@ import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
  */
 
 public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapter.ThumbnailHolder> {
+
+    public static final int VIEW_TYPE_SMALL = 0x00;
+    public static final int VIEW_TYPE_BIG = 0x01;
 
     private final int columnSpan;
     private final Context context;
@@ -47,8 +52,17 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
     }
 
     @Override
-    public ThumbnailHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.fragment_thumbnails_item, viewGroup, false);
+    public ThumbnailHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        View v;
+        if (viewType == VIEW_TYPE_BIG) {
+            v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.fragment_thumbnails_item, viewGroup, false);
+            SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) v.getLayoutParams();
+            lp.colSpan = columnSpan;
+            lp.rowSpan = columnSpan;
+            v.setLayoutParams(lp);
+        } else {
+            v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.fragment_thumbnails_item, viewGroup, false);
+        }
         return new ThumbnailHolder(v);
     }
 
@@ -77,17 +91,21 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
 
         String filename = cursor.getString(iData);
 
-        SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
-        if (mUseColumnSpan && cursor.getPosition() % 11 == 0) { //expand frequently used items (or just leave it static like this?)
-            lp.colSpan = columnSpan;
-            lp.rowSpan = columnSpan;
-        } else {
-            lp.colSpan = 1;
-            lp.rowSpan = 1;
-        }
-        holder.itemView.setLayoutParams(lp);
-
         GlideHelper.loadThumbnail(context.getApplicationContext(), filename, mThumbnailSize, holder.img);
+        if (BuildConfig.DEBUG) {
+            holder.text.setVisibility(View.VISIBLE);
+            holder.text.setText(String.valueOf(cursor.getPosition()));
+        }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (!mUseColumnSpan) return VIEW_TYPE_SMALL;
+        if (position % 11 == 0) {
+            return VIEW_TYPE_BIG;
+        } else {
+            return VIEW_TYPE_SMALL;
+        }
     }
 
     @Override
@@ -107,10 +125,12 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
 
     class ThumbnailHolder extends RecyclerView.ViewHolder {
         private ImageView img;
+        private TextView text;
 
         public ThumbnailHolder(View itemView) {
             super(itemView);
             img = (ImageView) itemView.findViewById(R.id.img);
+            text = (TextView) itemView.findViewById(R.id.text);
         }
     }
 }

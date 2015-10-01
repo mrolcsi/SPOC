@@ -1,12 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView
-    android:id="@+id/tvHeader"
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="bottom"
-    android:padding="@dimen/margin_medium"
-    android:singleLine="true"
-    android:textDirection="locale"
-    tools:text="Header Item"/>
+    android:layout_height="match_parent"
+    android:gravity="bottom">
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tvHeader"
+        android:layout_alignParentBottom="true"
+        android:layout_alignTop="@+id/tvHeader"
+        android:layout_marginLeft="@dimen/navigation_iconMargin"
+        android:layout_marginStart="@dimen/navigation_iconMargin"
+        android:minWidth="@dimen/design_navigation_icon_size"/>
+
+    <TextView
+        android:id="@+id/tvHeader"
+
+        style="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toEndOf="@+id/icon"
+        android:layout_toRightOf="@+id/icon"
+        android:gravity="bottom"
+        android:padding="@dimen/margin_medium"
+        android:singleLine="true"
+        android:textDirection="locale"
+        tools:text="Header Item"/>
+</RelativeLayout>

@@ -3,12 +3,11 @@ package hu.mrolcsi.android.spoc.gallery.main.categories;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
-import android.text.Html;
 import android.text.TextUtils;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -16,22 +15,31 @@ import hu.mrolcsi.android.spoc.gallery.common.CursorRecyclerViewAdapter;
 import hu.mrolcsi.android.spoc.gallery.main.ThumbnailsAdapter;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
 
-public class SectionedThumbnailsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+import java.util.ArrayList;
+import java.util.List;
 
-    public static final int VIEW_TYPE_HEADER = 0x00;
-    public static final int VIEW_TYPE_CONTENT = 0x01;
-    private final Context context;
+@SuppressWarnings("unchecked")
+public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<RecyclerView.ViewHolder> {
+
+    public static final String HEADER_COLUMN_NAME = "header";
+    public static final int VIEW_TYPE_CONTENT = 0x00;
+    public static final int VIEW_TYPE_HEADER = 0x01;
+
+    private final CategoriesFragment.CategoryHeaderLoader mHeaderLoader;
     private final int mPreferredColumns;
-
-    private SparseArray<String> mHeaders = new SparseArray<>();
-    private CursorRecyclerViewAdapter mCursorAdapter;
 
     private int mHeaderIndex = -1;
 
-    public SectionedThumbnailsAdapter(Context context, Cursor cursor) {
-        this.context = context;
+    private List<ItemInfo> mItems = new ArrayList<>();
+    private CursorRecyclerViewAdapter mCursorAdapter;
+
+    public SectionedThumbnailsAdapter(Context context, Cursor cursor, CategoriesFragment.CategoryHeaderLoader iconLoader) {
+        super(context, cursor);
+
+        mHeaderLoader = iconLoader;
+
         if (cursor != null) {
-            buildHeaders(cursor);
+            buildItemInfo(cursor);
         }
 
         mPreferredColumns = context.getResources().getInteger(R.integer.preferredColumns);
@@ -40,18 +48,29 @@ public class SectionedThumbnailsAdapter extends RecyclerView.Adapter<RecyclerVie
         ((ThumbnailsAdapter) mCursorAdapter).setUseColumnSpan(false);
     }
 
-    protected void buildHeaders(Cursor cursor) {
-        mHeaders.clear();
+    protected void buildItemInfo(Cursor cursor) {
+        mItems.clear();
+        mHeaderIndex = cursor.getColumnIndex(HEADER_COLUMN_NAME);
+        String lastHeader;
 
         if (cursor.moveToFirst()) {
-            String lastHeader = cursor.getString(2);
-            mHeaders.put(0, lastHeader);
+            //first item always has a header
+            lastHeader = cursor.getString(mHeaderIndex);
+            mItems.add(new ItemInfo(cursor.getPosition(), true));   //header
+            mItems.add(new ItemInfo(cursor.getPosition(), false));  //content
+
+            String currentHeader;
+
             while (cursor.moveToNext()) {
-                final String headerString = cursor.getString(2);
-                if (!TextUtils.equals(headerString, lastHeader)) {
-                    lastHeader = headerString;
-                    mHeaders.put(cursor.getPosition() + mHeaders.size(), headerString);
+                currentHeader = cursor.getString(mHeaderIndex);
+                //if item in cursor requires new header?
+                if (!TextUtils.equals(currentHeader, lastHeader)) {
+                    // add header item
+                    mItems.add(new ItemInfo(cursor.getPosition(), true));
+                    lastHeader = currentHeader;
                 }
+                // add content item (for every item)
+                mItems.add(new ItemInfo(cursor.getPosition(), false));
             }
         }
     }
@@ -60,79 +79,107 @@ public class SectionedThumbnailsAdapter extends RecyclerView.Adapter<RecyclerVie
     public final RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         if (viewType == VIEW_TYPE_HEADER) {
             //create header view
-            final View view = LayoutInflater.from(context).inflate(R.layout.fragment_thumbnails_header, viewGroup, false);
+            final View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.fragment_thumbnails_header, viewGroup, false);
             return new HeaderViewHolder(view);
         } else {
-            //create contentView
-            return mCursorAdapter.onCreateViewHolder(viewGroup, viewType);
+            return mCursorAdapter.onCreateViewHolder(viewGroup, 0x00); //ensure the underlying adapter uses the default viewType
         }
     }
 
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        final ItemInfo itemInfo = mItems.get(position);
+
         if (holder instanceof HeaderViewHolder) {
             final HeaderViewHolder headerViewHolder = (HeaderViewHolder) holder;
-            if (TextUtils.equals(mHeaders.get(position), Character.toString((char) 126))) {
-                headerViewHolder.text.setText(Html.fromHtml(context.getString(R.string.details_message_unknownLocation)));
-            } else {
-                headerViewHolder.text.setText(mHeaders.get(position));
-            }
-            mHeaderIndex = mHeaders.indexOfKey(position);
+
+            getCursor().moveToPosition(itemInfo.cursorPosition);
+            String headerText = getCursor().getString(mHeaderIndex);
+
+            mHeaderLoader.loadIcon(headerText, headerViewHolder.icon);
+            mHeaderLoader.loadText(headerText, headerViewHolder.text);
         } else {
-            final int cursorPosition = getCursorPosition(position);
-            if (cursorPosition >= 0) {
-                //noinspection unchecked
-                mCursorAdapter.onBindViewHolder(holder, cursorPosition);
+            mCursorAdapter.onBindViewHolder(holder, itemInfo.cursorPosition);
+        }
+    }
+
+    @Override
+    public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
+        if (holder instanceof HeaderViewHolder) {
+            final View item = holder.itemView;
+            final ViewGroup.LayoutParams layoutParams = item.getLayoutParams();
+            if (item.getHeight() > 0) {
+                layoutParams.height = item.getHeight();
+            } else {
+                layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
             }
+            item.setLayoutParams(layoutParams);
         }
     }
 
     @Override
     public int getItemCount() {
-        return mCursorAdapter.getItemCount() + mHeaders.size();
+        return mItems.size();
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return mCursorAdapter.getItemId(mItems.get(position).cursorPosition);
+    }
+
+    @Override
+    public Cursor getCursor() {
+        return mCursorAdapter.getCursor();
+    }
+
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, Cursor cursor) {
+        mCursorAdapter.onBindViewHolder(viewHolder, cursor);
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0) { //first item is always a header;
-            return VIEW_TYPE_HEADER;
-        } else {
-            if (mHeaders.get(position) != null) {
-                return VIEW_TYPE_HEADER;
-            }
-        }
-        return VIEW_TYPE_CONTENT;
-    }
-
-    private int getCursorPosition(int adapterPosition) {
-        return adapterPosition - (mHeaderIndex + 1);
-    }
-
-    public Context getContext() {
-        return context;
+        return mItems.get(position).isHeader ? VIEW_TYPE_HEADER : VIEW_TYPE_CONTENT;
     }
 
     public void changeCursor(Cursor cursor) {
         if (cursor == null) {
-            mHeaders.clear();
-        } else if (cursor != mCursorAdapter.getCursor()) {
-            buildHeaders(cursor);
+            mItems.clear();
+            mHeaderIndex = -1;
+        } else if (cursor != getCursor()) {
+            buildItemInfo(cursor);
         }
         mCursorAdapter.changeCursor(cursor);
         notifyDataSetChanged();
     }
 
+    public int getCursorPosition(int adapterPosition) {
+        return mItems.get(adapterPosition).cursorPosition;
+    }
+
     class HeaderViewHolder extends RecyclerView.ViewHolder {
         TextView text;
+        ImageView icon;
 
         public HeaderViewHolder(View itemView) {
             super(itemView);
 
             final SpannableGridLayoutManager.LayoutParams lp = (SpannableGridLayoutManager.LayoutParams) itemView.getLayoutParams();
             lp.colSpan = mPreferredColumns;
-            lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            //lp.height = ViewGroup.LayoutParams.WRAP_CONTENT; //set to fixed 64dp? ?attr/actionBarSize
             itemView.setLayoutParams(lp);
 
             text = (TextView) itemView.findViewById(R.id.tvHeader);
+            icon = (ImageView) itemView.findViewById(R.id.icon);
+        }
+    }
+
+    class ItemInfo {
+        boolean isHeader;
+        int cursorPosition;
+
+        public ItemInfo(int cursorPosition, boolean isHeader) {
+            this.cursorPosition = cursorPosition;
+            this.isHeader = isHeader;
         }
     }
 }

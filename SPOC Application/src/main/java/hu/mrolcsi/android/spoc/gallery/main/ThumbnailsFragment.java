@@ -42,6 +42,7 @@ import hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService;
 import hu.mrolcsi.android.spoc.common.utils.FileUtils;
 import hu.mrolcsi.android.spoc.common.utils.GeneralUtils;
 import hu.mrolcsi.android.spoc.gallery.R;
+import hu.mrolcsi.android.spoc.gallery.common.CursorRecyclerViewAdapter;
 import hu.mrolcsi.android.spoc.gallery.common.HideOnScrollListener;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 import hu.mrolcsi.android.spoc.gallery.imagedetails.ImagePagerActivity;
@@ -57,19 +58,19 @@ import org.lucasr.twowayview.widget.TwoWayView;
  * Time: 21:12
  */
 
-public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoader.LoaderCallbacks, SwipeRefreshLayout.OnRefreshListener {
+public abstract class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoader.LoaderCallbacks, SwipeRefreshLayout.OnRefreshListener {
 
     public static final int IMAGES_LOADER_ID = 1;
-
     public static final String ARG_QUERY_BUNDLE = "SPOC.Gallery.Thumbnails.ARGUMENT_BUNDLE";
     public static final String ARG_LOADER_ID = "SPOC.Gallery.Thumbnails.LOADER_ID";
-    protected ThumbnailsAdapter mAdapter;
-    protected CursorLoader mImagesLoader;
+
+    protected CursorRecyclerViewAdapter mAdapter;
     protected FloatingActionButton fabSearch;
     protected TwoWayView twList;
     protected SwipeRefreshLayout swipeRefreshLayout;
     protected Bundle mQueryArgs = new Bundle();
-    protected int mLoaderId;
+
+    private CursorLoader mImagesLoader;
     private Parcelable mListInstanceState;
     private int mSavedOrientation = Configuration.ORIENTATION_UNDEFINED;
     private Integer mSavedPosition;
@@ -123,7 +124,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
                 Intent imagePagerIntent = new Intent(getActivity(), ImagePagerActivity.class);
 
                 imagePagerIntent.putExtra(ImagePagerActivity.ARG_LOADER_ID, mImagesLoader.getId());
-                imagePagerIntent.putExtra(ImagePagerActivity.ARG_SELECTED_POSITION, i);
+                imagePagerIntent.putExtra(ImagePagerActivity.ARG_SELECTED_POSITION, getClickedImagePosition(i));
                 imagePagerIntent.putExtra(ARG_QUERY_BUNDLE, mQueryArgs);
 
                 startActivity(imagePagerIntent);
@@ -176,10 +177,20 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
             public void run() {
                 if (getActivity() != null) {
                     ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
-                    swipeRefreshLayout.setRefreshing(GeneralUtils.isServiceRunning(manager, DatabaseBuilderService.class));
+                    if (GeneralUtils.isServiceRunning(manager, DatabaseBuilderService.class)) {
+                        swipeRefreshLayout.setRefreshing(true);
+                        swipeRefreshLayout.setEnabled(false);
+                    } else {
+                        swipeRefreshLayout.setRefreshing(false);
+                        swipeRefreshLayout.setEnabled(true);
+                    }
                 }
             }
-        }, 1000);
+        }, 500);
+    }
+
+    protected int getClickedImagePosition(int adapterPosition) {
+        return adapterPosition;
     }
 
     @Override
@@ -205,24 +216,19 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
         SpannableGridLayoutManager layoutManager = ((SpannableGridLayoutManager) twList.getLayoutManager());
         layoutManager.setNumColumns(getResources().getInteger(R.integer.preferredColumns));
         layoutManager.setNumRows(getResources().getInteger(R.integer.preferredColumns));
-        mAdapter = new ThumbnailsAdapter(getActivity());
-        twList.setAdapter(mAdapter);
+        setupImagesAdapter();
 
-        mLoaderId = IMAGES_LOADER_ID;
-        Bundle loaderArgs = null;
-        if (getArguments() != null) {
-            if (getArguments().containsKey(ARG_LOADER_ID)) {
-                mLoaderId = getArguments().getInt(ARG_LOADER_ID);
-            }
-            loaderArgs = getArguments().getBundle(ThumbnailsFragment.ARG_QUERY_BUNDLE);
-        }
-        mImagesLoader = (CursorLoader) getLoaderManager().restartLoader(mLoaderId, loaderArgs, new ImagesTableLoader(getActivity(), this));
+        mImagesLoader = (CursorLoader) setupLoader();
 
         IntentFilter mDatabaseBuilderIntentFilter = new IntentFilter();
         mDatabaseBuilderIntentFilter.addAction(DatabaseBuilderService.BROADCAST_ACTION_IMAGES_READY);
         mDatabaseBuilderIntentFilter.addAction(DatabaseBuilderService.BROADCAST_ACTION_FINISHED);
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mDatabaseWatcher, mDatabaseBuilderIntentFilter);
     }
+
+    protected abstract void setupImagesAdapter();
+
+    protected abstract Loader<Cursor> setupLoader();
 
     @Override
     public void onResume() {
@@ -237,6 +243,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
         super.onStop();
 
         mAdapter = null;
+        swipeRefreshLayout.setRefreshing(false);
         twList.setAdapter(null);
     }
 
@@ -249,9 +256,13 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mDatabaseWatcher);
     }
 
+    public int getLoaderId() {
+        return IMAGES_LOADER_ID;
+    }
+
     @Override
     public void onLoadComplete(Loader<Cursor> loader, final Cursor data) {
-        if (loader.getId() != mLoaderId) return;
+        if (loader.getId() != getLoaderId()) return;
 
         Log.d(getClass().getSimpleName(), "onLoadComplete");
         if (data == null || data.getCount() == 0) {
@@ -266,8 +277,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
         mQueryArgs.putString(ImagesTableLoader.ARG_SORT_ORDER, ((CursorLoader) loader).getSortOrder());
 
         if (mAdapter == null) {
-            mAdapter = new ThumbnailsAdapter(getActivity());
-            twList.setAdapter(mAdapter);
+            setupImagesAdapter();
         }
         mAdapter.changeCursor(data);
 
@@ -286,7 +296,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        if (loader.getId() != mLoaderId) return;
+        if (loader.getId() != getLoaderId()) return;
 
         Log.d(getClass().getSimpleName(), "onLoaderReset");
         if (mAdapter != null) {
@@ -438,6 +448,7 @@ public class ThumbnailsFragment extends SPOCFragment implements ImagesTableLoade
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(DatabaseBuilderService.BROADCAST_ACTION_FINISHED)) {
                 swipeRefreshLayout.setRefreshing(false);
+                swipeRefreshLayout.setEnabled(true);
             }
         }
     }

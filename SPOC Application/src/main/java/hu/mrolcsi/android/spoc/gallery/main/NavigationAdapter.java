@@ -38,22 +38,20 @@ import java.util.Locale;
  * Time: 15:39
  */
 
-public class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpandableListAdapter implements LoaderManager.LoaderCallbacks<Cursor> {
+public final class NavigationAdapter extends AnimatedExpandableListView.AnimatedExpandableListAdapter implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    public static final int HOME_SCREEN_POSITION = 0;
+    public static final int DATES_POSITION = 1;
+    public static final int PLACES_POSITION = 2;
+    public static final int PEOPLE_POSITION = 3;
+    public static final int TAGS_POSITION = 4;
+    public static final int FOLDERS_POSITION = 5;
+    public static final int SETTINGS_POSITION = 6;
     private static final int DATE_LOADER_ID = 40;
     private static final int PLACES_LOADER_ID = 41;
     private static final int PEOPLE_LOADER_ID = 42;
     private static final int FOLDERS_LOADER_ID = 43;
     private static final int TAGS_LOADER_ID = 44;
-
-    private static final int HOME_SCREEN_POSITION = 0;
-    private static final int DATES_POSITION = 1;
-    private static final int PLACES_POSITION = 2;
-    private static final int PEOPLE_POSITION = 3;
-    private static final int TAGS_POSITION = 4;
-    private static final int FOLDERS_POSITION = 5;
-    private static final int SETTINGS_POSITION = 6;
-
     private final Context mContext;
     private final LayoutInflater mInflater;
     //private final DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM);
