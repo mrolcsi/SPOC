@@ -1,6 +1,8 @@
 package hu.mrolcsi.android.spoc.gallery.main.categories;
 
 import android.support.v4.content.CursorLoader;
+import android.text.Html;
+import android.text.TextUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,13 +24,17 @@ public final class PlacesFragment extends CategoriesFragment {
     protected CategoryHeaderLoader setupCategoryLoader() {
         return new CategoryHeaderLoader() {
             @Override
-            public void loadIcon(String s, ImageView view) {
+            public void loadIcon(ImageView view, String headerText, String extra) {
                 view.setImageResource(R.drawable.marker);
             }
 
             @Override
-            public void loadText(String s, TextView view) {
-                view.setText(s);
+            public void loadText(TextView view, String headerText, String extra) {
+                if (TextUtils.isEmpty(headerText)) {
+                    view.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
+                } else {
+                    view.setText(headerText);
+                }
             }
         };
     }
@@ -36,9 +42,13 @@ public final class PlacesFragment extends CategoriesFragment {
     @Override
     protected CursorLoader setupLoader() {
         mQueryArgs.clear();
-        //args.putString(ImagesTableLoader.ARG_URI_STRING, Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, "search").toString());
+        //args.putString(ImagesTableLoader.ARG_URI_STRING, Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, Label.TABLE_NAME).toString());
         mQueryArgs.putStringArray(ImagesTableLoader.ARG_PROJECTION,
-                new String[]{"DISTINCT _id", Image.COLUMN_FILENAME, Image.COLUMN_LOCATION + " AS " + SectionedThumbnailsAdapter.HEADER_COLUMN_NAME});
+                new String[]{"DISTINCT _id",
+                        Image.COLUMN_FILENAME,
+                        Image.COLUMN_LOCATION,
+                        Image.COLUMN_DATE_TAKEN,
+                        Image.COLUMN_LOCATION + " AS " + SectionedThumbnailsAdapter.HEADER_COLUMN_NAME});
         //args.putString(ImagesTableLoader.ARG_SELECTION, "type = ?");
         //args.putStringArray(ImagesTableLoader.ARG_SELECTION_ARGS, new String[]{LabelType.LOCATION_LOCALITY.name()});
         mQueryArgs.putString(ImagesTableLoader.ARG_SORT_ORDER, "(CASE WHEN " + Image.COLUMN_LOCATION + " IS NULL THEN 1 ELSE 0 END), " + Image.COLUMN_LOCATION + ", " + Image.COLUMN_DATE_TAKEN + " DESC");

@@ -33,7 +33,10 @@ import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
 import hu.mrolcsi.android.spoc.gallery.main.categories.DatesFragment;
+import hu.mrolcsi.android.spoc.gallery.main.categories.FoldersFragment;
+import hu.mrolcsi.android.spoc.gallery.main.categories.PeopleFragment;
 import hu.mrolcsi.android.spoc.gallery.main.categories.PlacesFragment;
+import hu.mrolcsi.android.spoc.gallery.main.categories.TagsFragment;
 import hu.mrolcsi.android.spoc.gallery.search.SearchResultsFragment;
 import hu.mrolcsi.android.spoc.gallery.service.CacheBuilderReceiver;
 import hu.mrolcsi.android.spoc.gallery.settings.SettingsFragment;
@@ -241,12 +244,23 @@ public final class GalleryActivity extends AppCompatActivity {
                 Bundle args = new Bundle();
                 args.putInt(SPOCFragment.ARG_NAVIGATION_POSITION, index);
 
+                //TODO: add arguments
+
                 switch (groupPosition) {
                     case NavigationAdapter.DATES_POSITION:
                         categoryFragment = new DatesFragment();
                         break;
                     case NavigationAdapter.PLACES_POSITION:
                         categoryFragment = new PlacesFragment();
+                        break;
+                    case NavigationAdapter.PEOPLE_POSITION:
+                        categoryFragment = new PeopleFragment();
+                        break;
+                    case NavigationAdapter.TAGS_POSITION:
+                        categoryFragment = new TagsFragment();
+                        break;
+                    case NavigationAdapter.FOLDERS_POSITION:
+                        categoryFragment = new FoldersFragment();
                         break;
                     default:
                         categoryFragment = null;

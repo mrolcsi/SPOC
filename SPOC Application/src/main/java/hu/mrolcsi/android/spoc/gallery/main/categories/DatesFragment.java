@@ -35,10 +35,10 @@ public final class DatesFragment extends CategoriesFragment {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy. MMMM d.", Locale.getDefault());
 
             @Override
-            public void loadIcon(String s, ImageView view) {
-                if (TextUtils.isEmpty(s)) return;
+            public void loadIcon(ImageView view, String headerText, String extra) {
+                if (TextUtils.isEmpty(headerText)) return;
 
-                final long dateLong = Long.parseLong(s);
+                final long dateLong = Long.parseLong(headerText);
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date(dateLong));
                 int day = calendar.get(Calendar.DAY_OF_MONTH);
@@ -53,8 +53,8 @@ public final class DatesFragment extends CategoriesFragment {
             }
 
             @Override
-            public void loadText(String s, TextView view) {
-                final long dateLong = Long.parseLong(s);
+            public void loadText(TextView view, String headerText, String extra) {
+                final long dateLong = Long.parseLong(headerText);
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date(dateLong));
                 view.setText(dateFormat.format(calendar.getTime()));
@@ -67,7 +67,11 @@ public final class DatesFragment extends CategoriesFragment {
         mQueryArgs.clear();
         mQueryArgs.putString(ImagesTableLoader.ARG_URI_STRING, Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, Views.IMAGES_BY_DAY_DAY_TAKEN).toString());
         mQueryArgs.putStringArray(ImagesTableLoader.ARG_PROJECTION,
-                new String[]{"DISTINCT " + Image.TABLE_NAME + "._id", Image.COLUMN_FILENAME, Views.IMAGES_BY_DAY_DAY_TAKEN + " AS " + SectionedThumbnailsAdapter.HEADER_COLUMN_NAME});
+                new String[]{"DISTINCT " + Image.TABLE_NAME + "._id",
+                        Image.COLUMN_FILENAME,
+                        Image.COLUMN_LOCATION,
+                        Image.COLUMN_DATE_TAKEN,
+                        Views.IMAGES_BY_DAY_DAY_TAKEN + " AS " + SectionedThumbnailsAdapter.HEADER_COLUMN_NAME});
         //mQueryArgs.putString(ImagesTableLoader.ARG_SELECTION, "type = ?");
         //args.putStringArray(ImagesTableLoader.ARG_SELECTION_ARGS, new String[]{LabelType.LOCATION_LOCALITY.name()});
         mQueryArgs.putString(ImagesTableLoader.ARG_SORT_ORDER, Image.COLUMN_DATE_TAKEN + " DESC");

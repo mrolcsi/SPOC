@@ -22,6 +22,7 @@ import java.util.List;
 public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<RecyclerView.ViewHolder> {
 
     public static final String HEADER_COLUMN_NAME = "header";
+    public static final String EXTRA_COLUMN_NAME = "extra";
     public static final int VIEW_TYPE_CONTENT = 0x00;
     public static final int VIEW_TYPE_HEADER = 0x01;
 
@@ -29,6 +30,7 @@ public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<Recycl
     private final int mPreferredColumns;
 
     private int mHeaderIndex = -1;
+    private int mExtraIndex = -1;
 
     private List<ItemInfo> mItems = new ArrayList<>();
     private CursorRecyclerViewAdapter mCursorAdapter;
@@ -51,6 +53,7 @@ public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<Recycl
     protected void buildItemInfo(Cursor cursor) {
         mItems.clear();
         mHeaderIndex = cursor.getColumnIndex(HEADER_COLUMN_NAME);
+        mExtraIndex = cursor.getColumnIndex(EXTRA_COLUMN_NAME);
         String lastHeader;
 
         if (cursor.moveToFirst()) {
@@ -94,9 +97,13 @@ public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<Recycl
 
             getCursor().moveToPosition(itemInfo.cursorPosition);
             String headerText = getCursor().getString(mHeaderIndex);
+            String extraText = null;
+            if (mExtraIndex != -1) {
+                extraText = getCursor().getString(mExtraIndex);
+            }
 
-            mHeaderLoader.loadIcon(headerText, headerViewHolder.icon);
-            mHeaderLoader.loadText(headerText, headerViewHolder.text);
+            mHeaderLoader.loadIcon(headerViewHolder.icon, headerText, extraText);
+            mHeaderLoader.loadText(headerViewHolder.text, headerText, extraText);
         } else {
             mCursorAdapter.onBindViewHolder(holder, itemInfo.cursorPosition);
         }

@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import hu.mrolcsi.android.spoc.common.helper.GlideHelper;
 import hu.mrolcsi.android.spoc.database.model.Image;
-import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.CursorRecyclerViewAdapter;
 import org.lucasr.twowayview.widget.SpannableGridLayoutManager;
@@ -92,10 +91,10 @@ public class ThumbnailsAdapter extends CursorRecyclerViewAdapter<ThumbnailsAdapt
         String filename = cursor.getString(iData);
 
         GlideHelper.loadThumbnail(context.getApplicationContext(), filename, mThumbnailSize, holder.img);
-        if (BuildConfig.DEBUG) {
-            holder.text.setVisibility(View.VISIBLE);
-            holder.text.setText(String.valueOf(cursor.getPosition()));
-        }
+//        if (BuildConfig.DEBUG) {
+//            holder.text.setVisibility(View.VISIBLE);
+//            holder.text.setText(String.valueOf(cursor.getPosition()));
+//        }
     }
 
     @Override

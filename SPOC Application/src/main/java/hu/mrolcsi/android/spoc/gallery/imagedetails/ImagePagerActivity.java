@@ -248,7 +248,10 @@ public class ImagePagerActivity extends AppCompatActivity implements ImagesTable
             }
             loaderArgs = getIntent().getBundleExtra(ThumbnailsFragment.ARG_QUERY_BUNDLE);
 
-            final String[] projection = new String[]{"DISTINCT _id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION};
+            String[] projection = loaderArgs.getStringArray(ImagesTableLoader.ARG_PROJECTION);
+            if (projection == null) {
+                projection = new String[]{"DISTINCT _id", Image.COLUMN_FILENAME, Image.COLUMN_DATE_TAKEN, Image.COLUMN_LOCATION};
+            }
             loaderArgs.putStringArray(ImagesTableLoader.ARG_PROJECTION, projection);
         }
         getSupportLoaderManager().restartLoader(mImageLoaderId, loaderArgs, new ImagesTableLoader(this, this));

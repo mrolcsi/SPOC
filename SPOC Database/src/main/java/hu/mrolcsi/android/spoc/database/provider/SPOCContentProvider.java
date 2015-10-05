@@ -40,7 +40,7 @@ public final class SPOCContentProvider extends ContentProvider {
     public static final Uri IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Image.TABLE_NAME);
     public static final Uri LABELS_URI = Uri.withAppendedPath(CONTENT_URI, Label.TABLE_NAME);
     public static final Uri LABELS_2_IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Label2Image.TABLE_NAME);
-    public static final Uri SEARCH_URI = CONTENT_URI.buildUpon().appendPath(Image.TABLE_NAME).appendPath("search").build();
+    public static final Uri SEARCH_URI = CONTENT_URI.buildUpon().appendPath(Image.TABLE_NAME).appendPath(Label.TABLE_NAME).build();
     public static final Uri CONTACTS_URI = Uri.withAppendedPath(CONTENT_URI, Contact.TABLE_NAME);
     public static final Uri CONTACTS_2_IMAGES_URI = Uri.withAppendedPath(CONTENT_URI, Contact2Image.TABLE_NAME);
 
@@ -79,9 +79,9 @@ public final class SPOCContentProvider extends ContentProvider {
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN, IMAGES_WITH_DAY_TAKEN);                   // content://authority/images/day_taken         > SELECT * FROM images INNER JOIN images_by_day
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN + "/#", IMAGES_BY_DAY_TAKEN);              // content://authority/images/day_taken/#       > SELECT * FROM images INNER JOIN images_by_day WHERE day_taken = #
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Views.IMAGES_BY_DAY_DAY_TAKEN + "/count", IMAGES_BY_DAY_TAKEN_COUNT);    // content://authority/images/day_taken/count   > SELECT count(_id), day_taken FROM images INNER JOIN images_by_day GROUP BY day_taken
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Label.TABLE_NAME, IMAGES_WITH_LABELS);                                   // content://authority/images/labels            > SELECT * FROM images_with_labels
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Label.TABLE_NAME + "/count", IMAGES_BY_LABEL_COUNT);                     // content://authority/images/labels/count      > SELECT * FROM images_with_labels GROUP BY label_id
-        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search", IMAGES_WITH_LABELS);                                                // content://authority/images/search            > SELECT * FROM images_with_labels
-        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/search/*", IMAGE_SEARCH_BY_NAME);                                            // content://authority/images/search/*          > SELECT * FROM images_with_labels WHERE column LIKE '%*%'
+        URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Label.TABLE_NAME + "/*", IMAGE_SEARCH_BY_NAME);                          // content://authority/images/labels/*          > SELECT * FROM images_with_labels WHERE column LIKE '%*%'
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Contact.TABLE_NAME, IMAGES_WITH_CONTACTS);                               // content://authority/images/contacts          > SELECT * FROM images INNER JOIN contacts2images LEFT JOIN contacts [WHERE image_id/contacts_id = ?]
         URI_MATCHER.addURI(AUTHORITY, Image.TABLE_NAME + "/" + Contact.TABLE_NAME + "/count", IMAGES_WITH_CONTACTS_COUNT);              // content://authority/images/contacts/count    > SELECT * FROM images_with_labels WHERE type='CONTACT' GROUP BY label_id ORDER BY date_taken DESC
 

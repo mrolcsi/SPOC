@@ -16,8 +16,6 @@ import hu.mrolcsi.android.spoc.gallery.main.ThumbnailsFragment;
 public abstract class CategoriesFragment extends ThumbnailsFragment {
 
     public static final String ARG_SELECTED_CATEGORY = "category";
-    public static final int LABELS_LOADER_ID = 23;
-    public static final int FOLDERS_LOADER_ID = 24;
 
     @Override
     protected void setupImagesAdapter() {
@@ -39,8 +37,8 @@ public abstract class CategoriesFragment extends ThumbnailsFragment {
     protected abstract CategoryHeaderLoader setupCategoryLoader();
 
     public interface CategoryHeaderLoader {
-        void loadIcon(String s, ImageView view);
+        void loadIcon(ImageView view, String headerText, String extra);
 
-        void loadText(String s, TextView view);
+        void loadText(TextView view, String headerText, String extra);
     }
 }

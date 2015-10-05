@@ -3,18 +3,22 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="bottom">
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:gravity="bottom"
+    android:paddingBottom="@dimen/margin_medium"
+    android:paddingTop="@dimen/margin_medium">
 
     <ImageView
         android:id="@+id/icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/design_navigation_icon_size"
+        android:layout_height="@dimen/design_navigation_icon_size"
         android:layout_alignBottom="@+id/tvHeader"
         android:layout_alignParentBottom="true"
         android:layout_alignTop="@+id/tvHeader"
         android:layout_marginLeft="@dimen/navigation_iconMargin"
         android:layout_marginStart="@dimen/navigation_iconMargin"
+        android:maxHeight="@dimen/design_navigation_icon_size"
         android:minWidth="@dimen/design_navigation_icon_size"/>
 
     <TextView
@@ -24,10 +28,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_marginLeft="@dimen/margin_medium"
         android:layout_toEndOf="@+id/icon"
         android:layout_toRightOf="@+id/icon"
         android:gravity="bottom"
-        android:padding="@dimen/margin_medium"
         android:singleLine="true"
         android:textDirection="locale"
         tools:text="Header Item"/>
