@@ -167,7 +167,7 @@ public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<Recycl
 
     public int getHeaderPosition(String headerText) {
         int i = 0;
-        while (i < mItems.size() && (!mItems.get(i).isHeader || !(mItems.get(i).headerText.contains(headerText)))) {
+        while (i < mItems.size() && (!mItems.get(i).isHeader || mItems.get(i).headerText == null || !(mItems.get(i).headerText.contains(headerText)))) {
             i++;
         }
         if (i == mItems.size()) {
