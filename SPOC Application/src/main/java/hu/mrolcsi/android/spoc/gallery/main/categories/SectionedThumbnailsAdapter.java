@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,7 +60,7 @@ public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<Recycl
         if (cursor.moveToFirst()) {
             //first item always has a header
             lastHeader = cursor.getString(mHeaderIndex);
-            mItems.add(new ItemInfo(cursor.getPosition(), true));   //header
+            mItems.add(new ItemInfo(cursor.getPosition(), true, lastHeader));   //header
             mItems.add(new ItemInfo(cursor.getPosition(), false));  //content
 
             String currentHeader;
@@ -69,13 +70,14 @@ public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<Recycl
                 //if item in cursor requires new header?
                 if (!TextUtils.equals(currentHeader, lastHeader)) {
                     // add header item
-                    mItems.add(new ItemInfo(cursor.getPosition(), true));
+                    mItems.add(new ItemInfo(cursor.getPosition(), true, currentHeader));
                     lastHeader = currentHeader;
                 }
                 // add content item (for every item)
                 mItems.add(new ItemInfo(cursor.getPosition(), false));
             }
         }
+        Log.d("", "");
     }
 
     @Override
@@ -163,6 +165,18 @@ public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<Recycl
         return mItems.get(adapterPosition).cursorPosition;
     }
 
+    public int getHeaderPosition(String headerText) {
+        int i = 0;
+        while (i < mItems.size() && (!mItems.get(i).isHeader || !(mItems.get(i).headerText.contains(headerText)))) {
+            i++;
+        }
+        if (i == mItems.size()) {
+            return -1;
+        } else {
+            return i;
+        }
+    }
+
     class HeaderViewHolder extends RecyclerView.ViewHolder {
         TextView text;
         ImageView icon;
@@ -183,10 +197,16 @@ public class SectionedThumbnailsAdapter extends CursorRecyclerViewAdapter<Recycl
     class ItemInfo {
         boolean isHeader;
         int cursorPosition;
+        String headerText = "";
 
         public ItemInfo(int cursorPosition, boolean isHeader) {
             this.cursorPosition = cursorPosition;
             this.isHeader = isHeader;
+        }
+
+        public ItemInfo(int cursorPosition, boolean isHeader, String headerText) {
+            this(cursorPosition, isHeader);
+            this.headerText = headerText;
         }
     }
 }

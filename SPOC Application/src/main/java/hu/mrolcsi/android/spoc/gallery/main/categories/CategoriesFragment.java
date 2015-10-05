@@ -1,5 +1,8 @@
 package hu.mrolcsi.android.spoc.gallery.main.categories;
 
+import android.database.Cursor;
+import android.support.v4.content.Loader;
+import android.text.TextUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -17,6 +20,8 @@ public abstract class CategoriesFragment extends ThumbnailsFragment {
 
     public static final String ARG_SELECTED_CATEGORY = "category";
 
+    private boolean scrollHappened = false;
+
     @Override
     protected void setupImagesAdapter() {
         mAdapter = new SectionedThumbnailsAdapter(getActivity(), null, setupCategoryLoader());
@@ -32,6 +37,21 @@ public abstract class CategoriesFragment extends ThumbnailsFragment {
     public boolean onBackPressed() {
         ((GalleryActivity) getActivity()).restoreFragmentFromStack();
         return true;
+    }
+
+    @Override
+    public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
+        super.onLoadComplete(loader, data);
+        if (loader.getId() == getLoaderId()) {
+            final String headerText = getArguments().getString(ARG_SELECTED_CATEGORY);
+            if (!TextUtils.isEmpty(headerText)) {
+                final int headerPosition = ((SectionedThumbnailsAdapter) mAdapter).getHeaderPosition(headerText);
+                if (!scrollHappened && headerPosition > 0) {
+                    twList.smoothScrollToPosition(headerPosition);
+                    scrollHappened = true;
+                }
+            }
+        }
     }
 
     protected abstract CategoryHeaderLoader setupCategoryLoader();

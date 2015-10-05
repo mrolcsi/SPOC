@@ -32,6 +32,7 @@ import hu.mrolcsi.android.spoc.common.fragment.SPOCFragment;
 import hu.mrolcsi.android.spoc.common.service.CacheBuilderService;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.widgets.AnimatedExpandableListView;
+import hu.mrolcsi.android.spoc.gallery.main.categories.CategoriesFragment;
 import hu.mrolcsi.android.spoc.gallery.main.categories.DatesFragment;
 import hu.mrolcsi.android.spoc.gallery.main.categories.FoldersFragment;
 import hu.mrolcsi.android.spoc.gallery.main.categories.PeopleFragment;
@@ -244,7 +245,8 @@ public final class GalleryActivity extends AppCompatActivity {
                 Bundle args = new Bundle();
                 args.putInt(SPOCFragment.ARG_NAVIGATION_POSITION, index);
 
-                //TODO: add arguments
+                final NavigationAdapter.NavigationItem childItem = (NavigationAdapter.NavigationItem) listView.getItemAtPosition(index);
+                args.putString(CategoriesFragment.ARG_SELECTED_CATEGORY, (String) childItem.title);
 
                 switch (groupPosition) {
                     case NavigationAdapter.DATES_POSITION:
