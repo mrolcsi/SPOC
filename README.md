@@ -18,7 +18,7 @@ _A graduation project by [Matusinka Roland](mailto:matusinka.roland@outlook.com)
 
 ## Third party software used in the application:
 
-Most software are registered under the Apache License 2.0
+Most software are registered under Apache License 2.0
 
 *   **Android Design Support Library** by [Google](http://android-developers.blogspot.hu/2015/05/android-design-support-library.html)
 *   **Glide** by [bumptech @ GitHub](https://github.com/bumptech/glide)
@@ -26,6 +26,6 @@ Most software are registered under the Apache License 2.0
 *   **PhotoView** by [chrisbanes @ GitHub](https://github.com/chrisbanes/PhotoView)
 *   a fork of **TwoWay-View** by [lucasr @ GitHub](https://github.com/lucasr/twoway-view)
 *   **PreferenceFragment-Compat** by [Machinarius @ GitHub](https://github.com/Machinarius/PreferenceFragment-Compat)
-*   **Crashlytics** crash porter by [Fabric](http://fabric.io)
+*   **Crashlytics** crash reporter by [Fabric](http://fabric.io)
 
 Icons provided by [Icons8](https://icons8.com).
