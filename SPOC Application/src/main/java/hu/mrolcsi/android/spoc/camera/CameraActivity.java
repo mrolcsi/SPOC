@@ -3,6 +3,8 @@ package hu.mrolcsi.android.spoc.camera;
 import android.annotation.TargetApi;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,11 +12,15 @@ import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import hu.mrolcsi.android.spoc.gallery.R;
@@ -31,17 +37,29 @@ public class CameraActivity extends AppCompatActivity {
     public static final String TAG = "SPOC.Camera";
     public static final int PREVIEW_TIME = 1000;
 
+    private static int STROKE_WIDTH;
+    private ImageView imgCrosshair;
+
     private Camera mCamera;
     private CameraPreview mPreview;
-
     private Runnable mResumePreview = new Runnable() {
         @Override
         public void run() {
             mCamera.startPreview();
+            ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.WHITE);
         }
     };
     private Handler mHandler = new Handler();
 
+    private boolean isFocused = false;
+    private boolean isFocusPressed = false;
+
+    private Camera.ShutterCallback mShutterCallback = new Camera.ShutterCallback() {
+        @Override
+        public void onShutter() {
+            ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.RED);
+        }
+    };
     private Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] bytes, Camera camera) {
@@ -68,6 +86,17 @@ public class CameraActivity extends AppCompatActivity {
                 Log.d(TAG, "File not found: " + e.getMessage());
             } catch (IOException e) {
                 Log.d(TAG, "Error accessing file: " + e.getMessage());
+            }
+        }
+    };
+    private Camera.AutoFocusCallback mFocusCallback = new Camera.AutoFocusCallback() {
+        @Override
+        public void onAutoFocus(boolean b, Camera camera) {
+            isFocused = b;
+            if (b) {
+                ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.GREEN);
+            } else {
+                ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.WHITE);
             }
         }
     };
@@ -100,17 +129,34 @@ public class CameraActivity extends AppCompatActivity {
                     .show();
         }
 
-        initListeners();
+        initViews();
     }
 
-    private void initListeners() {
-        ImageButton btnCapture = (ImageButton) findViewById(R.id.btnCapture);
-        btnCapture.setOnClickListener(new View.OnClickListener() {
+    private void initViews() {
+        final ImageButton btnCapture = (ImageButton) findViewById(R.id.btnCapture);
+        btnCapture.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View view) {
-                mCamera.takePicture(null, null, mPictureCallback);
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                    mCamera.autoFocus(mFocusCallback);
+                } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                    mCamera.takePicture(mShutterCallback, null, mPictureCallback);
+                }
+                return false;
             }
         });
+
+        final ImageButton btnSettings = (ImageButton) findViewById(R.id.btnSettings);
+        registerForContextMenu(btnSettings);
+        btnSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openContextMenu(btnSettings);
+            }
+        });
+
+        imgCrosshair = (ImageView) findViewById(R.id.imgCrosshair);
+        STROKE_WIDTH = getResources().getDimensionPixelSize(R.dimen.margin_xsmall);
     }
 
     private void initCamera() {
@@ -127,9 +173,41 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_FOCUS) {
+            if (!isFocusPressed) {
+                isFocusPressed = true;
+                mCamera.autoFocus(mFocusCallback);
+                return true;
+            }
+        } else if (keyCode == KeyEvent.KEYCODE_CAMERA) {
+            if (isFocused) {
+                mCamera.takePicture(mShutterCallback, null, mPictureCallback);
+                isFocused = false;
+                isFocusPressed = false;
+            }
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_FOCUS) {
+            isFocused = false;
+            isFocusPressed = false;
+            mCamera.cancelAutoFocus();
+            ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.WHITE);
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_camera, menu);
+        getMenuInflater().inflate(R.menu.camera, menu);
         return true;
     }
 
@@ -149,8 +227,28 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+
+        try {
+            mCamera.reconnect();
+        } catch (IOException e) {
+            Log.w(getClass().getSimpleName(), e);
+        }
 
         //TODO: screen brightness lock
     }
@@ -173,6 +271,15 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+
+        if (mCamera != null) {
+            mCamera.unlock();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
         if (mCamera != null) {
             mCamera.release();

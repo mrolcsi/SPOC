@@ -19,9 +19,44 @@
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         android:layout_gravity="right|center_vertical"
-        android:layout_margin="@dimen/activity_vertical_margin"
+        android:layout_margin="@dimen/margin_xlarge"
         android:alpha="0.7"
         android:background="@drawable/camera_btn_capture_background"
         android:elevation="@dimen/design_fab_elevation"
         android:src="@android:drawable/ic_menu_camera"/>
+
+    <ImageButton
+        android:id="@+id/btnSettings"
+        android:layout_width="@dimen/margin_xxlarge"
+        android:layout_height="@dimen/margin_xxlarge"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="@dimen/margin_xlarge"
+        android:layout_marginLeft="@dimen/margin_xlarge"
+        android:alpha="0.7"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:src="@drawable/settings"
+        android:visibility="gone"/>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/tbSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/btnSettings"
+        android:layout_alignTop="@+id/btnSettings"
+        android:layout_marginRight="@dimen/margin_xlarge"
+        android:layout_toRightOf="@+id/btnSettings"
+        android:visibility="gone">
+
+    </android.support.v7.widget.Toolbar>
+
+    <ImageView
+        android:id="@+id/imgCrosshair"
+        android:layout_width="@dimen/logo_size"
+        android:layout_height="@dimen/logo_size"
+        android:layout_centerInParent="true"
+        android:alpha="0.7"
+        android:src="@drawable/camera_crosshair"/>
 </RelativeLayout>
