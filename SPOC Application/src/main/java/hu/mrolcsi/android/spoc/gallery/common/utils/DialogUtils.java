@@ -30,7 +30,7 @@ public abstract class DialogUtils {
 
     public static AlertDialog.Builder buildErrorDialog(final Context context) {
         return new AlertDialog.Builder(context)
-                .setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.dismiss();

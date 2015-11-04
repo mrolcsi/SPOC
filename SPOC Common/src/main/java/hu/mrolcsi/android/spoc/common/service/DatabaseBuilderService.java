@@ -265,7 +265,7 @@ public class DatabaseBuilderService extends IntentService {
                     }
 
                     final Cursor imageCursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI,
-                            new String[]{"_id"},
+                            new String[]{"_id", Image.COLUMN_LOCATION},
                             Image.COLUMN_FILENAME + " = ?",
                             new String[]{file.getAbsolutePath()},
                             null);

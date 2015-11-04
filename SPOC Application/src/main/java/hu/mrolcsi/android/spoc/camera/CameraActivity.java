@@ -1,15 +1,24 @@
 package hu.mrolcsi.android.spoc.camera;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.hardware.Camera;
+import android.location.GpsStatus;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.location.LocationProvider;
+import android.media.ExifInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -21,8 +30,10 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Toast;
 
+import hu.mrolcsi.android.spoc.common.utils.CameraUtils;
+import hu.mrolcsi.android.spoc.common.utils.LocationUtils;
+import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
 
@@ -36,12 +47,15 @@ public class CameraActivity extends AppCompatActivity {
 
     public static final String TAG = "SPOC.Camera";
     public static final int PREVIEW_TIME = 1000;
+    public static final int LOCATION_UPDATE_INTERVAL = 1000; //millisec
+    public static final float LOCATION_UPDATE_DISTANCE = 1;  //meter
 
     private static int STROKE_WIDTH;
     private ImageView imgCrosshair;
+    private ImageView imgGPSIndicator;
 
     private Camera mCamera;
-    private CameraPreview mPreview;
+    private CameraCallbacks mCameraCallbacks = new CameraCallbacks();
     private Runnable mResumePreview = new Runnable() {
         @Override
         public void run() {
@@ -53,81 +67,19 @@ public class CameraActivity extends AppCompatActivity {
 
     private boolean isFocused = false;
     private boolean isFocusPressed = false;
+    private boolean isLocationFound = false;
 
-    private Camera.ShutterCallback mShutterCallback = new Camera.ShutterCallback() {
-        @Override
-        public void onShutter() {
-            ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.RED);
-        }
-    };
-    private Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
-        @Override
-        public void onPictureTaken(byte[] bytes, Camera camera) {
-            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-            path = new File(path, "SPOC");
-            path.mkdirs();
+    private LocationManager mLocationService;
+    private Location mCurrentLocation;
+    private LocationCallbacks mLocationListener = new LocationCallbacks();
 
-            File pictureFile = new File(path, Calendar.getInstance().getTimeInMillis() + ".jpg");
-
-            if (pictureFile == null) {
-                Log.d(TAG, "Error creating media file, check storage permissions.");
-                return;
-            }
-
-            try {
-                FileOutputStream fos = new FileOutputStream(pictureFile);
-                fos.write(bytes);
-                fos.close();
-
-                Toast.makeText(CameraActivity.this, "Picture taken.", Toast.LENGTH_SHORT).show();
-
-                mHandler.postDelayed(mResumePreview, PREVIEW_TIME);
-            } catch (FileNotFoundException e) {
-                Log.d(TAG, "File not found: " + e.getMessage());
-            } catch (IOException e) {
-                Log.d(TAG, "Error accessing file: " + e.getMessage());
-            }
-        }
-    };
-    private Camera.AutoFocusCallback mFocusCallback = new Camera.AutoFocusCallback() {
-        @Override
-        public void onAutoFocus(boolean b, Camera camera) {
-            isFocused = b;
-            if (b) {
-                ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.GREEN);
-            } else {
-                ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.WHITE);
-            }
-        }
-    };
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        // check if device has a camera
-        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            // this device has a camera
-            initCamera();
-        } else {
-            // no camera on this device
-            // show dialog and exit
-            DialogUtils.buildErrorDialog(this)
-                    .setMessage("This device does not have a camera.")
-                    .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            finish();
-                        }
-                    })
-                    .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                        @Override
-                        public void onDismiss(DialogInterface dialogInterface) {
-                            finish();
-                        }
-                    })
-                    .show();
-        }
+        //get GPS service
+        mLocationService = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         initViews();
     }
@@ -138,9 +90,9 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                    mCamera.autoFocus(mFocusCallback);
+                    mCamera.autoFocus(mCameraCallbacks);
                 } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-                    mCamera.takePicture(mShutterCallback, null, mPictureCallback);
+                    mCamera.takePicture(mCameraCallbacks, null, mCameraCallbacks);
                 }
                 return false;
             }
@@ -157,18 +109,59 @@ public class CameraActivity extends AppCompatActivity {
 
         imgCrosshair = (ImageView) findViewById(R.id.imgCrosshair);
         STROKE_WIDTH = getResources().getDimensionPixelSize(R.dimen.margin_xsmall);
+
+        imgGPSIndicator = (ImageView) findViewById(R.id.imgGPSIndicator);
     }
 
     private void initCamera() {
         // Create an instance of Camera
+
+        final AlertDialog.Builder error = DialogUtils.buildErrorDialog(this)
+                .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finish();
+                    }
+                })
+                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialogInterface) {
+                        finish();
+                    }
+                });
+
+        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            // this device has a camera
+            try {
+                mCamera = Camera.open();
+                CameraPreview mPreview = new CameraPreview(CameraActivity.this, mCamera);
+                FrameLayout flCameraContainer = (FrameLayout) findViewById(R.id.cameraContainer);
+                flCameraContainer.addView(mPreview);
+            } catch (Exception e) {
+                Log.w(getClass().getSimpleName(), e);
+                error.setMessage(e.getMessage()).show();
+            }
+        } else {
+            // no camera on this device
+            // show dialog and exit
+            error.setMessage("This device does not have a camera.").show();
+        }
+    }
+
+    private void writeExif(String filename) {
         try {
-            mCamera = Camera.open();
-            mPreview = new CameraPreview(CameraActivity.this, mCamera);
-            FrameLayout flCameraContainer = (FrameLayout) findViewById(R.id.cameraContainer);
-            flCameraContainer.addView(mPreview);
-        } catch (Exception e) {
-            Log.w(getClass().getSimpleName(), e);
-            DialogUtils.buildErrorDialog(this).setMessage(e.toString()).show();
+            ExifInterface exif = new ExifInterface(filename);
+
+            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mCurrentLocation.getLatitude()));
+            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mCurrentLocation.getLatitude()));
+            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mCurrentLocation.getLongitude()));
+            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mCurrentLocation.getLongitude()));
+
+            exif.saveAttributes();
+
+            Log.v(TAG, "Exif data saved.");
+        } catch (IOException e) {
+            Log.w(TAG, e);
         }
     }
 
@@ -177,12 +170,12 @@ public class CameraActivity extends AppCompatActivity {
         if (keyCode == KeyEvent.KEYCODE_FOCUS) {
             if (!isFocusPressed) {
                 isFocusPressed = true;
-                mCamera.autoFocus(mFocusCallback);
+                mCamera.autoFocus(mCameraCallbacks);
                 return true;
             }
         } else if (keyCode == KeyEvent.KEYCODE_CAMERA) {
             if (isFocused) {
-                mCamera.takePicture(mShutterCallback, null, mPictureCallback);
+                mCamera.takePicture(mCameraCallbacks, null, mCameraCallbacks);
                 isFocused = false;
                 isFocusPressed = false;
             }
@@ -230,30 +223,29 @@ public class CameraActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
+        initCamera();
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        mCurrentLocation = mLocationService.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        mLocationService.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_UPDATE_INTERVAL, LOCATION_UPDATE_DISTANCE, mLocationListener);
+        mLocationService.addGpsStatusListener(mLocationListener);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        try {
-            mCamera.reconnect();
-        } catch (IOException e) {
-            Log.w(getClass().getSimpleName(), e);
-        }
-
-        //TODO: screen brightness lock
+//        try {
+//            if (mCamera != null) {
+//                mCamera.reconnect();
+//            }
+//        } catch (IOException e) {
+//            Log.w(getClass().getSimpleName(), e);
+//        }
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -269,20 +261,145 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-
-        if (mCamera != null) {
-            mCamera.unlock();
-        }
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // TODO: implement method
     }
 
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//
+//        if (mCamera != null) {
+//            mCamera.unlock();
+//        }
+//    }
+
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
 
         if (mCamera != null) {
             mCamera.release();
+        }
+
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        mLocationService.removeUpdates(mLocationListener);
+        mLocationService.removeGpsStatusListener(mLocationListener);
+    }
+
+    private class CameraCallbacks implements Camera.ShutterCallback, Camera.AutoFocusCallback, Camera.PictureCallback {
+
+        @Override
+        public void onAutoFocus(boolean b, Camera camera) {
+            isFocused = b;
+            if (b) {
+                ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.GREEN);
+            } else {
+                ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.WHITE);
+            }
+        }
+
+        @Override
+        public void onPictureTaken(byte[] bytes, Camera camera) {
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+            path = new File(path, "SPOC");
+            path.mkdirs();
+
+            final File pictureFile = new File(path, Calendar.getInstance().getTimeInMillis() + ".jpg");
+
+            try {
+                FileOutputStream fos = new FileOutputStream(pictureFile);
+                fos.write(bytes);
+                fos.close();
+
+                mHandler.postDelayed(mResumePreview, PREVIEW_TIME);
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        writeExif(pictureFile.getAbsolutePath());
+                    }
+                }).start();
+            } catch (FileNotFoundException e) {
+                Log.d(TAG, "File not found: " + e.getMessage());
+            } catch (IOException e) {
+                Log.d(TAG, "Error accessing file: " + e.getMessage());
+            }
+        }
+
+        @Override
+        public void onShutter() {
+            ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.RED);
+        }
+    }
+
+    private class LocationCallbacks implements LocationListener, GpsStatus.Listener {
+        @Override
+        public void onGpsStatusChanged(int status) {
+            if (BuildConfig.DEBUG) {
+                Log.v(TAG, "GPS | onGpsStatusChanged: " + status);
+            }
+
+            if (status == 1) {
+                //looking for satellites
+                imgGPSIndicator.setImageResource(R.drawable.gps_searching);
+            } else if (status == 4 && !isLocationFound) {
+                // receiving data, no fix yet
+                imgGPSIndicator.setImageResource(R.drawable.gps_searching);
+            } else if (status == 3) {
+                // location updated
+                imgGPSIndicator.setImageResource(R.drawable.gps_receiving);
+            } else if (status == 2) {
+                imgGPSIndicator.setImageResource(R.drawable.gps_disconnected);
+            }
+        }
+
+        @Override
+        public void onLocationChanged(Location location) {
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "GPS | onLocationChanged: " + location.toString());
+            }
+
+            isLocationFound = true;
+
+            if (CameraUtils.isBetterLocation(location, mCurrentLocation)) {
+                mCurrentLocation = location;
+            }
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "GPS | onStatusChanged: " + status);
+            }
+
+            if (status == LocationProvider.OUT_OF_SERVICE) {
+                imgGPSIndicator.setImageResource(R.drawable.gps_disconnected);
+            } else if (status == LocationProvider.TEMPORARILY_UNAVAILABLE) {
+                imgGPSIndicator.setImageResource(R.drawable.gps_searching);
+            } else if (status == LocationProvider.AVAILABLE) {
+                imgGPSIndicator.setImageResource(R.drawable.gps_receiving);
+            }
+        }
+
+        @Override
+        public void onProviderEnabled(String s) {
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "GPS | onProviderEnabled: " + s);
+            }
+
+            //imgGPSIndicator.setImageResource(R.drawable.gps_receiving);
+        }
+
+        @Override
+        public void onProviderDisabled(String s) {
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "GPS | onProviderDisabled: " + s);
+            }
+
+            //imgGPSIndicator.setImageResource(R.drawable.gps_disconnected);
         }
     }
 }

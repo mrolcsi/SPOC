@@ -23,7 +23,7 @@
         android:alpha="0.7"
         android:background="@drawable/camera_btn_capture_background"
         android:elevation="@dimen/design_fab_elevation"
-        android:src="@android:drawable/ic_menu_camera"/>
+        android:src="@drawable/camera"/>
 
     <ImageButton
         android:id="@+id/btnSettings"
@@ -59,4 +59,26 @@
         android:layout_centerInParent="true"
         android:alpha="0.7"
         android:src="@drawable/camera_crosshair"/>
+
+    <LinearLayout
+        android:id="@+id/llIndicators"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="false"
+        android:layout_alignParentTop="true"
+        android:layout_margin="@dimen/margin_xlarge"
+        android:alpha="0.7"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/imgGPSIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:src="@drawable/gps_disconnected"/>
+
+    </LinearLayout>
+
 </RelativeLayout>

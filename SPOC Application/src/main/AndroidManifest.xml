@@ -49,6 +49,18 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="hu.mrolcsi.android.spoc.gallery.main.GalleryActivity" />
         </activity>
+        <activity
+            android:name="hu.mrolcsi.android.spoc.camera.CameraActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/old_time_camera"
+            android:label="@string/title_activity_camera"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.SPOC.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
 
         <service
             android:name="hu.mrolcsi.android.spoc.common.service.CacheBuilderService"
@@ -67,17 +79,6 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/GOOGLE_API_KEY" />
 
-        <activity
-            android:name="hu.mrolcsi.android.spoc.camera.CameraActivity"
-            android:icon="@drawable/old_time_camera"
-            android:label="@string/title_activity_camera"
-            android:screenOrientation="landscape"
-            android:theme="@style/Theme.SPOC.Fullscreen">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
     </application>
 
 </manifest>
