@@ -1,0 +1,734 @@
+Index: SPOC Application/src/main/res/xml/preferences.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Application/src/main/res/xml/preferences.xml	(revision 36c09fe7ba4c3feb33c692ba459cab3f63bd1e77)
++++ SPOC Application/src/main/res/xml/preferences.xml	(revision )
+@@ -1,7 +1,7 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+ 
+-    <PreferenceCategory android:title="@string/title_activity_gallery">
++    <PreferenceCategory android:title="@string/activity_gallery">
+ 
+         <!--<SwitchPreference-->
+         <!--android:id="@+id/prefShowCamera"-->
+\ No newline at end of file
+Index: SPOC Application/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Application/build.gradle	(revision 36c09fe7ba4c3feb33c692ba459cab3f63bd1e77)
++++ SPOC Application/build.gradle	(revision )
+@@ -146,6 +146,9 @@
+     compile project(':core')
+     compile project(':layouts')
+     compile project(':FileBrowser')
++    compile('com.crashlytics.sdk.android:crashlytics:2.5.0@aar') {
++        transitive = true;
++    }
+     compile 'com.android.support:design:23.0.1'
+     compile 'com.android.support:support-v4:23.0.1'
+     compile 'com.android.support:recyclerview-v7:23.0.1'
+@@ -153,7 +156,4 @@
+     compile 'com.github.chrisbanes.photoview:library:1.2.4'
+     compile 'com.github.machinarius:preferencefragment:0.1.2'
+     compile 'com.tonicartos:superslim:0.4.13'
+-    compile('com.crashlytics.sdk.android:crashlytics:2.5.0@aar') {
+-        transitive = true;
+-    }
+ }
+Index: SPOC Application/src/main/res/layout/activity_single_image.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Application/src/main/res/layout/activity_single_image.xml	(revision )
++++ SPOC Application/src/main/res/layout/activity_single_image.xml	(revision )
+@@ -0,0 +1,135 @@
++<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++             xmlns:app="http://schemas.android.com/apk/res-auto"
++             xmlns:tools="http://schemas.android.com/tools"
++             android:layout_width="match_parent"
++             android:layout_height="match_parent"
++             tools:context="hu.mrolcsi.android.spoc.gallery.imagedetails.ImagePagerActivity">
++
++    <!-- The primary full-screen view. This can be replaced with whatever view
++         is needed to present your content, e.g. VideoView, SurfaceView,
++         TextureView, etc. -->
++    <FrameLayout
++        android:id="@+id/fullscreen_content"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"/>
++
++    <!-- This FrameLayout insets its children based on system windows using
++         android:fitsSystemWindows. -->
++
++    <TableLayout
++        android:id="@+id/fullscreen_content_controls"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:layout_gravity="bottom"
++        android:fitsSystemWindows="true"
++        >
++
++        <TableRow
++            android:id="@+id/trDate"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content">
++
++            <ImageView
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_alignParentBottom="false"
++                android:layout_below="@+id/imgLocation"
++                android:layout_margin="@dimen/margin_small"
++                android:contentDescription="@string/details_label_dateTaken"
++                android:src="@drawable/calendar"/>
++
++            <TextView
++                android:id="@+id/tvDateTaken"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:layout_alignBottom="@+id/imgDate"
++                android:layout_alignParentLeft="false"
++                android:layout_alignParentStart="false"
++                android:layout_alignTop="@+id/imgDate"
++                android:layout_gravity="center_vertical"
++                android:layout_toEndOf="@+id/imgDate"
++                android:layout_toRightOf="@+id/imgDate"
++                android:shadowColor="@android:color/black"
++                android:shadowDx="1"
++                android:shadowDy="1"
++                android:shadowRadius="1"
++                android:text=""/>
++        </TableRow>
++
++        <TableRow
++            android:id="@+id/trLocation"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content">
++
++            <ImageView
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_alignParentLeft="true"
++                android:layout_alignParentStart="true"
++                android:layout_margin="@dimen/margin_small"
++                android:contentDescription="@string/details_label_location"
++                android:src="@drawable/map_marker"/>
++
++            <TextView
++                android:id="@+id/tvLocation"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:layout_alignBottom="@+id/imgLocation"
++                android:layout_alignParentLeft="false"
++                android:layout_alignParentStart="false"
++                android:layout_alignTop="@+id/imgLocation"
++                android:layout_gravity="center_vertical"
++                android:layout_toEndOf="@+id/imgLocation"
++                android:layout_toRightOf="@+id/imgLocation"
++                android:shadowColor="@android:color/black"
++                android:shadowDx="1"
++                android:shadowDy="1"
++                android:shadowRadius="1"
++                android:text=""/>
++        </TableRow>
++
++        <TableRow
++            android:id="@+id/trLabels"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content">
++
++            <ImageView
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_below="@+id/imgDate"
++                android:layout_margin="@dimen/margin_small"
++                android:contentDescription="@string/navigation_tags"
++                android:src="@drawable/tag"
++                />
++
++            <TextView
++                android:id="@+id/tvLabels"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:layout_alignBottom="@+id/imgLabels"
++                android:layout_alignTop="@+id/imgLabels"
++                android:layout_gravity="center_vertical"
++                android:layout_toEndOf="@+id/imgLabels"
++                android:layout_toRightOf="@+id/imgLabels"
++                android:ellipsize="marquee"
++                android:shadowColor="@android:color/black"
++                android:shadowDx="1"
++                android:shadowDy="1"
++                android:shadowRadius="1"
++                android:singleLine="true"
++                android:text=""/>
++        </TableRow>
++    </TableLayout>
++
++    <android.support.v7.widget.Toolbar
++        android:id="@+id/toolbar"
++        android:layout_width="match_parent"
++        android:layout_height="?attr/actionBarSize"
++        android:layout_marginTop="25dp"
++        android:background="@null"
++        android:elevation="0dp"
++        app:layout_scrollFlags="scroll|enterAlways"
++        app:popupTheme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
++        tools:ignore="UnusedAttribute"/>
++
++</FrameLayout>
+Index: SPOC Application/src/main/res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Application/src/main/res/values/strings.xml	(revision 36c09fe7ba4c3feb33c692ba459cab3f63bd1e77)
++++ SPOC Application/src/main/res/values/strings.xml	(revision )
+@@ -1,4 +1,6 @@
+ <resources>
++    <string name="activity_gallery">Gallery</string>
++    <string name="activity_single_image">SPOC Image Viewer</string>
+     <string name="cab_deselectAll">Deselect All</string>
+     <string name="cab_itemsSelectedFormat">%1$d selected</string>
+     <string name="cab_selectAll">Select All</string>
+@@ -122,6 +124,6 @@
+     <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
+     <string name="splash_button_continueInBackground">Continue in background</string>
+     <string name="splash_contentDescription_logo">SPOC Logo</string>
+-    <string name="title_activity_gallery">Gallery</string>
+     <string name="yes">Yes</string>
++
+ </resources>
+Index: SPOC Application/src/main/res/values-en/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Application/src/main/res/values-en/strings.xml	(revision 36c09fe7ba4c3feb33c692ba459cab3f63bd1e77)
++++ SPOC Application/src/main/res/values-en/strings.xml	(revision )
+@@ -122,6 +122,7 @@
+     <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
+     <string name="splash_button_continueInBackground">Continue in background</string>
+     <string name="splash_contentDescription_logo">SPOC Logo</string>
+-    <string name="title_activity_gallery">Gallery</string>
++    <string name="activity_gallery">Gallery</string>
+     <string name="yes">Yes</string>
++    <string name="activity_single_image">SPOC Image Viewer</string>
+ </resources>
+\ No newline at end of file
+Index: SPOC Application/src/main/java/hu/mrolcsi/android/spoc/gallery/imagedetails/SingleImageActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Application/src/main/java/hu/mrolcsi/android/spoc/gallery/imagedetails/SingleImageActivity.java	(revision )
++++ SPOC Application/src/main/java/hu/mrolcsi/android/spoc/gallery/imagedetails/SingleImageActivity.java	(revision )
+@@ -0,0 +1,388 @@
++package hu.mrolcsi.android.spoc.gallery.imagedetails;
++
++import android.annotation.TargetApi;
++import android.content.ContentValues;
++import android.database.Cursor;
++import android.location.Address;
++import android.media.ExifInterface;
++import android.net.Uri;
++import android.os.Build;
++import android.os.Bundle;
++import android.os.Handler;
++import android.support.v4.app.NavUtils;
++import android.support.v4.content.CursorLoader;
++import android.support.v4.content.Loader;
++import android.support.v4.view.ViewCompat;
++import android.support.v7.app.ActionBar;
++import android.support.v7.app.AppCompatActivity;
++import android.support.v7.widget.Toolbar;
++import android.text.Html;
++import android.text.TextUtils;
++import android.util.Log;
++import android.view.Menu;
++import android.view.MenuItem;
++import android.view.MotionEvent;
++import android.view.View;
++import android.view.WindowManager;
++import android.view.animation.AccelerateInterpolator;
++import android.view.animation.DecelerateInterpolator;
++import android.widget.TableRow;
++import android.widget.TextView;
++
++import hu.mrolcsi.android.spoc.common.helper.LocationFinderTask;
++import hu.mrolcsi.android.spoc.common.loader.ImagesTableLoader;
++import hu.mrolcsi.android.spoc.common.loader.LabelsTableLoader;
++import hu.mrolcsi.android.spoc.common.utils.LocationUtils;
++import hu.mrolcsi.android.spoc.database.model.Image;
++import hu.mrolcsi.android.spoc.database.model.Label;
++import hu.mrolcsi.android.spoc.database.model.LabelType;
++import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
++import hu.mrolcsi.android.spoc.gallery.R;
++import hu.mrolcsi.android.spoc.gallery.common.utils.SystemUiHider;
++
++import java.io.File;
++import java.io.IOException;
++import java.text.DateFormat;
++import java.text.ParseException;
++import java.text.SimpleDateFormat;
++import java.util.Date;
++import java.util.List;
++import java.util.Locale;
++
++/**
++ * An example full-screen activity that shows and hides the system UI (i.e.
++ * status bar and navigation/system bar) with user interaction.
++ *
++ * @see SystemUiHider
++ */
++public class SingleImageActivity extends AppCompatActivity implements ImagesTableLoader.LoaderCallbacks {
++    /**
++     * Whether or not the system UI should be auto-hidden after
++     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
++     */
++    private static final boolean AUTO_HIDE = false;
++
++    /**
++     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
++     * user interaction before hiding the system UI.
++     */
++    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
++
++    /**
++     * If set, will toggle the system UI visibility upon interaction. Otherwise,
++     * will show the system UI visibility upon interaction.
++     */
++    private static final boolean TOGGLE_ON_CLICK = true;
++
++    /**
++     * The flags to pass to {@link SystemUiHider#getInstance}.
++     */
++    private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
++    Handler mHideHandler = new Handler();
++    /**
++     * Touch listener to use for in-layout UI controls to delay hiding the
++     * system UI. This is to prevent the jarring behavior of controls going away
++     * while interacting with activity UI.
++     */
++    View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
++        @Override
++        public boolean onTouch(View view, MotionEvent motionEvent) {
++            if (AUTO_HIDE) {
++                delayedHide(AUTO_HIDE_DELAY_MILLIS);
++            }
++            return false;
++        }
++    };
++    /**
++     * The instance of the {@link SystemUiHider} for this activity.
++     */
++    private SystemUiHider mSystemUiHider;
++    Runnable mHideRunnable = new Runnable() {
++        @Override
++        public void run() {
++            mSystemUiHider.hide();
++        }
++    };
++    private TableRow trLocation;
++    private TableRow trLabels;
++    private TextView tvLocation;
++    private TextView tvDateTaken;
++    private TextView tvLabels;
++
++    private LocationFinderTask mLocationFinderTask;
++    private int mImageLoaderId;
++
++    private Bundle mLabelsLoaderArgs;
++    private CursorLoader mLabelsLoader;
++
++    @Override
++    protected void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++
++        setContentView(R.layout.activity_single_image);
++
++        setupActionBar();
++
++        final View controlsView = findViewById(R.id.fullscreen_content_controls);
++        final View contentView = findViewById(R.id.fullscreen_content);
++
++        // Set up an instance of SystemUiHider to control the system UI for
++        // this activity.
++        mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
++        mSystemUiHider.setup();
++        mSystemUiHider.addOnVisibilityChangeListener(new hu.mrolcsi.android.spoc.gallery.common.utils.SystemUiHider.OnVisibilityChangeListener() {
++            // Cached values.
++            int mControlsHeight;
++            DecelerateInterpolator decelerateInterpolator;
++            AccelerateInterpolator accelerateInterpolator;
++
++            @Override
++            @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
++            public void onVisibilityChange(boolean visible) {
++
++                if (mControlsHeight == 0) {
++                    mControlsHeight = controlsView.getHeight();
++                }
++                if (decelerateInterpolator == null) {
++                    decelerateInterpolator = new DecelerateInterpolator(2);
++                }
++                if (accelerateInterpolator == null) {
++                    accelerateInterpolator = new AccelerateInterpolator(2);
++                }
++                ViewCompat.animate(controlsView).translationY(visible ? 0 : mControlsHeight).setInterpolator(visible ? decelerateInterpolator : accelerateInterpolator);
++
++                if (getSupportActionBar() != null) {
++                    if (visible) {
++                        getSupportActionBar().show();
++                    } else {
++                        getSupportActionBar().hide();
++                    }
++                }
++
++                //noinspection PointlessBooleanExpression,ConstantConditions
++                if (visible && AUTO_HIDE) {
++                    // Schedule a hide().
++                    delayedHide(AUTO_HIDE_DELAY_MILLIS);
++                }
++            }
++        });
++
++        // Set up the user interaction to manually show or hide the system UI.
++        contentView.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View view) {
++                if (TOGGLE_ON_CLICK) {
++                    mSystemUiHider.toggle();
++                } else {
++                    mSystemUiHider.show();
++                }
++            }
++        });
++
++        // Upon interacting with UI controls, delay any scheduled hide()
++        // operations to prevent the jarring behavior of controls going away
++        // while interacting with the UI.
++        //findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
++
++        if (Build.VERSION.SDK_INT >= 18) {
++            WindowManager.LayoutParams params = getWindow().getAttributes();
++            params.rotationAnimation = WindowManager.LayoutParams.ROTATION_ANIMATION_ROTATE;
++            getWindow().setAttributes(params);
++        }
++
++        mLabelsLoaderArgs = new Bundle();
++        mLabelsLoaderArgs.putStringArray(LabelsTableLoader.ARG_PROJECTION, new String[]{"DISTINCT " + Label.COLUMN_FOREIGN_ID + " AS _id", Label.COLUMN_NAME});
++        mLabelsLoaderArgs.putString(LabelsTableLoader.ARG_SELECTION, Label.COLUMN_TYPE + " = '" + LabelType.CUSTOM.name() + "' AND " + Image.COLUMN_FOREIGN_ID + " = ?");
++        mLabelsLoaderArgs.putStringArray(LabelsTableLoader.ARG_SELECTION_ARGS, new String[]{"0"});
++    }
++
++    @Override
++    protected void onPostCreate(Bundle savedInstanceState) {
++        super.onPostCreate(savedInstanceState);
++
++        trLocation = (TableRow) findViewById(R.id.trLocation);
++        trLabels = (TableRow) findViewById(R.id.trLabels);
++
++        tvLocation = (TextView) findViewById(R.id.tvLocation);
++        tvDateTaken = (TextView) findViewById(R.id.tvDateTaken);
++        tvLabels = (TextView) findViewById(R.id.tvLabels);
++
++        // Trigger the initial hide() shortly after the activity has been
++        // created, to briefly hint to the user that UI controls
++        // are available.
++        delayedHide(100);
++    }
++
++    /**
++     * Set up the {@link android.app.ActionBar}, if the API is available.
++     */
++    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
++    private void setupActionBar() {
++        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
++
++        setSupportActionBar(toolbar);
++
++        final ActionBar actionBar = getSupportActionBar();
++        if (actionBar != null) {
++            actionBar.setDisplayHomeAsUpEnabled(true);
++            actionBar.setHomeButtonEnabled(true);
++            actionBar.setTitle(null);
++        }
++    }
++
++    @Override
++    public boolean onCreateOptionsMenu(Menu menu) {
++        super.onCreateOptionsMenu(menu);
++        getMenuInflater().inflate(R.menu.details, menu);
++        return true;
++    }
++
++    @Override
++    public boolean onOptionsItemSelected(MenuItem item) {
++        int id = item.getItemId();
++        if (id == android.R.id.home) {
++            NavUtils.navigateUpFromSameTask(this);
++            return true;
++        }
++        return super.onOptionsItemSelected(item);
++    }
++
++    @Override
++    protected void onStart() {
++        super.onStart();
++
++        //load image
++        Bundle loaderArgs = new Bundle();
++        loaderArgs.putString(ImagesTableLoader.ARG_URI_STRING, SPOCContentProvider.IMAGES_URI.buildUpon());
++
++        getSupportLoaderManager().restartLoader(mImageLoaderId, loaderArgs, new ImagesTableLoader(this, this));
++
++        mLabelsLoader = (CursorLoader) getSupportLoaderManager().initLoader(LABELS_LOADER_ID, mLabelsLoaderArgs, new LabelsTableLoader(this, this));
++    }
++
++    private void updateInfo() {
++        getIntent().getStringExtra("something");
++        String imagePath = item.getArguments().getString(SingleImageFragment.ARG_IMAGE_PATH);
++
++        if (imagePath == null) return;
++
++        try {
++            final ExifInterface exif = new ExifInterface(imagePath);
++            final SimpleDateFormat dateParser = new SimpleDateFormat(getString(hu.mrolcsi.android.spoc.common.R.string.spoc_exifParser), Locale.US);
++
++            //load data from db (fragment args)
++            //if not available, load from exif
++
++            // date taken
++            final long dateTaken = item.getArguments().getLong(SingleImageFragment.ARG_IMAGE_DATE_TAKEN);
++            if (dateTaken > 0) {
++                tvDateTaken.setText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(dateTaken)));
++            } else {
++                final String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
++                if (dateString != null) {
++                    final Date date = dateParser.parse(dateString);
++                    tvDateTaken.setText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date));
++                } else {
++                    final long l = new File(imagePath).lastModified();
++                    final String s = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(l));
++                    tvDateTaken.setText(s);
++                }
++            }
++
++            // location
++            final String location = item.getArguments().getString(SingleImageFragment.ARG_IMAGE_LOCATION);
++            if (!TextUtils.isEmpty(location)) {
++                trLocation.setVisibility(View.VISIBLE);
++                tvLocation.setText(location);
++            } else {
++                float latLong[] = new float[2];
++                if (exif.getLatLong(latLong)) {
++                    mLocationFinderTask = new LocationFinderTask(this) {
++                        @Override
++                        protected void onPreExecute() {
++                            super.onPreExecute();
++                            tvLocation.setText(Html.fromHtml(getString(R.string.details_message_lookingUpLocation)));
++                        }
++
++                        @Override
++                        protected void onPostExecute(List<Address> addresses) {
++                            super.onPostExecute(addresses);
++
++                            if (isCancelled()) return;
++
++                            if (addresses == null) {
++                                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation_noInternet)));
++                            } else if (addresses.isEmpty()) {
++                                tvLocation.setText(Html.fromHtml(getString(R.string.details_message_unknownLocation)));
++                            } else {
++                                final Address address = addresses.get(0);
++                                String locationText = LocationUtils.getLocationText(address);
++
++                                //update db
++                                ContentValues values = new ContentValues();
++                                values.put(Image.COLUMN_LOCATION, locationText);
++
++                                getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(item.getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID))), values, null, null);
++
++                                tvLocation.setText(locationText);
++                            }
++                        }
++                    };
++                    mLocationFinderTask.execute(latLong[0], latLong[1]);
++                } else {
++                    tvLocation.setText(null);
++                    trLocation.setVisibility(View.GONE);
++                }
++            }
++
++            //labels
++            mLabelsLoader.setSelectionArgs(new String[]{String.valueOf(item.getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID))});
++            mLabelsLoader.forceLoad();
++
++        } catch (IOException | ParseException e) {
++            Log.w(getClass().getName(), e);
++        }
++    }
++
++    /**
++     * Schedules a call to hide() in [delay] milliseconds, canceling any
++     * previously scheduled calls.
++     */
++    private void delayedHide(int delayMillis) {
++        mHideHandler.removeCallbacks(mHideRunnable);
++        mHideHandler.postDelayed(mHideRunnable, delayMillis);
++    }
++
++    @Override
++    public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
++        if (loader.getId() == mImageLoaderId) {
++            //no adapter, only one image
++            updateInfo();
++        } else if (loader.getId() == LABELS_LOADER_ID) {
++            //labels
++            if (data.getCount() > 0) {
++                trLabels.setVisibility(View.VISIBLE);
++
++                StringBuilder sb = new StringBuilder();
++                while (data.moveToNext()) {
++                    sb.append(data.getString(1)).append(", ");
++                }
++                tvLabels.setText(sb.substring(0, sb.length() - 2));
++            } else {
++                trLabels.setVisibility(View.GONE);
++            }
++        }
++    }
++
++    @Override
++    public void onLoaderReset(Loader<Cursor> loader) {
++        if (loader.getId() == mImageLoaderId) {
++            if (mAdapter != null) {
++                mAdapter.changeCursor(null);
++            }
++        } else if (loader.getId() == LABELS_LOADER_ID) {
++            tvLabels.setText(null);
++            trLabels.setVisibility(View.GONE);
++        }
++    }
++}
+Index: SPOC Application/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Application/src/main/AndroidManifest.xml	(revision 36c09fe7ba4c3feb33c692ba459cab3f63bd1e77)
++++ SPOC Application/src/main/AndroidManifest.xml	(revision )
+@@ -20,23 +20,22 @@
+         android:supportsRtl="false"
+         android:theme="@style/Theme.SPOC"
+         tools:ignore="UnusedAttribute">
+-
+         <activity
+             android:name=".main.GalleryActivity"
+-            android:label="@string/title_activity_gallery"
++            android:label="@string/activity_gallery"
+             android:launchMode="singleTop"
+             android:theme="@style/Theme.SPOC">
+         </activity>
+         <activity
+             android:name=".main.SplashScreenActivity"
+-            android:label="@string/title_activity_gallery"
++            android:label="@string/activity_gallery"
+             android:theme="@style/Theme.SPOC">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
++
+                 <category android:name="android.intent.category.LAUNCHER" />
+             </intent-filter>
+         </activity>
+-
+         <activity
+             android:name=".imagedetails.ImagePagerActivity"
+             android:configChanges="orientation|keyboardHidden|screenSize"
+@@ -63,6 +62,26 @@
+         <meta-data
+             android:name="com.google.android.geo.API_KEY"
+             android:value="@string/GOOGLE_API_KEY" />
++
++        <activity
++            android:name=".imagedetails.SingleImageActivity"
++            android:configChanges="orientation|keyboardHidden|screenSize"
++            android:icon="@drawable/stack_of_photos"
++            android:label="@string/activity_single_image"
++            android:theme="@style/Theme.SPOC.Fullscreen">
++            <intent-filter>
++                <action android:name="android.intent.action.VIEW"/>
++
++                <category android:name="android.intent.category.DEFAULT"/>
++                <category android:name="android.intent.category.BROWSABLE"/>
++
++                <data
++                    android:host="*"
++                    android:mimeType="image/*"
++                    android:scheme="file"
++                    />
++            </intent-filter>
++        </activity>
+     </application>
+ 
+ </manifest>
+Index: SPOC Application/src/main/res/layout/fragment_singleimage.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Application/src/main/res/layout/fragment_singleimage.xml	(revision 36c09fe7ba4c3feb33c692ba459cab3f63bd1e77)
++++ SPOC Application/src/main/res/layout/fragment_singleimage.xml	(revision )
+@@ -16,8 +16,10 @@
+ -->
+ 
+ <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++             xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+-             android:layout_height="match_parent">
++             android:layout_height="match_parent"
++             tools:showIn="@layout/activity_single_image">
+ 
+     <ProgressBar
+         android:id="@android:id/progress"
+\ No newline at end of file
+Index: SPOC Application/src/main/res/values-hu/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Application/src/main/res/values-hu/strings.xml	(revision 36c09fe7ba4c3feb33c692ba459cab3f63bd1e77)
++++ SPOC Application/src/main/res/values-hu/strings.xml	(revision )
+@@ -122,6 +122,7 @@
+     <string name="singleImage_message_personAlreadyTagged">Ez a személy már szerepel a képen.</string>
+     <string name="splash_button_continueInBackground">Folytatás a háttérben</string>
+     <string name="splash_contentDescription_logo">SPOC Embléma</string>
+-    <string name="title_activity_gallery">Galéria</string>
++    <string name="activity_gallery">Galéria</string>
+     <string name="yes">Igen</string>
++    <string name="activity_single_image">SPOC Képmegjelenítő</string>
+ </resources>
+\ No newline at end of file
+Index: SPOC Common/src/main/java/hu/mrolcsi/android/spoc/common/service/DatabaseBuilderService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- SPOC Common/src/main/java/hu/mrolcsi/android/spoc/common/service/DatabaseBuilderService.java	(revision 36c09fe7ba4c3feb33c692ba459cab3f63bd1e77)
++++ SPOC Common/src/main/java/hu/mrolcsi/android/spoc/common/service/DatabaseBuilderService.java	(revision )
+@@ -265,7 +265,7 @@
+                     }
+ 
+                     final Cursor imageCursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI,
+-                            new String[]{"_id"},
++                            new String[]{"_id", Image.COLUMN_LOCATION},
+                             Image.COLUMN_FILENAME + " = ?",
+                             new String[]{file.getAbsolutePath()},
+                             null);
