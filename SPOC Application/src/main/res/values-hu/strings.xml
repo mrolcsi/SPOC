@@ -122,6 +122,7 @@
     <string name="singleImage_message_personAlreadyTagged">Ez a személy már szerepel a képen.</string>
     <string name="splash_button_continueInBackground">Folytatás a háttérben</string>
     <string name="splash_contentDescription_logo">SPOC Embléma</string>
-    <string name="title_activity_gallery">Galéria</string>
+    <string name="title_activity_gallery">SPOC Galéria</string>
     <string name="yes">Igen</string>
+    <string name="title_activity_camera">SPOC Kamera</string>
 </resources>

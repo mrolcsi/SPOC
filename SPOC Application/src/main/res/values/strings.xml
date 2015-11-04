@@ -122,6 +122,9 @@
     <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
     <string name="splash_button_continueInBackground">Continue in background</string>
     <string name="splash_contentDescription_logo">SPOC Logo</string>
-    <string name="title_activity_gallery">Gallery</string>
+    <string name="title_activity_gallery">SPOC Gallery</string>
     <string name="yes">Yes</string>
+    <string name="title_activity_camera">SPOC Camera</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>

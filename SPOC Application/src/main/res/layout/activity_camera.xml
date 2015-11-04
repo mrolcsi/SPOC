@@ -1,0 +1,27 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="hu.mrolcsi.android.spoc.camera.CameraActivity">
+
+    <FrameLayout
+        android:id="@+id/cameraContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </FrameLayout>
+
+    <ImageButton
+        android:id="@+id/btnCapture"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_gravity="right|center_vertical"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        android:alpha="0.7"
+        android:background="@drawable/camera_btn_capture_background"
+        android:elevation="@dimen/design_fab_elevation"
+        android:src="@android:drawable/ic_menu_camera"/>
+</RelativeLayout>
