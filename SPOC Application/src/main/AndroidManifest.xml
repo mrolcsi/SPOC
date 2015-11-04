@@ -51,7 +51,6 @@
         </activity>
         <activity
             android:name="hu.mrolcsi.android.spoc.camera.CameraActivity"
-            android:configChanges="orientation"
             android:icon="@drawable/old_time_camera"
             android:label="@string/title_activity_camera"
             android:screenOrientation="landscape"

@@ -8,6 +8,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.hardware.Camera;
+import android.hardware.SensorManager;
 import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
@@ -25,11 +26,15 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.OrientationEventListener;
+import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import hu.mrolcsi.android.spoc.common.utils.CameraUtils;
 import hu.mrolcsi.android.spoc.common.utils.LocationUtils;
@@ -51,11 +56,15 @@ public class CameraActivity extends AppCompatActivity {
     public static final float LOCATION_UPDATE_DISTANCE = 1;  //meter
 
     private static int STROKE_WIDTH;
+    private FrameLayout flPreviewContainer;
     private ImageView imgCrosshair;
     private ImageView imgGPSIndicator;
+    private ImageButton btnCapture;
+    private LinearLayout llIndicators;
 
+    private int mCameraId = 0;
     private Camera mCamera;
-    private CameraCallbacks mCameraCallbacks = new CameraCallbacks();
+    private CameraCallbacks mCameraCallbacks;
     private Runnable mResumePreview = new Runnable() {
         @Override
         public void run() {
@@ -78,6 +87,8 @@ public class CameraActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+        mCameraCallbacks = new CameraCallbacks(this);
+
         //get GPS service
         mLocationService = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -85,7 +96,7 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        final ImageButton btnCapture = (ImageButton) findViewById(R.id.btnCapture);
+        btnCapture = (ImageButton) findViewById(R.id.btnCapture);
         btnCapture.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -110,7 +121,42 @@ public class CameraActivity extends AppCompatActivity {
         imgCrosshair = (ImageView) findViewById(R.id.imgCrosshair);
         STROKE_WIDTH = getResources().getDimensionPixelSize(R.dimen.margin_xsmall);
 
-        imgGPSIndicator = (ImageView) findViewById(R.id.imgGPSIndicator);
+        llIndicators = (LinearLayout) findViewById(R.id.llIndicators);
+
+        imgGPSIndicator = (ImageView) llIndicators.findViewById(R.id.imgGPSIndicator);
+    }
+
+    private void writeExif(String filename) {
+        try {
+            ExifInterface exif = new ExifInterface(filename);
+
+            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mCurrentLocation.getLatitude()));
+            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mCurrentLocation.getLatitude()));
+            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mCurrentLocation.getLongitude()));
+            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mCurrentLocation.getLongitude()));
+
+            final int rotation = getWindowManager().getDefaultDisplay().getRotation();
+            switch (rotation) {
+                case Surface.ROTATION_0:        //portrait
+                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_ROTATE_90));
+                    break;
+                case Surface.ROTATION_90:       //landscape
+                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_NORMAL));
+                    break;
+                case Surface.ROTATION_180:      //reverse portrait
+                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_ROTATE_180));
+                    break;
+                case Surface.ROTATION_270:      //reverse landscape
+                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_ROTATE_270));
+                    break;
+            }
+
+            exif.saveAttributes();
+
+            Log.v(TAG, "Exif data saved.");
+        } catch (IOException e) {
+            Log.w(TAG, e);
+        }
     }
 
     private void initCamera() {
@@ -133,10 +179,11 @@ public class CameraActivity extends AppCompatActivity {
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
             // this device has a camera
             try {
-                mCamera = Camera.open();
+                mCamera = Camera.open(mCameraId);
+                CameraUtils.setCameraDisplayOrientation(this, mCameraId, mCamera);
                 CameraPreview mPreview = new CameraPreview(CameraActivity.this, mCamera);
-                FrameLayout flCameraContainer = (FrameLayout) findViewById(R.id.cameraContainer);
-                flCameraContainer.addView(mPreview);
+                flPreviewContainer = (FrameLayout) findViewById(R.id.cameraContainer);
+                flPreviewContainer.addView(mPreview);
             } catch (Exception e) {
                 Log.w(getClass().getSimpleName(), e);
                 error.setMessage(e.getMessage()).show();
@@ -146,43 +193,6 @@ public class CameraActivity extends AppCompatActivity {
             // show dialog and exit
             error.setMessage("This device does not have a camera.").show();
         }
-    }
-
-    private void writeExif(String filename) {
-        try {
-            ExifInterface exif = new ExifInterface(filename);
-
-            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mCurrentLocation.getLatitude()));
-            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mCurrentLocation.getLatitude()));
-            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mCurrentLocation.getLongitude()));
-            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mCurrentLocation.getLongitude()));
-
-            exif.saveAttributes();
-
-            Log.v(TAG, "Exif data saved.");
-        } catch (IOException e) {
-            Log.w(TAG, e);
-        }
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_FOCUS) {
-            if (!isFocusPressed) {
-                isFocusPressed = true;
-                mCamera.autoFocus(mCameraCallbacks);
-                return true;
-            }
-        } else if (keyCode == KeyEvent.KEYCODE_CAMERA) {
-            if (isFocused) {
-                mCamera.takePicture(mCameraCallbacks, null, mCameraCallbacks);
-                isFocused = false;
-                isFocusPressed = false;
-            }
-            return true;
-        }
-
-        return super.onKeyDown(keyCode, event);
     }
 
     @Override
@@ -236,13 +246,7 @@ public class CameraActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-//        try {
-//            if (mCamera != null) {
-//                mCamera.reconnect();
-//            }
-//        } catch (IOException e) {
-//            Log.w(getClass().getSimpleName(), e);
-//        }
+        mCameraCallbacks.enable();
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -261,19 +265,62 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        // TODO: implement method
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_FOCUS) {
+            if (!isFocusPressed) {
+                isFocusPressed = true;
+                mCamera.autoFocus(mCameraCallbacks);
+            }
+            return true;
+        } else if (keyCode == KeyEvent.KEYCODE_CAMERA) {
+            if (isFocused) {
+                mCamera.takePicture(mCameraCallbacks, null, mCameraCallbacks);
+                isFocused = false;
+                isFocusPressed = false;
+            }
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//
-//        if (mCamera != null) {
-//            mCamera.unlock();
-//        }
-//    }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if (Build.VERSION.SDK_INT < 14) {
+            mCamera.stopPreview();
+        }
+        CameraUtils.setCameraDisplayOrientation(this, mCameraId, mCamera);
+        if (Build.VERSION.SDK_INT < 14) {
+            mCamera.startPreview();
+        }
+
+        if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            final RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) btnCapture.getLayoutParams();
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, 0);
+            layoutParams.addRule(RelativeLayout.CENTER_VERTICAL, 0);
+            layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+            btnCapture.setLayoutParams(layoutParams);
+        }
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            final RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) btnCapture.getLayoutParams();
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0);
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+            layoutParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
+            layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
+            btnCapture.setLayoutParams(layoutParams);
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        mCameraCallbacks.disable();
+    }
 
     @Override
     protected void onStop() {
@@ -289,7 +336,11 @@ public class CameraActivity extends AppCompatActivity {
         mLocationService.removeGpsStatusListener(mLocationListener);
     }
 
-    private class CameraCallbacks implements Camera.ShutterCallback, Camera.AutoFocusCallback, Camera.PictureCallback {
+    private class CameraCallbacks extends OrientationEventListener implements Camera.ShutterCallback, Camera.AutoFocusCallback, Camera.PictureCallback {
+
+        public CameraCallbacks(Context context) {
+            super(context, SensorManager.SENSOR_DELAY_UI);
+        }
 
         @Override
         public void onAutoFocus(boolean b, Camera camera) {
@@ -333,15 +384,38 @@ public class CameraActivity extends AppCompatActivity {
         public void onShutter() {
             ((GradientDrawable) imgCrosshair.getDrawable().mutate()).setStroke(STROKE_WIDTH, Color.RED);
         }
+
+        @Override
+        public void onOrientationChanged(int orientation) {
+            //rotate camera
+            if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) return;
+            Camera.CameraInfo info =
+                    new Camera.CameraInfo();
+            Camera.getCameraInfo(mCameraId, info);
+            orientation = (orientation + 45) / 90 * 90;
+            int rotation;
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                rotation = (info.orientation - orientation + 360) % 360;
+            } else {  // back-facing camera
+                rotation = (info.orientation + orientation) % 360;
+            }
+
+            final Camera.Parameters parameters = mCamera.getParameters();
+            parameters.setRotation(rotation);
+            mCamera.setParameters(parameters);
+
+            //rotate UI
+            btnCapture.setRotation(-rotation);
+            for (int i = 0; i < llIndicators.getChildCount(); i++) {
+                llIndicators.getChildAt(i).setRotation(-rotation);
+            }
+
+        }
     }
 
     private class LocationCallbacks implements LocationListener, GpsStatus.Listener {
         @Override
         public void onGpsStatusChanged(int status) {
-            if (BuildConfig.DEBUG) {
-                Log.v(TAG, "GPS | onGpsStatusChanged: " + status);
-            }
-
             if (status == 1) {
                 //looking for satellites
                 imgGPSIndicator.setImageResource(R.drawable.gps_searching);
