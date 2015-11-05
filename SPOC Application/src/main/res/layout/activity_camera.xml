@@ -1,0 +1,91 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="hu.mrolcsi.android.spoc.camera.CameraActivity">
+
+    <FrameLayout
+        android:id="@+id/cameraContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </FrameLayout>
+
+    <ImageButton
+        android:id="@+id/btnCapture"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_gravity="right|center_vertical"
+        android:layout_margin="@dimen/margin_xlarge"
+        android:alpha="0.7"
+        android:background="@drawable/camera_btn_capture_background"
+        android:elevation="@dimen/design_fab_elevation"
+        android:src="@drawable/camera"
+        />
+
+    <ImageButton
+        android:id="@+id/btnSettings"
+        android:layout_width="@dimen/margin_xxlarge"
+        android:layout_height="@dimen/margin_xxlarge"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="@dimen/margin_xlarge"
+        android:layout_marginLeft="@dimen/margin_xlarge"
+        android:alpha="0.7"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:src="@drawable/settings"
+        android:visibility="gone"/>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/tbSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/btnSettings"
+        android:layout_alignTop="@+id/btnSettings"
+        android:layout_marginRight="@dimen/margin_xlarge"
+        android:layout_toRightOf="@+id/btnSettings"
+        android:visibility="gone">
+
+    </android.support.v7.widget.Toolbar>
+
+    <ImageView
+        android:id="@+id/imgCrosshair"
+        android:layout_width="@dimen/logo_size"
+        android:layout_height="@dimen/logo_size"
+        android:layout_centerInParent="true"
+        android:alpha="0.7"
+        android:src="@drawable/camera_crosshair"/>
+
+    <LinearLayout
+        android:id="@+id/llIndicators"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/margin_xlarge"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="@dimen/margin_xlarge"
+        android:alpha="0.7"
+        android:orientation="horizontal"
+        >
+
+        <ImageView
+            android:id="@+id/imgGPSIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:src="@drawable/gps_disconnected"/>
+
+        <ImageView
+            android:id="@+id/imgSaveIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/browser_save_light"
+            android:visibility="gone"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

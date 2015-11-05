@@ -109,7 +109,7 @@ android {
 
     defaultConfig {
         applicationId "hu.mrolcsi.android.spoc"
-        minSdkVersion 10
+        minSdkVersion 11
         targetSdkVersion 23
         versionCode makeVersionCode()
         versionName makeVersionNameDebug()

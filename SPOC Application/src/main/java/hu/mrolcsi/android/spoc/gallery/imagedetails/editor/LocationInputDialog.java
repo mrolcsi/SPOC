@@ -49,6 +49,7 @@ import hu.mrolcsi.android.spoc.database.model.Image;
 import hu.mrolcsi.android.spoc.database.model.Label;
 import hu.mrolcsi.android.spoc.database.model.LabelType;
 import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
+import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.imagedetails.SingleImageFragment;
 import hu.mrolcsi.android.spoc.gallery.search.SuggestionAdapter;
@@ -284,10 +285,12 @@ public class LocationInputDialog extends DialogFragment implements OnMapReadyCal
                 exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mSelectedAddress.getLongitude()));
                 exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mSelectedAddress.getLongitude()));
 
-                Log.d(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mSelectedAddress.getLatitude()));
-                Log.d(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mSelectedAddress.getLatitude()));
-                Log.d(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mSelectedAddress.getLongitude()));
-                Log.d(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mSelectedAddress.getLongitude()));
+                if (BuildConfig.DEBUG) {
+                    Log.d(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mSelectedAddress.getLatitude()));
+                    Log.d(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mSelectedAddress.getLatitude()));
+                    Log.d(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mSelectedAddress.getLongitude()));
+                    Log.d(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mSelectedAddress.getLongitude()));
+                }
 
                 exif.saveAttributes();
             } catch (IOException e) {

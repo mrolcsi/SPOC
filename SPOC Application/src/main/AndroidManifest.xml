@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA"/>
+
+    <uses-feature android:name="android.hardware.camera"/>
+    <uses-feature android:name="android.hardware.camera.autofocus"/>
 
     <application
         android:name="hu.mrolcsi.android.spoc.SPOCApplication"
@@ -20,7 +24,6 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.SPOC"
         tools:ignore="UnusedAttribute">
-
         <activity
             android:name=".main.GalleryActivity"
             android:label="@string/title_activity_gallery"
@@ -33,10 +36,10 @@
             android:theme="@style/Theme.SPOC">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".imagedetails.ImagePagerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -45,6 +48,17 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="hu.mrolcsi.android.spoc.gallery.main.GalleryActivity" />
+        </activity>
+        <activity
+            android:name="hu.mrolcsi.android.spoc.camera.CameraActivity"
+            android:icon="@drawable/old_time_camera"
+            android:label="@string/title_activity_camera"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.SPOC.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
         </activity>
 
         <service
@@ -63,6 +77,7 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/GOOGLE_API_KEY" />
+
     </application>
 
 </manifest>
