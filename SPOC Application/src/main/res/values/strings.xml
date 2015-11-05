@@ -125,6 +125,4 @@
     <string name="title_activity_gallery">SPOC Gallery</string>
     <string name="yes">Yes</string>
     <string name="title_activity_camera">SPOC Camera</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>
