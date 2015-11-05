@@ -270,9 +270,10 @@ public abstract class ThumbnailsFragment extends SPOCFragment implements ImagesT
 
         Log.d(getClass().getSimpleName(), "onLoadComplete");
         if (data == null || data.getCount() == 0) {
-            DialogUtils.buildErrorDialog(getActivity()).setMessage(getString(R.string.error_noPictures)).show();
+            mRootView.findViewById(R.id.llEmptyIndicator).setVisibility(View.VISIBLE);
             return;
         }
+        mRootView.findViewById(R.id.llEmptyIndicator).setVisibility(View.GONE);
 
         mQueryArgs.putString(ImagesTableLoader.ARG_URI_STRING, ((CursorLoader) loader).getUri().toString());
         mQueryArgs.putStringArray(ImagesTableLoader.ARG_PROJECTION, ((CursorLoader) loader).getProjection());

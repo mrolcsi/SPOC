@@ -48,6 +48,7 @@
     <string name="editLabels_message_tagRemoved">Tag removed.</string>
     <string name="error_noPictures">No pictures found.</string>
     <string name="error_noResults">No pictures found.</string>
+    <string name="gallery_empty">Nothing here…</string>
     <string name="locationInput_message_noLocationFound">No location found.</string>
     <string name="locationInput_message_saveToFileFailed">Location could not be saved to file.</string>
     <string name="locationInput_message_searchDoesNotWorkWithoutInternet">Location search does not work without internet.</string>
@@ -122,7 +123,8 @@
     <string name="singleImage_message_personAlreadyTagged">That person is already tagged on this picture.</string>
     <string name="splash_button_continueInBackground">Continue in background</string>
     <string name="splash_contentDescription_logo">SPOC Logo</string>
+    <string name="title_activity_camera">SPOC Camera</string>
     <string name="title_activity_gallery">SPOC Gallery</string>
     <string name="yes">Yes</string>
-    <string name="title_activity_camera">SPOC Camera</string>
+
 </resources>
