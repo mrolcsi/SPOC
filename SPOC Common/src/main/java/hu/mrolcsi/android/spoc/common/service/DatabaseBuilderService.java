@@ -39,6 +39,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -55,14 +56,65 @@ public class DatabaseBuilderService extends IntentService {
     public static final String BROADCAST_ACTION_IMAGES_READY = "hu.mrolcsi.android.spoc.BROADCAST_IMAGES_READY";
     public static final String BROADCAST_ACTION_FINISHED = "hu.mrolcsi.android.spoc.BROADCAST_DATABASE_READY";
     public static final String ARG_FIRST_START = "SPOC.Common.FIRST_START";
-
+    private static java.util.Map<String, Integer> mLabelCache = new java.util.TreeMap<>();
     private boolean mInternet;
-
-    private java.util.Map<String, Integer> mLabelCache = new java.util.TreeMap<>();
     private java.util.ArrayList<ContentProviderOperation> mOps = new java.util.ArrayList<>();
 
     public DatabaseBuilderService() {
         super(TAG);
+    }
+
+    public static String buildLocationString(Context context, String filename) {
+        try {
+            ExifInterface exif = new ExifInterface(filename);
+
+            float[] latLong = new float[2];
+            exif.getLatLong(latLong);
+
+            Geocoder geocoder = new Geocoder(context);
+
+            java.util.List<android.location.Address> addresses = geocoder.getFromLocation(latLong[0], latLong[1], 1);
+            if (addresses != null && addresses.size() > 0) {
+                final Address address = addresses.get(0);
+                return LocationUtils.getLocationText(address);
+            }
+        } catch (IOException e) {
+            Log.w(TAG, e.toString());
+        }
+        return null;
+    }
+
+    public static ContentProviderOperation createLabel(Context context, long imageId, String labelName, LabelType type) {
+
+        int labelId;
+        if (mLabelCache.containsKey(labelName)) {
+            labelId = mLabelCache.get(labelName);
+        } else {
+            final Uri labelNameUri = SPOCContentProvider.LABELS_URI.buildUpon().appendPath(Label.COLUMN_NAME).appendPath(labelName).build();
+            final Cursor labelCursor = context.getContentResolver().query(labelNameUri, new String[]{"_id"}, null, null, null);
+
+            if (labelCursor.moveToFirst()) {
+                labelId = labelCursor.getInt(0);
+            } else {
+                ContentValues values = new ContentValues();
+                values.put(Label.COLUMN_NAME, labelName);
+                values.put(Label.COLUMN_CREATION_DATE, java.util.Calendar.getInstance().getTimeInMillis());
+                values.put(Label.COLUMN_TYPE, type.name());
+
+                final Uri insert = context.getContentResolver().insert(SPOCContentProvider.LABELS_URI, values);
+                labelId = Integer.parseInt(insert.getLastPathSegment());
+            }
+            labelCursor.close();
+        }
+
+        mLabelCache.put(labelName, labelId);
+
+        ContentValues values = new ContentValues();
+        values.put(Label2Image.COLUMN_DATE, java.util.Calendar.getInstance().getTimeInMillis());
+        values.put(Label2Image.COLUMN_IMAGE_ID, imageId);
+        values.put(Label2Image.COLUMN_LABEL_ID, labelId);
+
+        return ContentProviderOperation.newInsert(SPOCContentProvider.LABELS_2_IMAGES_URI).withValues(values).withYieldAllowed(true).build();
     }
 
     @Override
@@ -188,7 +240,7 @@ public class DatabaseBuilderService extends IntentService {
                         // ~update db with mediastore values~
                         // don't! will revert user made changes
                         if (mInternet && TextUtils.isEmpty(imageCursor.getString(1))) {
-                            location = buildLocationString(filename);
+                            location = buildLocationString(this, filename);
                             if (location != null) {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
@@ -203,7 +255,7 @@ public class DatabaseBuilderService extends IntentService {
                         values.put(Image.COLUMN_DATE_TAKEN, dateTaken);
 
                         if (mInternet) {
-                            location = buildLocationString(filename);
+                            location = buildLocationString(this, filename);
                             if (location != null) {
                                 values.put(Image.COLUMN_LOCATION, location);
                             }
@@ -221,104 +273,6 @@ public class DatabaseBuilderService extends IntentService {
             if (mediaStoreCursor != null) mediaStoreCursor.close();
         }
         Log.v(getClass().getSimpleName(), "Update from MediaStore done.");
-    }
-
-    private void updateImagesFromWhiteList() {
-        Log.v(getClass().getSimpleName(), "Updating images from Whitelist...");
-        final java.util.List<String> whitelist = new ListHelper(getApplicationContext()).getWhitelist();
-        final FilenameFilter filter = new FilenameFilter() {
-            @Override
-            public boolean accept(File parent, String filename) {
-                for (String format : FileUtils.ACCEPTED_FORMATS) {
-                    if (filename.contains(format)) return true;
-                }
-                return false;
-            }
-        };
-
-        final SimpleDateFormat sdf = new SimpleDateFormat(getString(R.string.spoc_exifParser), java.util.Locale.getDefault());
-
-        try {
-            File dir;
-            String location;
-            ContentValues values = new ContentValues();
-
-            mOps.clear();
-
-            for (String s : whitelist) {
-                dir = new File(s);
-                for (File file : dir.listFiles(filter)) {
-                    values.clear();
-                    values.put(Image.COLUMN_FILENAME, file.getAbsolutePath());
-
-                    Date date;
-                    if (file.getAbsolutePath().contains("jpg") || file.getAbsolutePath().contains("jpeg")) { //TODO: additional extensions
-                        ExifInterface exif = new ExifInterface(file.getAbsolutePath());
-
-                        String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
-                        if (!TextUtils.isEmpty(dateString)) {
-                            date = sdf.parse(dateString);
-                        } else {
-                            date = new Date(file.lastModified());
-                        }
-                        values.put(Image.COLUMN_DATE_TAKEN, date.getTime());
-                    }
-
-                    final Cursor imageCursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI,
-                            new String[]{"_id", Image.COLUMN_LOCATION},
-                            Image.COLUMN_FILENAME + " = ?",
-                            new String[]{file.getAbsolutePath()},
-                            null);
-
-                    if (imageCursor.moveToFirst()) {
-                        if (mInternet && TextUtils.isEmpty(imageCursor.getString(1))) {
-                            location = buildLocationString(file.getAbsolutePath());
-                            if (location != null) {
-                                values.put(Image.COLUMN_LOCATION, location);
-                            }
-                        }
-                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
-                        //getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
-                    } else {
-                        if (mInternet) {
-                            location = buildLocationString(file.getAbsolutePath());
-                            if (location != null) {
-                                values.put(Image.COLUMN_LOCATION, location);
-                            }
-                        }
-                        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
-                        //getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
-                    }
-
-                    imageCursor.close();
-                }
-            }
-
-            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
-        } catch (IOException | ParseException | RemoteException | OperationApplicationException e) {
-            Log.w(getClass().getSimpleName(), e);
-        }
-        Log.v(getClass().getSimpleName(), "Update from Whitelist done.");
-    }
-
-    private String buildLocationString(String filename) {
-        try {
-            ExifInterface exif = new ExifInterface(filename);
-
-            float[] latLong = new float[2];
-            exif.getLatLong(latLong);
-
-            Geocoder geocoder = new Geocoder(this);
-
-            java.util.List<android.location.Address> addresses = geocoder.getFromLocation(latLong[0], latLong[1], 1);
-            if (addresses != null && addresses.size() > 0) {
-                final Address address = addresses.get(0);
-                return LocationUtils.getLocationText(address);
-            }
-        } catch (IOException e) {
-            Log.w(getClass().getSimpleName(), e.toString());
-        }
-        return null;
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -470,27 +424,104 @@ public class DatabaseBuilderService extends IntentService {
 
         cursor.close();
 
-        ContentValues values = new ContentValues();
-        values.put(Label2Image.COLUMN_IMAGE_ID, 555);
-        values.put(Label2Image.COLUMN_LABEL_ID, 555);
-        values.put(Label2Image.COLUMN_DATE, java.util.Calendar.getInstance().getTimeInMillis());
-
         long endTime = System.currentTimeMillis();
         Log.v(getClass().getSimpleName(), String.format("Labels generated in %d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), TimeUnit.MILLISECONDS.toSeconds(endTime - startTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime - startTime))));
     }
 
+    private void updateImagesFromWhiteList() {
+        Log.v(getClass().getSimpleName(), "Updating images from Whitelist...");
+        final java.util.List<String> whitelist = new ListHelper(getApplicationContext()).getWhitelist();
+        final FilenameFilter filter = new FilenameFilter() {
+            @Override
+            public boolean accept(File parent, String filename) {
+                for (String format : FileUtils.ACCEPTED_FORMATS) {
+                    if (filename.contains(format)) return true;
+                }
+                return false;
+            }
+        };
+
+        final SimpleDateFormat sdf = new SimpleDateFormat(getString(R.string.spoc_exifParser), java.util.Locale.getDefault());
+
+        try {
+            File dir;
+            String location;
+            ContentValues values = new ContentValues();
+
+            mOps.clear();
+
+            for (String s : whitelist) {
+                dir = new File(s);
+                for (File file : dir.listFiles(filter)) {
+                    values.clear();
+                    values.put(Image.COLUMN_FILENAME, file.getAbsolutePath());
+
+                    Date date;
+                    if (file.getAbsolutePath().contains("jpg") || file.getAbsolutePath().contains("jpeg")) { //TODO: additional extensions
+                        ExifInterface exif = new ExifInterface(file.getAbsolutePath());
+
+                        String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
+                        if (!TextUtils.isEmpty(dateString)) {
+                            date = sdf.parse(dateString);
+                        } else {
+                            date = new Date(file.lastModified());
+                        }
+                        values.put(Image.COLUMN_DATE_TAKEN, date.getTime());
+                    }
+
+                    final Cursor imageCursor = getContentResolver().query(SPOCContentProvider.IMAGES_URI,
+                            new String[]{"_id", Image.COLUMN_LOCATION},
+                            Image.COLUMN_FILENAME + " = ?",
+                            new String[]{file.getAbsolutePath()},
+                            null);
+
+                    if (imageCursor.moveToFirst()) {
+                        if (mInternet && TextUtils.isEmpty(imageCursor.getString(1))) {
+                            location = buildLocationString(this, file.getAbsolutePath());
+                            if (location != null) {
+                                values.put(Image.COLUMN_LOCATION, location);
+                            }
+                        }
+                        mOps.add(ContentProviderOperation.newUpdate(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0)))).withValues(values).build());
+                        //getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.IMAGES_URI, String.valueOf(imageCursor.getLong(0))), values, null, null);
+                    } else {
+                        if (mInternet) {
+                            location = buildLocationString(this, file.getAbsolutePath());
+                            if (location != null) {
+                                values.put(Image.COLUMN_LOCATION, location);
+                            }
+                        }
+                        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.IMAGES_URI).withValues(values).build());
+                        //getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
+                    }
+
+                    imageCursor.close();
+                }
+            }
+
+            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, mOps);
+        } catch (IOException | ParseException | RemoteException | OperationApplicationException e) {
+            Log.w(getClass().getSimpleName(), e);
+        }
+        Log.v(getClass().getSimpleName(), "Update from Whitelist done.");
+    }
+
     private void generateLabelsFromDate(Cursor cursorWithImage) {
 
-        final java.util.Calendar calendar = java.util.Calendar.getInstance();
+        final Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date(cursorWithImage.getLong(1)));
 
         final long imageId = cursorWithImage.getLong(0);
 
+        ContentProviderOperation op;
+
         final String monthText = calendar.getDisplayName(java.util.Calendar.MONTH, java.util.Calendar.LONG, java.util.Locale.getDefault());
-        createLabel(imageId, monthText, LabelType.DATE_MONTH);
+        op = createLabel(this, imageId, monthText, LabelType.DATE_MONTH);
+        mOps.add(op);
 
         final String dayOfWeek = calendar.getDisplayName(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.LONG, java.util.Locale.getDefault());
-        createLabel(imageId, dayOfWeek, LabelType.DATE_DAY);
+        op = createLabel(this, imageId, dayOfWeek, LabelType.DATE_DAY);
+        mOps.add(op);
     }
 
     private void generateLabelsFromLocation(Cursor cursorWithImage) {
@@ -500,8 +531,16 @@ public class DatabaseBuilderService extends IntentService {
 
         final long imageId = cursorWithImage.getLong(0);
 
-        createLabel(imageId, locationStrings[0], LabelType.LOCATION_LOCALITY);
-        createLabel(imageId, locationStrings[1], LabelType.LOCATION_COUNTRY);
+        ContentProviderOperation op;
+
+        op = createLabel(this, imageId, locationStrings[0], LabelType.LOCATION_LOCALITY);
+        mOps.add(op);
+        op = createLabel(this, imageId, locationStrings[1], LabelType.LOCATION_COUNTRY);
+        mOps.add(op);
+    }
+
+    private void generateLabelsFromPeople(Cursor cursorWithImage) {
+        //TODO
     }
 
     private void generateLabelsFromFilename(Cursor cursorWithImage) {
@@ -509,7 +548,8 @@ public class DatabaseBuilderService extends IntentService {
         File file = new File(filename);
 
         final long imageId = cursorWithImage.getLong(0);
-        createLabel(imageId, file.getParentFile().getName(), LabelType.FOLDER);
+        final ContentProviderOperation operation = createLabel(this, imageId, file.getParentFile().getName(), LabelType.FOLDER);
+        mOps.add(operation);
 
 //        final String externalStorage = Environment.getExternalStorageDirectory().getAbsolutePath();
 //
@@ -519,42 +559,5 @@ public class DatabaseBuilderService extends IntentService {
 //        for (int i = 1; i < filenameSplit.length - 1; i++) {
 //            createLabel(imageId, filenameSplit[i], LabelType.FOLDER);
 //        }
-    }
-
-    private void generateLabelsFromPeople(Cursor cursorWithImage) {
-        //TODO
-    }
-
-    private void createLabel(long imageId, String labelName, LabelType type) {
-
-        int labelId;
-        if (mLabelCache.containsKey(labelName)) {
-            labelId = mLabelCache.get(labelName);
-        } else {
-            final Uri labelNameUri = SPOCContentProvider.LABELS_URI.buildUpon().appendPath(Label.COLUMN_NAME).appendPath(labelName).build();
-            final Cursor labelCursor = getContentResolver().query(labelNameUri, new String[]{"_id"}, null, null, null);
-
-            if (labelCursor.moveToFirst()) {
-                labelId = labelCursor.getInt(0);
-            } else {
-                ContentValues values = new ContentValues();
-                values.put(Label.COLUMN_NAME, labelName);
-                values.put(Label.COLUMN_CREATION_DATE, java.util.Calendar.getInstance().getTimeInMillis());
-                values.put(Label.COLUMN_TYPE, type.name());
-
-                final Uri insert = getContentResolver().insert(SPOCContentProvider.LABELS_URI, values);
-                labelId = Integer.parseInt(insert.getLastPathSegment());
-            }
-            labelCursor.close();
-        }
-
-        mLabelCache.put(labelName, labelId);
-
-        ContentValues values = new ContentValues();
-        values.put(Label2Image.COLUMN_DATE, java.util.Calendar.getInstance().getTimeInMillis());
-        values.put(Label2Image.COLUMN_IMAGE_ID, imageId);
-        values.put(Label2Image.COLUMN_LABEL_ID, labelId);
-
-        mOps.add(ContentProviderOperation.newInsert(SPOCContentProvider.LABELS_2_IMAGES_URI).withValues(values).withYieldAllowed(true).build());
     }
 }

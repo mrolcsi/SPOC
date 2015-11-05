@@ -1,8 +1,11 @@
 package hu.mrolcsi.android.spoc.camera;
 
 import android.annotation.TargetApi;
+import android.content.ContentProviderOperation;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.OperationApplicationException;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -15,12 +18,15 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.RemoteException;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -30,14 +36,22 @@ import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import hu.mrolcsi.android.spoc.common.helper.FaceDetectorTask;
+import hu.mrolcsi.android.spoc.common.service.DatabaseBuilderService;
 import hu.mrolcsi.android.spoc.common.utils.CameraUtils;
 import hu.mrolcsi.android.spoc.common.utils.LocationUtils;
+import hu.mrolcsi.android.spoc.database.model.Image;
+import hu.mrolcsi.android.spoc.database.model.LabelType;
+import hu.mrolcsi.android.spoc.database.model.binder.Contact2Image;
+import hu.mrolcsi.android.spoc.database.provider.SPOCContentProvider;
 import hu.mrolcsi.android.spoc.gallery.BuildConfig;
 import hu.mrolcsi.android.spoc.gallery.R;
 import hu.mrolcsi.android.spoc.gallery.common.utils.DialogUtils;
@@ -46,7 +60,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class CameraActivity extends AppCompatActivity {
 
@@ -58,9 +78,11 @@ public class CameraActivity extends AppCompatActivity {
     private static int STROKE_WIDTH;
     private FrameLayout flPreviewContainer;
     private ImageView imgCrosshair;
-    private ImageView imgGPSIndicator;
     private ImageButton btnCapture;
     private LinearLayout llIndicators;
+    private ImageView imgGPSIndicator;
+    private ImageView imgSaveIndicator;
+    private Animation mBlinkAnim;
 
     private int mCameraId = 0;
     private Camera mCamera;
@@ -81,7 +103,6 @@ public class CameraActivity extends AppCompatActivity {
     private LocationManager mLocationService;
     private Location mCurrentLocation;
     private LocationCallbacks mLocationListener = new LocationCallbacks();
-
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,41 +143,9 @@ public class CameraActivity extends AppCompatActivity {
         STROKE_WIDTH = getResources().getDimensionPixelSize(R.dimen.margin_xsmall);
 
         llIndicators = (LinearLayout) findViewById(R.id.llIndicators);
-
         imgGPSIndicator = (ImageView) llIndicators.findViewById(R.id.imgGPSIndicator);
-    }
-
-    private void writeExif(String filename) {
-        try {
-            ExifInterface exif = new ExifInterface(filename);
-
-            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mCurrentLocation.getLatitude()));
-            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mCurrentLocation.getLatitude()));
-            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mCurrentLocation.getLongitude()));
-            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mCurrentLocation.getLongitude()));
-
-            final int rotation = getWindowManager().getDefaultDisplay().getRotation();
-            switch (rotation) {
-                case Surface.ROTATION_0:        //portrait
-                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_ROTATE_90));
-                    break;
-                case Surface.ROTATION_90:       //landscape
-                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_NORMAL));
-                    break;
-                case Surface.ROTATION_180:      //reverse portrait
-                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_ROTATE_180));
-                    break;
-                case Surface.ROTATION_270:      //reverse landscape
-                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_ROTATE_270));
-                    break;
-            }
-
-            exif.saveAttributes();
-
-            Log.v(TAG, "Exif data saved.");
-        } catch (IOException e) {
-            Log.w(TAG, e);
-        }
+        imgSaveIndicator = (ImageView) llIndicators.findViewById(R.id.imgSaveIndicator);
+        mBlinkAnim = AnimationUtils.loadAnimation(this, R.anim.blink);
     }
 
     private void initCamera() {
@@ -336,6 +325,119 @@ public class CameraActivity extends AppCompatActivity {
         mLocationService.removeGpsStatusListener(mLocationListener);
     }
 
+    private void writeExif(String filename) {
+        try {
+            ExifInterface exif = new ExifInterface(filename);
+
+            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mCurrentLocation.getLatitude()));
+            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mCurrentLocation.getLatitude()));
+            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mCurrentLocation.getLongitude()));
+            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mCurrentLocation.getLongitude()));
+
+            final int rotation = getWindowManager().getDefaultDisplay().getRotation();
+            switch (rotation) {
+                case Surface.ROTATION_0:        //portrait
+                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_ROTATE_90));
+                    break;
+                case Surface.ROTATION_90:       //landscape
+                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_NORMAL));
+                    break;
+                case Surface.ROTATION_180:      //reverse portrait
+                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_ROTATE_180));
+                    break;
+                case Surface.ROTATION_270:      //reverse landscape
+                    exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_ROTATE_270));
+                    break;
+            }
+
+            exif.saveAttributes();
+
+            Log.v(TAG, "Exif data saved.");
+        } catch (IOException e) {
+            Log.w(TAG, e);
+        }
+    }
+
+    private void saveToDatabase(String filename) {
+        Log.v(TAG, "Insert '" + filename + "' into database...");
+        //assume it's called from a separate thread
+
+        File file = new File(filename);
+
+        //  insert into image table: filename, date taken, location
+        ContentValues values = new ContentValues();
+
+        //      filename
+        values.put(Image.COLUMN_FILENAME, filename);
+
+        Date date = Calendar.getInstance().getTime();
+        final SimpleDateFormat sdf = new SimpleDateFormat(getString(hu.mrolcsi.android.spoc.common.R.string.spoc_exifParser), Locale.getDefault());
+
+        //      date taken
+        try {
+            ExifInterface exif = new ExifInterface(filename);
+
+            String dateString = exif.getAttribute(ExifInterface.TAG_DATETIME);
+            if (!TextUtils.isEmpty(dateString)) {
+                date = sdf.parse(dateString);
+            } else {
+                date = new Date(new File(filename).lastModified());
+            }
+            values.put(Image.COLUMN_DATE_TAKEN, date.getTime());
+        } catch (IOException | ParseException e) {
+            Log.w(getClass().getSimpleName(), e);
+        }
+
+        //      location
+        final String location = DatabaseBuilderService.buildLocationString(this, filename);
+        if (location != null) {
+            values.put(Image.COLUMN_LOCATION, location);
+        }
+
+        final Uri insertedUri = getContentResolver().insert(SPOCContentProvider.IMAGES_URI, values);
+        long imageId = Long.parseLong(insertedUri.getLastPathSegment());
+
+        //  generate labels from filename, date, location
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+
+        //      filename
+        ops.add(DatabaseBuilderService.createLabel(this, imageId, file.getParentFile().getName(), LabelType.FOLDER));
+
+        //      date
+        final Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+
+        final String monthText = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
+        ops.add(DatabaseBuilderService.createLabel(this, imageId, monthText, LabelType.DATE_MONTH));
+
+        final String dayOfWeek = calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault());
+        ops.add(DatabaseBuilderService.createLabel(this, imageId, dayOfWeek, LabelType.DATE_DAY));
+
+        //      location
+        if (location != null) {
+            final String[] locationStrings = location.split(", ");
+
+            ops.add(DatabaseBuilderService.createLabel(this, imageId, locationStrings[0], LabelType.LOCATION_LOCALITY));
+            ops.add(DatabaseBuilderService.createLabel(this, imageId, locationStrings[1], LabelType.LOCATION_COUNTRY));
+        }
+
+        try {
+            getContentResolver().applyBatch(SPOCContentProvider.AUTHORITY, ops);
+            Log.v(TAG, "Insert successful.");
+        } catch (RemoteException | OperationApplicationException e) {
+            Log.w(getClass().getSimpleName(), e);
+        }
+
+        // detect faces
+        new FaceDetectorTask(this, (int) imageId, filename) {
+            @Override
+            protected void onPostExecute(List<Contact2Image> contact2ImageList) {
+                imgSaveIndicator.setVisibility(View.GONE);
+                imgSaveIndicator.clearAnimation();
+            }
+        }.execute();
+    }
+
     private class CameraCallbacks extends OrientationEventListener implements Camera.ShutterCallback, Camera.AutoFocusCallback, Camera.PictureCallback {
 
         public CameraCallbacks(Context context) {
@@ -354,6 +456,9 @@ public class CameraActivity extends AppCompatActivity {
 
         @Override
         public void onPictureTaken(byte[] bytes, Camera camera) {
+            imgSaveIndicator.setVisibility(View.VISIBLE);
+            imgSaveIndicator.startAnimation(mBlinkAnim);
+
             File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
             path = new File(path, "SPOC");
             path.mkdirs();
@@ -365,12 +470,15 @@ public class CameraActivity extends AppCompatActivity {
                 fos.write(bytes);
                 fos.close();
 
+                Log.v(TAG, "onPictureTaken | File saved.");
+
                 mHandler.postDelayed(mResumePreview, PREVIEW_TIME);
 
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         writeExif(pictureFile.getAbsolutePath());
+                        saveToDatabase(pictureFile.getAbsolutePath());
                     }
                 }).start();
             } catch (FileNotFoundException e) {

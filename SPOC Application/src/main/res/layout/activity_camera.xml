@@ -63,7 +63,7 @@
     <LinearLayout
         android:id="@+id/llIndicators"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/margin_xlarge"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_margin="@dimen/margin_xlarge"
@@ -78,6 +78,13 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
             android:src="@drawable/gps_disconnected"/>
+
+        <ImageView
+            android:id="@+id/imgSaveIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/browser_save_light"
+            android:visibility="gone"/>
 
     </LinearLayout>
 
