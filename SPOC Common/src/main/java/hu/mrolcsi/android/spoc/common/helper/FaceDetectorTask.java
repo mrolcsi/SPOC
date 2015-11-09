@@ -36,6 +36,7 @@ public class FaceDetectorTask extends AsyncTask<Bitmap, Void, List<Contact2Image
     private final Context context;
     private final int imageId;
     private String filename;
+    private boolean mInternalBitmap = false;
 
     public FaceDetectorTask(Context context, int imageId) {
         this.context = context;
@@ -118,7 +119,9 @@ public class FaceDetectorTask extends AsyncTask<Bitmap, Void, List<Contact2Image
         values.put(Contact2Image.COLUMN_IMAGE_ID, imageId);
         int fakeContact = -1;
 
-        bitmap.recycle();
+        if (mInternalBitmap) {
+            bitmap.recycle();
+        }
 
         for (FaceDetector.Face face : faces) {
             //check for valid face
@@ -168,6 +171,8 @@ public class FaceDetectorTask extends AsyncTask<Bitmap, Void, List<Contact2Image
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private Bitmap loadBitmap(String filename) {
+        mInternalBitmap = true;
+
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         int desiredWidth;
