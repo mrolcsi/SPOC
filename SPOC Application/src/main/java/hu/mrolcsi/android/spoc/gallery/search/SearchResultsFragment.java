@@ -176,6 +176,7 @@ public final class SearchResultsFragment extends ThumbnailsFragment {
                 final String type = cursorWithSuggestion.getString(2);
 
                 mSearchView.clearFocus();
+                getImagesLoader().reset();
                 performIdSearch(id, type);
 
                 mSearchView.setQuery(name, false);
