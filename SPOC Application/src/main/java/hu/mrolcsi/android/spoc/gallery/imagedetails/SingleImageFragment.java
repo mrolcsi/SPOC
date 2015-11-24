@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
@@ -94,6 +95,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     public static final String ARG_IMAGE_LOCATION = "SPOC.Gallery.Details.Location";
     public static final String ARG_IMAGE_DATE_TAKEN = "SPOC.Gallery.Details.DateTaken";
     private static final int PLACE_PICKER_REQUEST = 65;
+    private static final int VISIBLE_ALPHA = 128;
 
     private PhotoView photoView;
     private View mFaceTagStatic;
@@ -107,17 +109,17 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     private int mImageId;
     private CursorLoader mFacesLoader;
 
-    private BitmapDrawable mOverlayDrawable;
-    private BitmapDrawable mBitmapDrawable;
+    private LayerDrawable mOverlayDrawable;
+    private BitmapDrawable mPhotoDrawable;
     private FaceDetectorTask mDetector;
     private List<Contact2Image> mFacePositions;
     private BitmapImageViewTarget mBitmapTarget;
-    private android.graphics.Bitmap mOverlayBitmap;
+    private BitmapDrawable[] mLayers = new BitmapDrawable[0];
 
     private Bundle mSuggestionArgs = new Bundle();
     private SuggestionAdapter mSuggestionsAdapter;
     private CursorLoader mSuggestionsLoader;
-    private Contact2Image mSelectedFace;
+    private int mSelectedFaceIndex = -1;
 
     public static SingleImageFragment newInstance(int imageId, String imagePath, String location, long dateTaken) {
         final SingleImageFragment f = new SingleImageFragment();
@@ -173,7 +175,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                             photoView.invalidate();
                             photoView.setScale(scale);
                         } else {
-                            mOverlayDrawable.setAlpha(128);
+                            mOverlayDrawable.setAlpha(VISIBLE_ALPHA);
                             final float scale = photoView.getScale();
                             photoView.invalidate();
                             photoView.setScale(scale);
@@ -208,19 +210,24 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                     // [0,0] being the top left corner of the photo,
                     // [1,1] being the bottom right corner.
 
-                    int selectedFace = 0;
+                    mSelectedFaceIndex = 0;
                     if (mFacePositions != null && !mFacePositions.isEmpty()) {
-                        float photoX = x * mOverlayBitmap.getWidth();
-                        float photoY = y * mOverlayBitmap.getHeight();
+                        float photoX = x * mPhotoDrawable.getBitmap().getWidth();
+                        float photoY = y * mPhotoDrawable.getBitmap().getHeight();
 
-                        while (selectedFace < mFacePositions.size() && !mFacePositions.get(selectedFace).contains(photoX, photoY)) {
-                            selectedFace++;
+                        while (mSelectedFaceIndex < mFacePositions.size() && !mFacePositions.get(mSelectedFaceIndex).contains(photoX, photoY)) {
+                            mSelectedFaceIndex++;
                         }
 
-                        mSelectedFace = null;
-                        if (selectedFace < mFacePositions.size()) {
-                            mSelectedFace = mFacePositions.get(selectedFace);
-                            showFaceTag(mFacePositions.get(selectedFace));
+                        if (mSelectedFaceIndex < mFacePositions.size()) {
+                            showFaceTag(mFacePositions.get(mSelectedFaceIndex));
+                            for (int i = 0; i < mOverlayDrawable.getNumberOfLayers(); i++) {
+                                if (i == mSelectedFaceIndex) {
+                                    mOverlayDrawable.getDrawable(i).setAlpha(VISIBLE_ALPHA);
+                                } else {
+                                    mOverlayDrawable.getDrawable(i).setAlpha(0);
+                                }
+                            }
                         } else {
                             if (mFaceTagStatic.getVisibility() == View.VISIBLE || mFaceTagEditable.getVisibility() == View.VISIBLE) {
                                 hideFaceTags();
@@ -293,18 +300,17 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             }
 
             @Override
-            protected void setResource(android.graphics.Bitmap resource) {
-                mBitmapDrawable = new BitmapDrawable(getResources(), resource);
-                mOverlayBitmap = android.graphics.Bitmap.createBitmap(resource.getWidth(), resource.getHeight(), android.graphics.Bitmap.Config.ARGB_8888);
-                mOverlayDrawable = new BitmapDrawable(getResources(), mOverlayBitmap);
+            protected void setResource(Bitmap resource) {
+                mPhotoDrawable = new BitmapDrawable(getResources(), resource);
+                mOverlayDrawable = new LayerDrawable(mLayers);
 
                 if (((ImagePagerActivity) getActivity()).getSystemUiHider().isVisible()) {
-                    mOverlayDrawable.setAlpha(128);
+                    mOverlayDrawable.setAlpha(VISIBLE_ALPHA);
                 } else {
                     mOverlayDrawable.setAlpha(0);
                 }
 
-                LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{mBitmapDrawable, mOverlayDrawable});
+                LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{mPhotoDrawable, mOverlayDrawable});
                 photoView.setImageDrawable(layerDrawable);
             }
         };
@@ -415,12 +421,14 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             mDetector.cancel(true);
         }
 
-        if (mOverlayBitmap != null) {
-            mOverlayBitmap.recycle();
-            mOverlayBitmap = null;
+        for (int i = 0; i < mLayers.length; i++) {
+            if (mLayers[i].getBitmap() != null) {
+                mLayers[i].getBitmap().recycle();
+                mLayers[i] = null;
 
-            mOverlayDrawable = null;
+            }
         }
+        mOverlayDrawable = null;
 
         getLoaderManager().destroyLoader(mImageId + 100);
     }
@@ -439,13 +447,35 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
         final int cornerRadius = getResources().getDimensionPixelSize(R.dimen.margin_small);
 
-        final Canvas canvas = new Canvas(mOverlayDrawable.getBitmap());
+        //foreach face create new bitmap drawable with a rectangle
+        //new bitmap
+        //new canvas
+        //draw rect on canvas
+        //create drawable
 
-        for (RectF rect : mFacePositions) {
+        mLayers = new BitmapDrawable[mFacePositions.size()];
+
+        for (int i = 0; i < mFacePositions.size(); i++) {
+            RectF rect = mFacePositions.get(i);
+            final Bitmap bitmap = Bitmap.createBitmap(mPhotoDrawable.getBitmap().getWidth(), mPhotoDrawable.getBitmap().getHeight(), Bitmap.Config.ARGB_8888);
+            final Canvas canvas = new Canvas(bitmap);
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint);
+            mLayers[i] = new BitmapDrawable(getResources(), bitmap);
         }
 
-        photoView.invalidate();
+        mOverlayDrawable = new LayerDrawable(mLayers);
+        if (((ImagePagerActivity) getActivity()).getSystemUiHider().isVisible()) {
+            mOverlayDrawable.setAlpha(VISIBLE_ALPHA);
+        } else {
+            mOverlayDrawable.setAlpha(0);
+        }
+
+        LayerDrawable finalDrawable = new LayerDrawable(new Drawable[]{
+                mPhotoDrawable,
+                mOverlayDrawable
+        });
+
+        photoView.setImageDrawable(finalDrawable);
     }
 
     private void showFaceTag(final Contact2Image contact) {
@@ -507,6 +537,10 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
     }
 
     private void hideFaceTags() {
+        for (int i = 0; i < mOverlayDrawable.getNumberOfLayers(); i++) {
+            mOverlayDrawable.getDrawable(i).setAlpha(VISIBLE_ALPHA);
+        }
+
         if (mFaceTagViewHolder != null && mFaceTagViewHolder.editableName != null) {
             GeneralUtils.hideSoftKeyboard(getActivity(), mFaceTagViewHolder.editableName);
         }
@@ -520,7 +554,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
             mFaceTagEditable.startAnimation(fadeOutAnim);
         }
 
-        mSelectedFace = null;
+        mSelectedFaceIndex = -1;
     }
 
     @Override
@@ -559,11 +593,13 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                     mFacePositions.add(c2i);
                 }
                 drawFaces();
-                showFaceTag(mSelectedFace);
+                if (mSelectedFaceIndex > -1 && mSelectedFaceIndex < mFacePositions.size()) {
+                    showFaceTag(mFacePositions.get(mSelectedFaceIndex));
+                }
             } else {
                 //detect faces
                 if (mFacePositions == null && mDetector != null && mDetector.getStatus() != AsyncTask.Status.RUNNING) {
-                    mDetector.execute(mBitmapDrawable.getBitmap());
+                    mDetector.execute(mPhotoDrawable.getBitmap());
                 }
             }
         }
@@ -595,8 +631,11 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         final AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (mSelectedFace != null) {
-                    mSelectedFace.setContactId((int) l);
+                if (mSelectedFaceIndex > -1 && mSelectedFaceIndex < mFacePositions.size()) {
+                    final Contact2Image selectedFace = mFacePositions.get(mSelectedFaceIndex);
+                    if (selectedFace != null) {
+                        selectedFace.setContactId((int) l);
+                    }
                 }
             }
         };
@@ -606,43 +645,46 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         final TextView.OnEditorActionListener onEditorActionListener = new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-                if (actionId == EditorInfo.IME_ACTION_DONE && mSelectedFace != null) {
-                    mSelectedFace.setContactName(textView.getText().toString().trim());
+                if (mSelectedFaceIndex > -1 && mSelectedFaceIndex < mFacePositions.size()) {
+                    Contact2Image selectedFace = mFacePositions.get(mSelectedFaceIndex);
+                    if (actionId == EditorInfo.IME_ACTION_DONE && selectedFace != null) {
+                        selectedFace.setContactName(textView.getText().toString().trim());
 
-                    //validate
-                    if (mSelectedFace.getContactId() == 0) {
-                        //no contact was selected, save new contact? only locally
+                        //validate
+                        if (selectedFace.getContactId() == 0) {
+                            //no contact was selected, save new contact? only locally
+                            ContentValues values = new ContentValues();
+                            values.put(Contact.COLUMN_NAME, textView.getText().toString().trim());
+                            values.put(Contact.COLUMN_TYPE, LabelType.CONTACT.name());
+
+                            final Uri insertedUri = getActivity().getContentResolver().insert(SPOCContentProvider.CONTACTS_URI, values);
+                            selectedFace.setContactId(Integer.parseInt(insertedUri.getLastPathSegment()));
+                        }
+
+                        GeneralUtils.hideSoftKeyboard(getActivity(), mFaceTagViewHolder.editableName);
+
                         ContentValues values = new ContentValues();
-                        values.put(Contact.COLUMN_NAME, textView.getText().toString().trim());
-                        values.put(Contact.COLUMN_TYPE, LabelType.CONTACT.name());
+                        values.put(Contact2Image.COLUMN_CONTACT_ID, selectedFace.getContactId());
 
-                        final Uri insertedUri = getActivity().getContentResolver().insert(SPOCContentProvider.CONTACTS_URI, values);
-                        mSelectedFace.setContactId(Integer.parseInt(insertedUri.getLastPathSegment()));
+                        int updateCount;
+                        try {
+                            updateCount = getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_2_IMAGES_URI, String.valueOf(selectedFace.get_id())), values, null, null);
+                        } catch (SQLiteConstraintException e) {
+                            Toast.makeText(getActivity(), R.string.singleImage_message_personAlreadyTagged, Toast.LENGTH_SHORT).show();
+                            selectedFace.setContactId(-1);
+                            return true;
+                        }
+
+                        if (updateCount > 0) {
+                            Toast.makeText(getActivity(), R.string.singleImage_message_faceTagged, Toast.LENGTH_SHORT).show();
+                            mFacesLoader.reset();
+                            mFacesLoader.startLoading();
+                        } else {
+                            Toast.makeText(getActivity(), R.string.singleImage_message_faceNotTagged, Toast.LENGTH_SHORT).show();
+                        }
+
+                        return false;
                     }
-
-                    GeneralUtils.hideSoftKeyboard(getActivity(), mFaceTagViewHolder.editableName);
-
-                    ContentValues values = new ContentValues();
-                    values.put(Contact2Image.COLUMN_CONTACT_ID, mSelectedFace.getContactId());
-
-                    int updateCount;
-                    try {
-                        updateCount = getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_2_IMAGES_URI, String.valueOf(mSelectedFace.get_id())), values, null, null);
-                    } catch (SQLiteConstraintException e) {
-                        Toast.makeText(getActivity(), R.string.singleImage_message_personAlreadyTagged, Toast.LENGTH_SHORT).show();
-                        mSelectedFace.setContactId(-1);
-                        return true;
-                    }
-
-                    if (updateCount > 0) {
-                        Toast.makeText(getActivity(), R.string.singleImage_message_faceTagged, Toast.LENGTH_SHORT).show();
-                        mFacesLoader.reset();
-                        mFacesLoader.startLoading();
-                    } else {
-                        Toast.makeText(getActivity(), R.string.singleImage_message_faceNotTagged, Toast.LENGTH_SHORT).show();
-                    }
-
-                    return false;
                 }
                 return false;
             }
@@ -651,7 +693,9 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
         final View.OnClickListener onRemoveClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mSelectedFace != null) {
+                if (mSelectedFaceIndex > -1 && mSelectedFaceIndex < mFacePositions.size()) {
+                    final Contact2Image selectedFace = mFacePositions.get(mSelectedFaceIndex);
+                    if (selectedFace != null) {
                     DialogUtils.buildConfirmDialog(getActivity()).setMessage(R.string.singleImage_confirm_untagFace).setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
@@ -662,16 +706,16 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
 
                                     ContentValues values = new ContentValues();
                                     values.put(Contact2Image.COLUMN_CONTACT_ID, lowestId);
-                                    final int update = getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_2_IMAGES_URI, String.valueOf(mSelectedFace.get_id())), values, null, null);
+                                    final int update = getActivity().getContentResolver().update(Uri.withAppendedPath(SPOCContentProvider.CONTACTS_2_IMAGES_URI, String.valueOf(selectedFace.get_id())), values, null, null);
                                     if (update > 0) {
                                         Toast.makeText(getActivity(), R.string.singleImage_message_faceUntagged, Toast.LENGTH_SHORT).show();
 
-                                        mSelectedFace.setContactId(lowestId);
+                                        selectedFace.setContactId(lowestId);
 
                                         mFacesLoader.reset();
                                         mFacesLoader.startLoading();
 
-                                        showFaceTag(mSelectedFace);
+                                        showFaceTag(selectedFace);
                                     } else {
                                         Toast.makeText(getActivity(), R.string.singleImage_message_faceNotUntagged, Toast.LENGTH_SHORT).show();
                                     }
@@ -681,6 +725,7 @@ public class SingleImageFragment extends SPOCFragment implements ImagesTableLoad
                             }
                         }
                     }).show();
+                }
                 }
             }
         };
