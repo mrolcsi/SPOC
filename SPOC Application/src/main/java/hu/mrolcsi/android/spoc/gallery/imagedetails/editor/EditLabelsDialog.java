@@ -189,6 +189,8 @@ public class EditLabelsDialog extends DialogFragment implements LabelsTableLoade
         values.put(Label2Image.COLUMN_LABEL_ID, labelId);
         values.put(Label2Image.COLUMN_IMAGE_ID, getArguments().getInt(SingleImageFragment.ARG_IMAGE_ID));
         getActivity().getContentResolver().insert(SPOCContentProvider.LABELS_2_IMAGES_URI, values);
+
+        etNewLabel.setText(null);
     }
 
     @Override
