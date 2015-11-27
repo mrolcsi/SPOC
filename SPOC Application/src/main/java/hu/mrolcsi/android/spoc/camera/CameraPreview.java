@@ -2,6 +2,7 @@ package hu.mrolcsi.android.spoc.camera;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.os.Build;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -60,6 +61,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         final Camera.Parameters parameters = mCamera.getParameters();
         final Camera.Size optimalPreviewSize = getOptimalPreviewSize(parameters.getSupportedPreviewSizes(), w, h);
         parameters.setPreviewSize(optimalPreviewSize.width, optimalPreviewSize.height);
+        if (Build.VERSION.SDK_INT >= 14) {
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        }
         applyParameters(parameters);
     }
 
