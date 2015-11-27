@@ -64,12 +64,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         if (Build.VERSION.SDK_INT >= 14) {
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         }
+        final Camera.Size optimalPictureSize = getOptimalPictureSize(parameters.getSupportedPictureSizes(), w, h);
+        parameters.setPictureSize(optimalPictureSize.width, optimalPictureSize.height);
         applyParameters(parameters);
     }
 
     private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
         final double ASPECT_TOLERANCE = 0.1;
-        double targetRatio = (double) h / w;
+        double targetRatio = (double) w / h;
 
         if (sizes == null) return null;
 
@@ -94,6 +96,28 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 }
             }
         }
+        return optimalSize;
+    }
+
+    private Camera.Size getOptimalPictureSize(List<Camera.Size> sizes, int w, int h) {
+        final double ASPECT_TOLERANCE = 0.1;
+        double targetRatio = (double) w / h;
+
+        if (sizes == null) return null;
+
+        Camera.Size optimalSize = null;
+        int i = 0;
+        while (i < sizes.size() && optimalSize == null) {
+            final Camera.Size size = sizes.get(i);
+            double ratio = (double) size.width / size.height;
+            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) i++;
+            else optimalSize = size;
+        }
+
+        if (optimalSize == null) {
+            optimalSize = sizes.get(0);
+        }
+
         return optimalSize;
     }
 
