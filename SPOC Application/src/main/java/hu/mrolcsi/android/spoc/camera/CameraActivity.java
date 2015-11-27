@@ -329,11 +329,15 @@ public class CameraActivity extends AppCompatActivity {
         try {
             ExifInterface exif = new ExifInterface(filename);
 
-            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mCurrentLocation.getLatitude()));
-            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mCurrentLocation.getLatitude()));
-            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mCurrentLocation.getLongitude()));
-            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mCurrentLocation.getLongitude()));
+            //save position
+            if (mCurrentLocation != null) {
+                exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, LocationUtils.convert(mCurrentLocation.getLatitude()));
+                exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, LocationUtils.latitudeRef(mCurrentLocation.getLatitude()));
+                exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, LocationUtils.convert(mCurrentLocation.getLongitude()));
+                exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, LocationUtils.longitudeRef(mCurrentLocation.getLongitude()));
+            }
 
+            //save rotation
             final int rotation = getWindowManager().getDefaultDisplay().getRotation();
             switch (rotation) {
                 case Surface.ROTATION_0:        //portrait
