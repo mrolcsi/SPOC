@@ -283,8 +283,8 @@ public final class GalleryActivity extends AppCompatActivity {
     @TargetApi(21)
     private void setUpDrawerToggle() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
         setSupportActionBar(toolbar);
+        getSupportActionBar().setElevation(0);
 
         this.mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
 
