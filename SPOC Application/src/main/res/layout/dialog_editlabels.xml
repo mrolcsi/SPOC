@@ -2,15 +2,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingLeft="12dp"
+    android:paddingRight="12dp">
 
     <ListView
         android:id="@+id/lvLabels"
         style="?android:attr/listViewStyle"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_margin="6dp"
         android:layout_weight="1"
-        android:divider="?android:attr/listDivider"/>
+        android:divider="?android:attr/listDivider" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -25,7 +28,6 @@
             android:layout_marginEnd="@dimen/margin_small"
             android:layout_marginLeft="@dimen/margin_medium"
             android:layout_marginStart="@dimen/margin_small"
-            android:layout_marginTop="@dimen/margin_small"
             android:layout_toLeftOf="@+id/btnSave"
             android:theme="@style/Theme.SPOC">
 
@@ -47,7 +49,6 @@
             android:layout_alignBottom="@+id/textInputLayout"
             android:layout_alignParentRight="true"
             android:layout_alignTop="@+id/textInputLayout"
-            android:layout_marginRight="@dimen/margin_medium"
             android:background="@null"
             android:scaleType="centerInside"
             android:src="@drawable/plus"/>

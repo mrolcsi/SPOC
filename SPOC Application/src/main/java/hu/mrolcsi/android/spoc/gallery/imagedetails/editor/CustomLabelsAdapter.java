@@ -24,7 +24,7 @@ public class CustomLabelsAdapter extends CursorAdapter {
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
-        final View view = LayoutInflater.from(context).inflate(android.R.layout.simple_dropdown_item_1line, viewGroup, false);
+        final View view = LayoutInflater.from(context).inflate(android.R.layout.simple_spinner_dropdown_item, viewGroup, false);
         ((TextView) view).setCompoundDrawablePadding(context.getResources().getDimensionPixelOffset(R.dimen.margin_small));
         return view;
     }
